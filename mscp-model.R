@@ -1,3 +1,22 @@
+########################################## GLOBAL PARAMETERS #########################################
+# game design
+PLAYERS_CNT <- 3
+UTIL_MAX <- 100
+COOP_COST <- 40
+UTIL_MIN <- UTIL_MAX - COOP_COST
+UTIL_NONE <- 0
+# actions
+COOPERATE <- "c"
+DEVIATE <- "d"
+# log level
+LOG_LEVEL <- "debug"    # possible: "debug", "none"
+# file system
+BASE_DIR <- paste(dirname(sys.frame(1)$ofile), "/simulations/", sep = "")
+BASE_FILENAME <- "vod-simulation-"
+# simulation type
+SIM_TYPE <- "reinf"    # possible: "default", "reinf", "decl-mem", "mel-vs-max"
+
+
 ############################################## CLASSES ###############################################
 #####------------------------------------------- VOD --------------------------------------------#####
 # class: Vod
@@ -157,7 +176,7 @@ Player <- setRefClass("Player",
                         #----------------------------------------------------------------------------#
                         validate = function() {
                           if (!is.numeric(ID)) {
-                            stop(paste("Error during player validation: ID must be numeric!"))
+                            stop("Error during player validation: ID must be numeric!")
                           }
                         },
                         
@@ -214,8 +233,7 @@ ReinforcementPlayer <- setRefClass("ReinforcementPlayer",
                                      #    TODO
                                      #---------------------------------------------------------------#
                                      computeAction = function() {
-                                       print(personalHistory)
-                                       return("coordinate")
+                                       return(COOPERATE)
                                      }
                                    )
 )
@@ -223,24 +241,18 @@ ReinforcementPlayer <- setRefClass("ReinforcementPlayer",
 
 ############################################# FUNCTIONS ##############################################
 #----------------------------------------------------------------------------------------------------#
-# function: initSimulation
-#     Initializations required by the simulation, such setting global parameters.
+#   function: storeData
+#     Stores the given data.
+#     param:  data
+#         the data to be stored
 #----------------------------------------------------------------------------------------------------#
-initSimulation <- function() {
-  ### GAME PARAMETERS
-  # game design
-  PLAYERS_CNT <- 3
-  UTIL_MAX <- 100
-  COOP_COST <- 40
-  UTIL_MIN <- UTIL_MAX - COOP_COST
-  UTIL_NONE <- 0
-  # actions
-  COOPERATE <- "c"
-  DEVIATE <- "d"
-  
-  ### HELPERS
-  # log level
-  LOG_LEVEL <- "debug"    # others: none
+storeData <- function(data) {
+  timestamp <- gsub(" ", "-",               # 3. add "-" between date and time of the day
+                    gsub("-", "",           # 2. remove "-", as in date
+                         gsub(":", "",      # 1. remove ":", as in time of the day
+                              Sys.time(), fixed = TRUE), fixed = TRUE), fixed = TRUE)
+  filename <- paste(BASE_DIR, BASE_FILENAME, SIM_TYPE, "-", timestamp, ".Rdata", sep = "")
+  save(data, file=filename)
 }
 
 #----------------------------------------------------------------------------------------------------#
@@ -250,10 +262,24 @@ initSimulation <- function() {
 #----------------------------------------------------------------------------------------------------#
 computeSimulation <- function() {
   
-  vod <- Vod$new(list(Player$new(1), Player$new(2), Player$new(3)))
+  if (SIM_TYPE == "default") {
+    players <- list(Player$new(1), Player$new(2), Player$new(3))
+  } else if (SIM_TYPE == "reinf") {
+    players <- list(ReinforcementPlayer$new(1), ReinforcementPlayer$new(2), 
+                    ReinforcementPlayer$new(3))
+  } else if (SIM_TYPE == "decl-mem") {
+    stop("Declarative memory not implemented yet!")
+  } else if (SIM_TYPE == "mel-vs-max") {
+    stop("Melioration vs. maximization not implemented yet!")
+  } else {
+    stop(paste("Unknown simulation type:", SIM_TYPE))
+  }
   
-  vod$computeRound()
-  vod$history
-  vod$roundsPlayed
-  vod$players[[3]]$history
+  vod <- Vod$new(players)
+  
+  for (i in 1:50) {
+    vod$computeRound()
+  }
+  
+  storeData(vod$history)
 }
