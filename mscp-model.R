@@ -5,6 +5,7 @@ UTIL_MAX <- 100
 COOP_COST <- 40
 UTIL_MIN <- UTIL_MAX - COOP_COST
 UTIL_NONE <- 0
+ROUNDS <- 50
 # actions
 COOPERATE <- "c"
 DEVIATE <- "d"
@@ -14,7 +15,7 @@ LOG_LEVEL <- "debug"    # possible: "debug", "none"
 BASE_DIR <- paste(dirname(sys.frame(1)$ofile), "/simulations/", sep = "")
 BASE_FILENAME <- "vod-simulation-"
 # simulation type
-SIM_TYPE <- "reinf"    # possible: "default", "reinf", "decl-mem", "mel-vs-max"
+MODEL_TYPE <- "reinf"    # possible: "default", "reinf", "decl-mem", "mel-vs-max"
 
 
 ############################################## CLASSES ###############################################
@@ -85,7 +86,7 @@ Vod <- setRefClass("Vod",
                        actions <- c()
                        coop <- FALSE
                        for (i in 1:length(players)) {
-                         # retrieval of actual object with [[]], instead of just reference pointer 
+                         # retrieval of list objects with [[]], instead of just reference pointer 
                          # with [] --- for further information, see: 
                          # https://rforpublichealth.blogspot.nl/2015/03/basics-of-lists.html
                          action <- players[[i]]$computeAction()
@@ -251,7 +252,7 @@ storeData <- function(data) {
                     gsub("-", "",           # 2. remove "-", as in date
                          gsub(":", "",      # 1. remove ":", as in time of the day
                               Sys.time(), fixed = TRUE), fixed = TRUE), fixed = TRUE)
-  filename <- paste(BASE_DIR, BASE_FILENAME, SIM_TYPE, "-", timestamp, ".Rdata", sep = "")
+  filename <- paste(BASE_DIR, BASE_FILENAME, MODEL_TYPE, "-", timestamp, ".Rdata", sep = "")
   save(data, file=filename)
 }
 
@@ -262,22 +263,24 @@ storeData <- function(data) {
 #----------------------------------------------------------------------------------------------------#
 computeSimulation <- function() {
   
-  if (SIM_TYPE == "default") {
-    players <- list(Player$new(1), Player$new(2), Player$new(3))
-  } else if (SIM_TYPE == "reinf") {
-    players <- list(ReinforcementPlayer$new(1), ReinforcementPlayer$new(2), 
-                    ReinforcementPlayer$new(3))
-  } else if (SIM_TYPE == "decl-mem") {
-    stop("Declarative memory not implemented yet!")
-  } else if (SIM_TYPE == "mel-vs-max") {
-    stop("Melioration vs. maximization not implemented yet!")
-  } else {
-    stop(paste("Unknown simulation type:", SIM_TYPE))
+  players <- list()
+  for (i in 1:PLAYERS_CNT) {
+    if (MODEL_TYPE == "default") {
+      players[[i]] <- Player$new(i)
+    } else if (MODEL_TYPE == "reinf") {
+      players[[i]] <- ReinforcementPlayer$new(i)
+    } else if (MODEL_TYPE == "decl-mem") {
+      stop("Declarative memory not implemented yet!")
+    } else if (MODEL_TYPE == "mel-vs-max") {
+      stop("Melioration vs. maximization not implemented yet!")
+    } else {
+      stop(paste("Unknown model type:", MODEL_TYPE))
+    }
   }
   
   vod <- Vod$new(players)
   
-  for (i in 1:50) {
+  for (i in 1:ROUNDS) {
     vod$computeRound()
   }
   
