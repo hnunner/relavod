@@ -37,7 +37,17 @@ importVodSimData <- function(modelType = "default", timestamp = "latest") {
   return(vodSimData)
 }
 
-
+#----------------------------------------------------------------------------------------------------#
+# function: extractLNISequence
+#   Extracts the interaction sequence required to compute the LNI. For details, see Diekmann & 
+#   Przepiorka (2016), p.1318.
+#    "1" - player 1 coordinates, others deviate
+#    "2" - player 2 coordinates, others deviate
+#    "3" - player 3 coordinates, others deviate
+#   "-1" - either more than one player coordinates, or all players deviate
+#   param:  vodData
+#       the VOD data to extract the LNI sequence from
+#----------------------------------------------------------------------------------------------------#
 extractLNISequence <- function(vodData) {
   moves <- vodData[vodData$round >= 1,2:4]
   moves$lniSequence <- -1
@@ -56,7 +66,102 @@ extractLNISequence <- function(vodData) {
 #----------------------------------------------------------------------------------------------------#
 computeLNIs <- function(vodData) {
   lniSequence <- extractLNISequence(vodData)
-  print(lniSequence)
+  
+  ### TEST ###
+  lniSequence <- createLNITestSequence1()
+  #lniSequence <- extractLNISequence(createVodTestData2())
+  ### TEST ###
+  
+  # 1-sequences
+  oneSequences <- c()
+  i <- 1
+  while (i < length(lniSequence)) {
+    currInteraction <- lniSequence[i]
+    
+    # compare current interaction with next interactions, 
+    # as long as we haven't reached the end of the sequence
+    # and as long as they are the same
+    seqLength <- 1
+    j <- i+1
+    while (j <= length(lniSequence) 
+           & currInteraction == lniSequence[j]) {
+      seqLength <- seqLength+1
+      j <- j+1
+    }
+    if (seqLength > 1) {
+      oneSequences <- c(oneSequences, seqLength)
+    }
+    i <- j
+  }
+  oneSequences <- oneSequences[oneSequences >= 3]
+  lni13 <- 100 * sum(oneSequences) / length(lniSequence)
+  
+  # 2-sequences
+  twoSequences <- c()
+  i <- 1
+  while (i+1 <= length(lniSequence)) {
+    j <- i+1
+    k <- i+2
+    currInteraction <- lniSequence[i:j]
+    if (currInteraction[1] == -1
+        | currInteraction[2] == -1
+        | currInteraction[1] == currInteraction[2]) {
+      i <- i+1
+      j <- j+1
+      k <- k+1
+      next
+    }
+    seqLength <- 2
+    alternatingIndex <- 0
+    while (k <= length(lniSequence)
+           & lniSequence[k] == currInteraction[(alternatingIndex%%2)+1]) {
+      seqLength <- seqLength+1
+      k <- k+1
+      alternatingIndex <- alternatingIndex+1
+    }
+    twoSequences <- c(twoSequences, seqLength)
+    i <- k
+  }
+  twoSequences <- twoSequences[twoSequences >= 3]
+  lni23 <- 100 * sum(twoSequences) / length(lniSequence)
+  
+  # 3-sequences
+  threeSequences <- c()
+  i <- 1
+  while (i+2 <= length(lniSequence)) {
+    j <- i+1
+    k <- i+2
+    l <- i+3
+    currInteraction <- lniSequence[i:k]
+    if (currInteraction[1] == -1
+        | currInteraction[2] == -1
+        | currInteraction[3] == -1
+        | currInteraction[1] == currInteraction[2]
+        | currInteraction[1] == currInteraction[3]
+        | currInteraction[2] == currInteraction[3]) {
+      i <- i+1
+      j <- j+1
+      k <- k+1
+      l <- l+1
+      next
+    }
+    seqLength <- 3
+    alternatingIndex <- 0
+    while (l <= length(lniSequence)
+           & lniSequence[l] == currInteraction[(alternatingIndex%%3)+1]) {
+      seqLength <- seqLength+1
+      l <- l+1
+      alternatingIndex <- alternatingIndex+1
+    }
+    threeSequences <- c(threeSequences, seqLength)
+    i <- k
+  }
+  threeSequences <- threeSequences[threeSequences >= 3]
+  lni33 <- 100 * sum(threeSequences) / length(lniSequence)
+  
+  
+  return(data.frame(lni13, lni23, lni33))
+  
 }
 
 #----------------------------------------------------------------------------------------------------#
@@ -100,6 +205,11 @@ createVodTestData2 <- function() {
   util2 <- c(0,60,60,100,60,100,60,60,60,100,100)
   util3 <- c(0,100,100,100,100,100,100,100,100,100,60)
   return(data.frame(round,player1,player2,player3,util1,util2,util3))
+}
+
+
+createLNITestSequence1 <- function() {
+  return(c(1,1,2,2,2,3,3,3,3,1,2,3,2,2,2,2,2,2,2))
 }
 
 #----------------------------------------------------------------------------------------------------#
