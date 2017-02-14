@@ -1,39 +1,56 @@
 ########################################## GLOBAL PARAMETERS #########################################
 # file system
 BASE_DIR <- paste(dirname(sys.frame(1)$ofile), "/simulations/", sep = "")
-BASE_FILENAME <- "vod-simulation-"
+BASE_FILENAME <- "sim-"
+# log level
+LOG_LEVEL <- "none"    # possible: "debug", "none"
 
 
 #----------------------------------------------------------------------------------------------------#
 # function: importVodSimData
-#     Imports VOD simulation data. Data is stored as: "vod-simulation-MODELTYPE-TIMESTAMP.Rdata"
-#     Available MODELTYPEs: "default", "reinf", "decl-mem", "mel-vs-max"
-#     TIMESTAMP format: yyyymmdd-hhmmss
+#     Imports VOD simulation data. 
+#     Data is stored as: "BASE_DIR/modelType/Date-dateCount/sim-simCount.Rdata"
+#     Available for modelType: "default", "reinf", "decl-mem", "mel-vs-max"
+#     Date format: yyyymmdd
 #     param:  modelType
 #         the model type used by the simulation
-#     param:  timestamp
-#         the timestamp of the simulation (if undefined: latest available timestamp)
+#     param:  date
+#         the date of the simulation 
+#         (if undefined: latest available date)
+#     param:  dateCount
+#         defines the round of simulation of the given date
+#         (if undefined: latest available round of simulations)
 #----------------------------------------------------------------------------------------------------#
-importVodSimData <- function(modelType = "default", timestamp = "latest") {
-  filename <- paste(BASE_DIR, BASE_FILENAME, modelType, "-", timestamp, ".Rdata", sep = "")
-  # if timestamp is undefined, take latest available timestamp
-  if (timestamp == "latest") {
-    files <- list.files(BASE_DIR)
-    fileTimestamps <- gsub(".Rdata", "", 
-                           gsub(paste(BASE_FILENAME, modelType, "-", sep = ""), "", 
-                                files[grepl(modelType, files)], fixed = TRUE), fixed = TRUE)
-    maxTimestamp <- NA
-    for (i in 1:length(fileTimestamps)) {
-      if (is.na(maxTimestamp)) {
-        maxTimestamp <- fileTimestamps[i]
-      } else if (fileTimestamps[i] > maxTimestamp) {
-        maxTimestamp <- fileTimestamps[i]
-      }
-    }
-    filename <- paste(BASE_DIR, BASE_FILENAME, modelType, "-", maxTimestamp, ".Rdata", sep = "")
+importVodSimData <- function(modelType = "default", 
+                             date = "latest",
+                             dateCount = "latest") {
+  
+  modelDir <- paste(BASE_DIR, modelType, sep = "")
+  
+  if (date == "latest") {
+    dateDirs <- list.dirs(modelDir, recursive = FALSE)
+    dates <- gsub(paste(modelDir, "/", sep = ""), "", dateDirs, fixed = TRUE)
+    date <- max(dates)
   }
-  vodSimData <- get(load(filename))
-  print(paste("Success: Data import from:", filename))
+  dateDir <- paste(modelDir, "/", date, sep = "")
+  
+  if (dateCount == "latest") {
+    dateCountDirs <- list.dirs(dateDir, recursive = FALSE)
+    dateCounts <- gsub(paste(dateDir, "/", sep = ""), "", dateCountDirs, fixed = TRUE)
+    dateCount <- max(dateCounts)
+  }
+  dateCountDir <- paste(dateDir, "/", dateCount, sep = "")
+  
+  vodSimData = list()
+  simCountFiles <- list.files(dateCountDir, recursive = FALSE)
+  for (i in 1:length(simCountFiles)) {
+    filename <- paste(dateCountDir, "/", BASE_FILENAME, i, ".Rdata", sep = "")
+    vodSimData[[i]] <- get(load(filename))
+    if (LOG_LEVEL == "debug") {
+      print(paste("Success: Data import from:", filename))
+    }
+  }
+
   return(vodSimData)
 }
 
@@ -68,7 +85,7 @@ computeLNIs <- function(vodData) {
   lniSequence <- extractLNISequence(vodData)
   
   ### TEST ###
-  lniSequence <- createLNITestSequence1()
+  #lniSequence <- createLNITestSequence1()
   #lniSequence <- extractLNISequence(createVodTestData2())
   ### TEST ###
   
@@ -167,12 +184,25 @@ computeLNIs <- function(vodData) {
 #----------------------------------------------------------------------------------------------------#
 # function: analyzeData
 #     Starting point for the data analysis.
+#     param:  modelType
+#         the model type used by the simulation
+#     param:  date
+#         the date of the simulation 
+#         (if undefined: latest available date)
+#     param:  dateCount
+#         defines the round of simulations of the given date
+#         (if undefined: latest available round of simulations)
 #----------------------------------------------------------------------------------------------------#
-analyzeData <- function() {
-  vodSimData <- importVodSimData(modelType = "reinf")
-  vodSimData <- importVodSimData(modelType = "reinf", timestamp = "20170208-115642")
-  vodSimData <- importVodSimData()
-  computeLNIs(vodSimData)
+analyzeData <- function(modelType = "default", 
+                        date = "latest",
+                        dateCount = "latest") {
+  
+  vodSimData <- importVodSimData(modelType = modelType, date = date, dateCount = dateCount)
+  lnis <- data.frame()
+  for (i in 1:length(vodSimData)) {
+    lnis <- rbind(lnis, computeLNIs(vodSimData[[i]]))
+  } 
+  lnis
 }
 
 

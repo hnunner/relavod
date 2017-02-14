@@ -5,7 +5,6 @@ UTIL_MAX <- 100
 COOP_COST <- 40
 UTIL_MIN <- UTIL_MAX - COOP_COST
 UTIL_NONE <- 0
-ROUNDS <- 50
 # actions
 COOPERATE <- "c"
 DEVIATE <- "d"
@@ -13,9 +12,7 @@ DEVIATE <- "d"
 LOG_LEVEL <- "debug"    # possible: "debug", "none"
 # file system
 BASE_DIR <- paste(dirname(sys.frame(1)$ofile), "/simulations/", sep = "")
-BASE_FILENAME <- "vod-simulation-"
-# simulation type
-MODEL_TYPE <- "reinf"    # possible: "default", "reinf", "decl-mem", "mel-vs-max"
+BASE_FILENAME <- "sim-"
 
 
 ############################################## CLASSES ###############################################
@@ -242,47 +239,89 @@ ReinforcementPlayer <- setRefClass("ReinforcementPlayer",
 
 ############################################# FUNCTIONS ##############################################
 #----------------------------------------------------------------------------------------------------#
+#   function: createDirectory
+#     Creates a directory to store simulation data in.
+#     param:  modelType
+#         the type of model to create the directory for
+#----------------------------------------------------------------------------------------------------#
+createDirectory <- function(modelType) {
+  # creation of base directory for the model type
+  modelDir <- paste(BASE_DIR, modelType, "/", sep = "")
+  if (!file.exists(modelDir)) {
+    dir.create(modelDir)
+  }
+  
+  # creation of base directory for the date
+  dateDir <- paste(modelDir, gsub("-", "", Sys.Date(), fixed = TRUE), "/", sep = "")
+  if (!file.exists(dateDir)) {
+    dir.create(dateDir)
+  }
+  
+  # creation of base directory for the simulations
+  simDir <- NA
+  dirCnt <- 0
+  while (is.na(simDir) || file.exists(simDir)) {
+    dirCnt <- dirCnt+1
+    simDir <- paste(dateDir, dirCnt, "/", sep = "")
+  }
+  dir.create(simDir)
+  return(simDir)
+}
+
+#----------------------------------------------------------------------------------------------------#
 #   function: storeData
 #     Stores the given data.
 #     param:  data
 #         the data to be stored
+#     param:  directory
+#         the directory to store the data in
+#     param:  simulationCnt
+#         the counter of the simulation to be stored
 #----------------------------------------------------------------------------------------------------#
-storeData <- function(data) {
-  timestamp <- gsub(" ", "-",               # 3. add "-" between date and time of the day
-                    gsub("-", "",           # 2. remove "-", as in date
-                         gsub(":", "",      # 1. remove ":", as in time of the day
-                              Sys.time(), fixed = TRUE), fixed = TRUE), fixed = TRUE)
-  filename <- paste(BASE_DIR, BASE_FILENAME, MODEL_TYPE, "-", timestamp, ".Rdata", sep = "")
+storeData <- function(data, directory, simulationCnt) {
+  filename <- paste(directory, BASE_FILENAME, simulationCnt, ".Rdata", sep = "")
   save(data, file=filename)
 }
 
 #----------------------------------------------------------------------------------------------------#
-# function: computeSimulation
+#   function: computeSimulation
 #     Start and central organizational point of the simulation. Within this function the whole logic
 #     is composed together to completely simulate the VOD and store the results.
+#   param:  modelType
+#       the type of model used for the simulation
+#       possible: "default", "reinf", "decl-mem", "mel-vs-max"
+#   param:  simulationCount
+#       the amount of overall simulations
+#   param:  roundsPerSimulation
+#       the amount of rounds per simulation
 #----------------------------------------------------------------------------------------------------#
-computeSimulation <- function() {
+computeSimulation <- function(modelType = "default",
+                              simulationCount = 5, 
+                              roundsPerSimulation = 50) {
   
-  players <- list()
-  for (i in 1:PLAYERS_CNT) {
-    if (MODEL_TYPE == "default") {
-      players[[i]] <- Player$new(i)
-    } else if (MODEL_TYPE == "reinf") {
-      players[[i]] <- ReinforcementPlayer$new(i)
-    } else if (MODEL_TYPE == "decl-mem") {
-      stop("Declarative memory not implemented yet!")
-    } else if (MODEL_TYPE == "mel-vs-max") {
-      stop("Melioration vs. maximization not implemented yet!")
-    } else {
-      stop(paste("Unknown model type:", MODEL_TYPE))
+  directory <- createDirectory(modelType)
+  
+  for (currSim in 1:simulationCount) {
+    
+    players <- list()
+    for (i in 1:PLAYERS_CNT) {
+      if (modelType == "default") {
+        players[[i]] <- Player$new(i)
+      } else if (modelType == "reinf") {
+        players[[i]] <- ReinforcementPlayer$new(i)
+      } else if (modelType == "decl-mem") {
+        stop("Declarative memory not implemented yet!")
+      } else if (modelType == "mel-vs-max") {
+        stop("Melioration vs. maximization not implemented yet!")
+      } else {
+        stop(paste("Unknown model type:", modelType))
+      }
     }
+    vod <- Vod$new(players)
+    for (currRound in 1:roundsPerSimulation) {
+      vod$computeRound()
+    }
+    
+    storeData(vod$history, directory, currSim)
   }
-  
-  vod <- Vod$new(players)
-  
-  for (i in 1:ROUNDS) {
-    vod$computeRound()
-  }
-  
-  storeData(vod$history)
 }
