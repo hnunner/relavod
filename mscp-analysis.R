@@ -84,16 +84,13 @@ extractLNISequence <- function(vodData) {
 #----------------------------------------------------------------------------------------------------#
 # function: computeLNIs
 #   Computation of the Latent Norm Index (LNI) for the given VOD data.
+#   TODOs: 
+#       - generalize code for different sequence lengths (quite dodgy the way it is)
 #   param:  vodData
 #       the VOD data 
 #----------------------------------------------------------------------------------------------------#
 computeLNIs <- function(vodData) {
   lniSequence <- extractLNISequence(vodData)
-  
-  ### TEST ###
-  #lniSequence <- createLNITestSequence1()
-  #lniSequence <- extractLNISequence(createVodTestData2())
-  ### TEST ###
   
   # 1-sequences
   oneSequences <- c()
@@ -182,9 +179,7 @@ computeLNIs <- function(vodData) {
   threeSequences <- threeSequences[threeSequences >= 3]
   lni33 <- 100 * sum(threeSequences) / length(lniSequence)
   
-  
   return(data.frame(lni13, lni23, lni33))
-  
 }
 
 #----------------------------------------------------------------------------------------------------#
@@ -233,17 +228,11 @@ analyzeData <- function(modelType = "default",
     for (i in 1:length(vodSimData)) {
       vodTypeLNIs <- rbind(vodTypeLNIs, computeLNIs(vodSimData[[i]]))
     }
-    
-    # adding VOD type to column index
-    # colnames(vodTypeLNIs)[1] <- paste(vod"_h1"
-    # colnames(vodTypeLNIs)[2] <- "_h2"
-    # colnames(vodTypeLNIs)[3] <- "_h3"
-    
     colnames(vodTypeLNIs) <- c((paste(currVodType, "_h1", sep = "")),
                                (paste(currVodType, "_h2", sep = "")),
                                (paste(currVodType, "_h3", sep = "")))
     
-    # column binding of different conditions
+    # column binding of different VOD types
     if (nrow(LNIs) == 0) {
       LNIs <- vodTypeLNIs
     } else {
