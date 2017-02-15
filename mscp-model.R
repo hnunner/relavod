@@ -252,16 +252,24 @@ ReinforcementPlayer <- setRefClass("ReinforcementPlayer",
 #     Creates a directory to store simulation data in.
 #     param:  modelType
 #         the type of model to create the directory for
+#     param:  vodType
+#         the type of VOD to create the directory for
 #----------------------------------------------------------------------------------------------------#
-createDirectory <- function(modelType) {
+createDirectory <- function(modelType, vodType) {
   # creation of base directory for the model type
-  modelDir <- paste(BASE_DIR, modelType, "/", sep = "")
-  if (!file.exists(modelDir)) {
-    dir.create(modelDir)
+  modelTypeDir <- paste(BASE_DIR, modelType, "/", sep = "")
+  if (!file.exists(modelTypeDir)) {
+    dir.create(modelTypeDir)
+  }
+  
+  # creation of base directory for the VOD type
+  vodTypeDir <- paste(modelTypeDir, vodType, "/", sep = "")
+  if (!file.exists(vodTypeDir)) {
+    dir.create(vodTypeDir)
   }
   
   # creation of base directory for the date
-  dateDir <- paste(modelDir, gsub("-", "", Sys.Date(), fixed = TRUE), "/", sep = "")
+  dateDir <- paste(vodTypeDir, gsub("-", "", Sys.Date(), fixed = TRUE), "/", sep = "")
   if (!file.exists(dateDir)) {
     dir.create(dateDir)
   }
@@ -304,15 +312,15 @@ storeData <- function(data, directory, simulationCnt) {
 #       possible: "sym", "asym1", "asym2"
 #   param:  simulationCount
 #       the amount of overall simulations
-#   param:  roundsPerSimulation
-#       the amount of rounds per simulation
+#   param:  interactionRounds
+#       the amount of interaction rounds per simulation
 #----------------------------------------------------------------------------------------------------#
 computeSimulation <- function(modelType = "default",
                               vodType = "sym",
-                              simulationCount = 5, 
-                              roundsPerSimulation = 50) {
+                              simulationCount = 30,                  # 120 (subjects) / 4 (conditions)
+                              interactionRounds = 56) {
   
-  directory <- createDirectory(modelType)
+  directory <- createDirectory(modelType, vodType)
 
   # determining the cooperation costs per player, depending on VOD type
   coopCosts <- c()
@@ -349,7 +357,7 @@ computeSimulation <- function(modelType = "default",
     vod <- Vod$new(players)
     
     # actual VOD simulation
-    for (currRound in 1:roundsPerSimulation) {
+    for (currInteractionRound in 1:interactionRounds) {
       vod$computeRound()
     }
     

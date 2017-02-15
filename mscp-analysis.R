@@ -14,6 +14,10 @@ LOG_LEVEL <- "none"    # possible: "debug", "none"
 #     Date format: yyyymmdd
 #     param:  modelType
 #         the model type used by the simulation
+#         possible: "default", "reinf", "decl-mem", "mel-vs-max"
+#     param:  vodType
+#         the type of VOD used for the simulation
+#         possible: "sym", "asym1", "asym2"
 #     param:  date
 #         the date of the simulation 
 #         (if undefined: latest available date)
@@ -22,17 +26,20 @@ LOG_LEVEL <- "none"    # possible: "debug", "none"
 #         (if undefined: latest available round of simulations)
 #----------------------------------------------------------------------------------------------------#
 importVodSimData <- function(modelType = "default", 
+                             vodType = "sym",
                              date = "latest",
                              dateCount = "latest") {
   
   modelDir <- paste(BASE_DIR, modelType, sep = "")
+  vodTypeDir <- paste(modelDir, "/", vodType, sep = "")
   
   if (date == "latest") {
-    dateDirs <- list.dirs(modelDir, recursive = FALSE)
-    dates <- gsub(paste(modelDir, "/", sep = ""), "", dateDirs, fixed = TRUE)
+    dateDirs <- list.dirs(vodTypeDir, recursive = FALSE)
+    dates <- gsub(paste(vodTypeDir, "/", sep = ""), "", dateDirs, fixed = TRUE)
     date <- max(dates)
   }
-  dateDir <- paste(modelDir, "/", date, sep = "")
+  dateDir <- paste(vodTypeDir, "/", date, sep = "")
+  
   
   if (dateCount == "latest") {
     dateCountDirs <- list.dirs(dateDir, recursive = FALSE)
@@ -186,6 +193,10 @@ computeLNIs <- function(vodData) {
 #     Starting point for the data analysis.
 #     param:  modelType
 #         the model type used by the simulation
+#         possible: "default", "reinf", "decl-mem", "mel-vs-max"
+#     param:  vodType
+#         the type of VOD used for the simulation
+#         possible: "sym", "asym1", "asym2"
 #     param:  date
 #         the date of the simulation 
 #         (if undefined: latest available date)
@@ -193,11 +204,13 @@ computeLNIs <- function(vodData) {
 #         defines the round of simulations of the given date
 #         (if undefined: latest available round of simulations)
 #----------------------------------------------------------------------------------------------------#
-analyzeData <- function(modelType = "default", 
+analyzeData <- function(modelType = "default",
+                        vodType = "sym",
                         date = "latest",
                         dateCount = "latest") {
   
-  vodSimData <- importVodSimData(modelType = modelType, date = date, dateCount = dateCount)
+  vodSimData <- importVodSimData(modelType = modelType, vodType = vodType, 
+                                 date = date, dateCount = dateCount)
   lnis <- data.frame()
   for (i in 1:length(vodSimData)) {
     lnis <- rbind(lnis, computeLNIs(vodSimData[[i]]))
