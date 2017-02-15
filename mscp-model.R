@@ -1,9 +1,10 @@
 ########################################## GLOBAL PARAMETERS #########################################
 # game design
 PLAYERS_CNT <- 3
-UTIL_MAX <- 100
-COOP_COST <- 40
-UTIL_MIN <- UTIL_MAX - COOP_COST
+UTIL_MAX <- 80
+COOP_COST_SYMM <- 50
+COOP_COST_ASYMM1 <- 30
+COOP_COST_ASYMM2 <- 10
 UTIL_NONE <- 0
 # actions
 COOPERATE <- "c"
@@ -100,7 +101,7 @@ Vod <- setRefClass("Vod",
                            utils <- c(utils, UTIL_NONE)
                          } else {
                            if (actions[i] == COOPERATE) {
-                             utils <- c(utils, UTIL_MIN)
+                             utils <- c(utils, UTIL_MAX - players[[i]]$coopCost)
                            } 
                            if (actions[i] == DEVIATE) {
                              utils <- c(utils, UTIL_MAX)
@@ -139,11 +140,13 @@ Player <- setRefClass("Player",
                       #   class parameters (public by default)
                       #     param:  ID 
                       #         the player's identifier
+                      #     param:  coopCost
+                      #         the player's cost to cooperate
                       #     param:  history
                       #         the player's game history, consisting of round, all player actions,
                       #         player's own utility
                       #------------------------------------------------------------------------------#
-                      fields = c("ID", "history"),
+                      fields = c("ID", "coopCost", "history"),
                       
                       #------------------------------------------------------------------------------# 
                       #   class methods (public by defualt)
@@ -156,9 +159,12 @@ Player <- setRefClass("Player",
                         #     data frame and player is validated
                         #     param:  ID
                         #         the player's ID
+                        #     param:  coopCost
+                        #         the player's cost to cooperate
                         #----------------------------------------------------------------------------#
-                        initialize = function(ID) {
+                        initialize = function(ID, coopCost) {
                           ID <<- ID
+                          coopCost <<- coopCost
                           history <<- data.frame("round" = numeric(1), "player1" = character(1), 
                                                  "player2" = character(1), "player3" = character(1),
                                                  "util" = numeric(1), stringsAsFactors=FALSE)
@@ -174,7 +180,10 @@ Player <- setRefClass("Player",
                         #----------------------------------------------------------------------------#
                         validate = function() {
                           if (!is.numeric(ID)) {
-                            stop("Error during player validation: ID must be numeric!")
+                            stop("Error during player validation: 'ID' must be numeric!")
+                          }
+                          if (!is.numeric(coopCost)) {
+                            stop("Error during player validation: 'coopCost' must be numeric!")
                           }
                         },
                         
@@ -290,25 +299,43 @@ storeData <- function(data, directory, simulationCnt) {
 #   param:  modelType
 #       the type of model used for the simulation
 #       possible: "default", "reinf", "decl-mem", "mel-vs-max"
+#   param:  vodType
+#       the type of VOD used for the simulation
+#       possible: "sym", "asym1", "asym2"
 #   param:  simulationCount
 #       the amount of overall simulations
 #   param:  roundsPerSimulation
 #       the amount of rounds per simulation
 #----------------------------------------------------------------------------------------------------#
 computeSimulation <- function(modelType = "default",
+                              vodType = "sym",
                               simulationCount = 5, 
                               roundsPerSimulation = 50) {
   
   directory <- createDirectory(modelType)
+
+  # determining the cooperation costs per player, depending on VOD type
+  coopCosts <- c()
+  if (vodType == "sym") {
+    coopCosts <- c(COOP_COST_SYMM, COOP_COST_SYMM, COOP_COST_SYMM)
+  } else if (vodType == "asym1") {
+    coopCosts <- c(COOP_COST_ASYMM1, COOP_COST_SYMM, COOP_COST_SYMM)
+  } else if (vodType == "asym2") {
+    coopCosts <- c(COOP_COST_ASYMM2, COOP_COST_SYMM, COOP_COST_SYMM)
+  } else {
+    stop(paste("Unknown VOD type:", vodType))
+  }
   
+  # simulation rounds resembling the amount of VOD games played in groups of players
   for (currSim in 1:simulationCount) {
     
+    # initializing the players
     players <- list()
-    for (i in 1:PLAYERS_CNT) {
+    for (currPlayer in 1:PLAYERS_CNT) {
       if (modelType == "default") {
-        players[[i]] <- Player$new(i)
+        players[[currPlayer]] <- Player$new(currPlayer, coopCosts[currPlayer])
       } else if (modelType == "reinf") {
-        players[[i]] <- ReinforcementPlayer$new(i)
+        players[[currPlayer]] <- ReinforcementPlayer$new(currPlayer, coopCosts[currPlayer])
       } else if (modelType == "decl-mem") {
         stop("Declarative memory not implemented yet!")
       } else if (modelType == "mel-vs-max") {
@@ -317,11 +344,16 @@ computeSimulation <- function(modelType = "default",
         stop(paste("Unknown model type:", modelType))
       }
     }
+    
+    # creating a new VOD for the players
     vod <- Vod$new(players)
+    
+    # actual VOD simulation
     for (currRound in 1:roundsPerSimulation) {
       vod$computeRound()
     }
     
+    # data storage
     storeData(vod$history, directory, currSim)
   }
 }
