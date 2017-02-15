@@ -3,7 +3,9 @@
 BASE_DIR <- paste(dirname(sys.frame(1)$ofile), "/simulations/", sep = "")
 BASE_FILENAME <- "sim-"
 # log level
-LOG_LEVEL <- "none"    # possible: "debug", "none"
+LOG_LEVEL <- "debug"    # possible: "all", debug", "none"
+# VOD types
+VOD_TYPES <- c("sym", "asym1", "asym2")
 
 
 #----------------------------------------------------------------------------------------------------#
@@ -15,31 +17,29 @@ LOG_LEVEL <- "none"    # possible: "debug", "none"
 #     param:  modelType
 #         the model type used by the simulation
 #         possible: "default", "reinf", "decl-mem", "mel-vs-max"
-#     param:  vodType
-#         the type of VOD used for the simulation
-#         possible: "sym", "asym1", "asym2"
 #     param:  date
 #         the date of the simulation 
 #         (if undefined: latest available date)
 #     param:  dateCount
 #         defines the round of simulation of the given date
 #         (if undefined: latest available round of simulations)
+#     param:  vodType
+#         the type of VOD used for the simulation
+#         possible: "sym", "asym1", "asym2"
 #----------------------------------------------------------------------------------------------------#
-importVodSimData <- function(modelType = "default", 
-                             vodType = "sym",
+importVodSimData <- function(modelType = "default",
                              date = "latest",
-                             dateCount = "latest") {
+                             dateCount = "latest", 
+                             vodType = "sym") {
   
   modelDir <- paste(BASE_DIR, modelType, sep = "")
-  vodTypeDir <- paste(modelDir, "/", vodType, sep = "")
   
   if (date == "latest") {
-    dateDirs <- list.dirs(vodTypeDir, recursive = FALSE)
-    dates <- gsub(paste(vodTypeDir, "/", sep = ""), "", dateDirs, fixed = TRUE)
+    dateDirs <- list.dirs(modelDir, recursive = FALSE)
+    dates <- gsub(paste(modelDir, "/", sep = ""), "", dateDirs, fixed = TRUE)
     date <- max(dates)
   }
-  dateDir <- paste(vodTypeDir, "/", date, sep = "")
-  
+  dateDir <- paste(modelDir, "/", date, sep = "")
   
   if (dateCount == "latest") {
     dateCountDirs <- list.dirs(dateDir, recursive = FALSE)
@@ -48,16 +48,15 @@ importVodSimData <- function(modelType = "default",
   }
   dateCountDir <- paste(dateDir, "/", dateCount, sep = "")
   
+  vodTypeDir <- paste(dateCountDir, "/", vodType, sep = "")
+  
   vodSimData = list()
-  simCountFiles <- list.files(dateCountDir, recursive = FALSE)
+  simCountFiles <- list.files(vodTypeDir, recursive = FALSE)
   for (i in 1:length(simCountFiles)) {
-    filename <- paste(dateCountDir, "/", BASE_FILENAME, i, ".Rdata", sep = "")
+    filename <- paste(vodTypeDir, "/", BASE_FILENAME, i, ".Rdata", sep = "")
     vodSimData[[i]] <- get(load(filename))
-    if (LOG_LEVEL == "debug") {
-      print(paste("Success: Data import from:", filename))
-    }
   }
-
+  
   return(vodSimData)
 }
 
@@ -194,28 +193,73 @@ computeLNIs <- function(vodData) {
 #     param:  modelType
 #         the model type used by the simulation
 #         possible: "default", "reinf", "decl-mem", "mel-vs-max"
-#     param:  vodType
-#         the type of VOD used for the simulation
-#         possible: "sym", "asym1", "asym2"
 #     param:  date
 #         the date of the simulation 
 #         (if undefined: latest available date)
 #     param:  dateCount
 #         defines the round of simulations of the given date
 #         (if undefined: latest available round of simulations)
+#     param:  vodType
+#         the type of VOD used for the simulation
+#         possible: "all", "sym", "asym1", "asym2"
 #----------------------------------------------------------------------------------------------------#
 analyzeData <- function(modelType = "default",
-                        vodType = "sym",
                         date = "latest",
-                        dateCount = "latest") {
+                        dateCount = "latest",
+                        vodType = "all") {
   
-  vodSimData <- importVodSimData(modelType = modelType, vodType = vodType, 
-                                 date = date, dateCount = dateCount)
-  lnis <- data.frame()
-  for (i in 1:length(vodSimData)) {
-    lnis <- rbind(lnis, computeLNIs(vodSimData[[i]]))
-  } 
-  lnis
+  if (vodType == "all") {
+    vodType <- VOD_TYPES
+  }
+  
+  LNIs <- data.frame()
+  for (i in 1:length(vodType)) {
+    currVodType <- vodType[i]
+    
+    if (LOG_LEVEL == "all") {
+      cat(paste("Analyzing data for:
+                model type:\t", modelType, "
+                date:\t\t", date, "
+                date count:\t", dateCount, "
+                vod type:\t", currVodType,"
+                ########################\n"))
+    }
+    
+    vodSimData <- importVodSimData(modelType = modelType, date = date, 
+                                   dateCount = dateCount, vodType = currVodType)
+    vodTypeLNIs <- data.frame()
+    
+    # row binding of all simulations per VOD type
+    for (i in 1:length(vodSimData)) {
+      vodTypeLNIs <- rbind(vodTypeLNIs, computeLNIs(vodSimData[[i]]))
+    }
+    
+    # adding VOD type to column index
+    # colnames(vodTypeLNIs)[1] <- paste(vod"_h1"
+    # colnames(vodTypeLNIs)[2] <- "_h2"
+    # colnames(vodTypeLNIs)[3] <- "_h3"
+    
+    colnames(vodTypeLNIs) <- c((paste(currVodType, "_h1", sep = "")),
+                               (paste(currVodType, "_h2", sep = "")),
+                               (paste(currVodType, "_h3", sep = "")))
+    
+    # column binding of different conditions
+    if (nrow(LNIs) == 0) {
+      LNIs <- vodTypeLNIs
+    } else {
+      LNIs <- cbind(LNIs, vodTypeLNIs)
+    }
+  }
+  
+  if (LOG_LEVEL == "all") {
+    print(LNIs)
+  }
+  
+  meanLNIs <- colMeans(LNIs)
+  
+  if (LOG_LEVEL == "debug") {
+    print(meanLNIs)
+  }
 }
 
 

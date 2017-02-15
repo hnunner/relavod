@@ -14,6 +14,8 @@ LOG_LEVEL <- "debug"    # possible: "debug", "none"
 # file system
 BASE_DIR <- paste(dirname(sys.frame(1)$ofile), "/simulations/", sep = "")
 BASE_FILENAME <- "sim-"
+# VOD types
+VOD_TYPES <- c("sym", "asym1", "asym2")
 
 
 ############################################## CLASSES ###############################################
@@ -248,28 +250,21 @@ ReinforcementPlayer <- setRefClass("ReinforcementPlayer",
 
 ############################################# FUNCTIONS ##############################################
 #----------------------------------------------------------------------------------------------------#
-#   function: createDirectory
-#     Creates a directory to store simulation data in.
+#   function: createBaseDirectory
+#     Creates the base directory to store VOD simulation data in.
 #     param:  modelType
 #         the type of model to create the directory for
-#     param:  vodType
-#         the type of VOD to create the directory for
 #----------------------------------------------------------------------------------------------------#
-createDirectory <- function(modelType, vodType) {
+createBaseDirectory <- function(modelType) {
+  
   # creation of base directory for the model type
   modelTypeDir <- paste(BASE_DIR, modelType, "/", sep = "")
   if (!file.exists(modelTypeDir)) {
     dir.create(modelTypeDir)
   }
   
-  # creation of base directory for the VOD type
-  vodTypeDir <- paste(modelTypeDir, vodType, "/", sep = "")
-  if (!file.exists(vodTypeDir)) {
-    dir.create(vodTypeDir)
-  }
-  
   # creation of base directory for the date
-  dateDir <- paste(vodTypeDir, gsub("-", "", Sys.Date(), fixed = TRUE), "/", sep = "")
+  dateDir <- paste(modelTypeDir, gsub("-", "", Sys.Date(), fixed = TRUE), "/", sep = "")
   if (!file.exists(dateDir)) {
     dir.create(dateDir)
   }
@@ -282,7 +277,27 @@ createDirectory <- function(modelType, vodType) {
     simDir <- paste(dateDir, dirCnt, "/", sep = "")
   }
   dir.create(simDir)
+  
   return(simDir)
+}
+
+#----------------------------------------------------------------------------------------------------#
+#   function: createVodDirectory
+#     Creates a directory to store the simulation data for a specific type of VOD in.
+#     param:  baseDir
+#         the base directory
+#     param:  vodType
+#         the type of VOD to create the directory for
+#----------------------------------------------------------------------------------------------------#
+createVodDirectory <- function(baseDir, vodType) {
+  
+  # creation of base directory for the VOD type
+  vodTypeDir <- paste(baseDir, vodType, "/", sep = "")
+  if (!file.exists(vodTypeDir)) {
+    dir.create(vodTypeDir)
+  }
+  
+  return(vodTypeDir)
 }
 
 #----------------------------------------------------------------------------------------------------#
@@ -309,59 +324,68 @@ storeData <- function(data, directory, simulationCnt) {
 #       possible: "default", "reinf", "decl-mem", "mel-vs-max"
 #   param:  vodType
 #       the type of VOD used for the simulation
-#       possible: "sym", "asym1", "asym2"
+#       possible: "all", "sym", "asym1", "asym2"
 #   param:  simulationCount
 #       the amount of overall simulations
 #   param:  interactionRounds
 #       the amount of interaction rounds per simulation
 #----------------------------------------------------------------------------------------------------#
 computeSimulation <- function(modelType = "default",
-                              vodType = "sym",
+                              vodType = "all",
                               simulationCount = 30,                  # 120 (subjects) / 4 (conditions)
                               interactionRounds = 56) {
   
-  directory <- createDirectory(modelType, vodType)
-
-  # determining the cooperation costs per player, depending on VOD type
-  coopCosts <- c()
-  if (vodType == "sym") {
-    coopCosts <- c(COOP_COST_SYMM, COOP_COST_SYMM, COOP_COST_SYMM)
-  } else if (vodType == "asym1") {
-    coopCosts <- c(COOP_COST_ASYMM1, COOP_COST_SYMM, COOP_COST_SYMM)
-  } else if (vodType == "asym2") {
-    coopCosts <- c(COOP_COST_ASYMM2, COOP_COST_SYMM, COOP_COST_SYMM)
-  } else {
-    stop(paste("Unknown VOD type:", vodType))
-  }
+  baseDirectory <- createBaseDirectory(modelType)
   
-  # simulation rounds resembling the amount of VOD games played in groups of players
-  for (currSim in 1:simulationCount) {
+  if (vodType == "all") {
+    vodType <- VOD_TYPES
+  }
+
+  for (currVodType in 1:length(vodType)) {
     
-    # initializing the players
-    players <- list()
-    for (currPlayer in 1:PLAYERS_CNT) {
-      if (modelType == "default") {
-        players[[currPlayer]] <- Player$new(currPlayer, coopCosts[currPlayer])
-      } else if (modelType == "reinf") {
-        players[[currPlayer]] <- ReinforcementPlayer$new(currPlayer, coopCosts[currPlayer])
-      } else if (modelType == "decl-mem") {
-        stop("Declarative memory not implemented yet!")
-      } else if (modelType == "mel-vs-max") {
-        stop("Melioration vs. maximization not implemented yet!")
-      } else {
-        stop(paste("Unknown model type:", modelType))
+    directory <- createVodDirectory(baseDirectory, vodType[currVodType])
+    
+    # determining the cooperation costs per player, depending on VOD type
+    coopCosts <- c()
+    if (vodType[currVodType] == "sym") {
+      coopCosts <- c(COOP_COST_SYMM, COOP_COST_SYMM, COOP_COST_SYMM)
+    } else if (vodType[currVodType] == "asym1") {
+      coopCosts <- c(COOP_COST_ASYMM1, COOP_COST_SYMM, COOP_COST_SYMM)
+    } else if (vodType[currVodType] == "asym2") {
+      coopCosts <- c(COOP_COST_ASYMM2, COOP_COST_SYMM, COOP_COST_SYMM)
+    } else {
+      stop(paste("Unknown VOD type:", vodType[currVodType]))
+    }
+    
+    # simulation rounds resembling the amount of VOD games played in groups of players
+    for (currSim in 1:simulationCount) {
+      
+      # initializing the players
+      players <- list()
+      for (currPlayer in 1:PLAYERS_CNT) {
+        if (modelType == "default") {
+          players[[currPlayer]] <- Player$new(currPlayer, coopCosts[currPlayer])
+        } else if (modelType == "reinf") {
+          players[[currPlayer]] <- ReinforcementPlayer$new(currPlayer, coopCosts[currPlayer])
+        } else if (modelType == "decl-mem") {
+          stop("Declarative memory not implemented yet!")
+        } else if (modelType == "mel-vs-max") {
+          stop("Melioration vs. maximization not implemented yet!")
+        } else {
+          stop(paste("Unknown model type:", modelType))
+        }
       }
+      
+      # creating a new VOD for the players
+      vod <- Vod$new(players)
+      
+      # actual VOD simulation
+      for (currInteractionRound in 1:interactionRounds) {
+        vod$computeRound()
+      }
+      
+      # data storage
+      storeData(vod$history, directory, currSim)
     }
-    
-    # creating a new VOD for the players
-    vod <- Vod$new(players)
-    
-    # actual VOD simulation
-    for (currInteractionRound in 1:interactionRounds) {
-      vod$computeRound()
-    }
-    
-    # data storage
-    storeData(vod$history, directory, currSim)
   }
 }
