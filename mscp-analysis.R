@@ -3,7 +3,7 @@
 BASE_DIR <- paste(dirname(sys.frame(1)$ofile), "/simulations/", sep = "")
 BASE_FILENAME <- "sim-"
 # log level
-LOG_LEVEL <- "debug"    # possible: "all", debug", "none"
+LOG_LEVEL <- "all"    # possible: "all", debug", "none"
 # VOD types
 VOD_TYPES <- c("sym", "asym1", "asym2")
 
@@ -56,7 +56,6 @@ importVodSimData <- function(modelType = "default",
     filename <- paste(vodTypeDir, "/", BASE_FILENAME, i, ".Rdata", sep = "")
     vodSimData[[i]] <- get(load(filename))
   }
-  
   return(vodSimData)
 }
 
@@ -73,10 +72,12 @@ importVodSimData <- function(modelType = "default",
 #----------------------------------------------------------------------------------------------------#
 extractLNISequence <- function(vodData) {
   moves <- vodData[vodData$round >= 1,2:4]
+  
   moves$lniSequence <- -1
-  moves[moves$player1 == "c" & moves$player2 == "d" & moves$player3 == "d", ]$lniSequence <- 1
-  moves[moves$player1 == "d" & moves$player2 == "c" & moves$player3 == "d", ]$lniSequence <- 2
-  moves[moves$player1 == "d" & moves$player2 == "d" & moves$player3 == "c", ]$lniSequence <- 3
+  moves[moves$player1 == "c" & moves$player2 == "d" & moves$player3 == "d", "lniSequence"] <- 1
+  moves[moves$player1 == "d" & moves$player2 == "c" & moves$player3 == "d", "lniSequence"] <- 2
+  moves[moves$player1 == "d" & moves$player2 == "d" & moves$player3 == "c", "lniSequence"] <- 3
+  
   return(moves$lniSequence)
 }
 
@@ -246,7 +247,7 @@ analyzeData <- function(modelType = "default",
   
   meanLNIs <- colMeans(LNIs)
   
-  if (LOG_LEVEL == "debug") {
+  if (LOG_LEVEL == "debug" || LOG_LEVEL == "all") {
     print(meanLNIs)
   }
 }

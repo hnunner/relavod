@@ -114,9 +114,9 @@ Vod <- setRefClass("Vod",
                        # round simulation completed
                        roundsPlayed <<- roundsPlayed + 1
                        
-                       # updating the player's personal game histories
+                       # assessing the player's action
                        for (i in 1:length(players)) {
-                         action <- players[[i]]$updateHistory(roundsPlayed, actions, utils[i])
+                         action <- players[[i]]$assessAction(roundsPlayed, actions, utils[i])
                        }
                        
                        # updating the VOD's game history
@@ -190,8 +190,8 @@ Player <- setRefClass("Player",
                         },
                         
                         #----------------------------------------------------------------------------# 
-                        #   function: updateHistory
-                        #     Updates the player's personal game history with the given parameters.
+                        #   function: assessAction
+                        #     Assesses the player's action.
                         #     param:  round
                         #         the round
                         #     param:  actions
@@ -199,7 +199,7 @@ Player <- setRefClass("Player",
                         #     param:  util
                         #         utility earned in the corresponding round, based on the action taken
                         #----------------------------------------------------------------------------#
-                        updateHistory = function(round, actions, util) {
+                        assessAction = function(round, actions, util) {
                           history <<- rbind(history, c(round, actions, util))
                         },
                         
@@ -208,16 +208,96 @@ Player <- setRefClass("Player",
                         #     Computes which action to take. This implementation is just a 
                         #     placeholder for more elaborate implementations, such as reinforcement 
                         #     declarative memory. This method must be overwritten by inheriting 
-                        #     classes.
+                        #     classes. The current implementation corresponds to the mixed-strategy
+                        #     equilibrium as described in Diekmann & Przepiorka (2016), p.1316.
                         #----------------------------------------------------------------------------#
                         computeAction = function() {
-                          if (runif(1, 0, 1) < 1/PLAYERS_CNT) {
+                          coopProb <- 1 - sqrt(coopCost/UTIL_MAX)
+                          if (runif(1, 0, 1) < coopProb) {
                             return(COOPERATE)
                           } else {
                             return(DEVIATE)
                           }
                         }
                       )
+)
+
+#####------------------------------------- AsymmetricPlayer -------------------------------------#####
+# class: AsymmetricPlayer
+#     Class extending the basic Player class. This class represents a player using reinforcement 
+#     learning for decision making.
+#----------------------------------------------------------------------------------------------------#
+AsymmetricPlayer <- setRefClass("AsymmetricPlayer",
+                                
+                                #--------------------------------------------------------------------# 
+                                #  class inheritance
+                                #--------------------------------------------------------------------#
+                                contains = "Player",
+                                
+                                #--------------------------------------------------------------------# 
+                                #   class parameters (public by default)
+                                #     param:  othersCoopCosts
+                                #         the other player's costs to cooperate
+                                #--------------------------------------------------------------------#
+                                fields = c("othersCoopCosts"),
+                                
+                                #--------------------------------------------------------------------# 
+                                #   class methods (public by defualt)
+                                #--------------------------------------------------------------------#
+                                methods = list(
+                                  
+                                  #------------------------------------------------------------------# 
+                                  #   function: initialize
+                                  #     Initializes the Player: ID is set, history is initialized with 
+                                  #     an empty data frame and player is validated
+                                  #     param:  ID
+                                  #         the player's ID
+                                  #     param:  coopCost
+                                  #         the player's cost to cooperate
+                                  #------------------------------------------------------------------#
+                                  initialize = function(ID, coopCost, othersCoopCosts) {
+                                    othersCoopCosts <<- othersCoopCosts
+                                    callSuper(ID, coopCost)
+                                    if (LOG_LEVEL == "debug") {
+                                      print(paste("Asymmetric Player", ID, "successfully created!"))
+                                    }
+                                  },
+                                  
+                                  #------------------------------------------------------------------# 
+                                  #   function: validate
+                                  #     Integrity check for player: othersCoopCosts must be a vector 
+                                  #     with two elements.
+                                  #------------------------------------------------------------------#
+                                  validate = function() {
+                                    if (!length(othersCoopCosts == 2)) {
+                                      stop(paste("Error during player validation: 'othersCoopCosts' 
+                                                 must be a vector with two elements, but is:", 
+                                                 othersCoopCosts))
+                                    }
+                                    callSuper()
+                                  },
+                                  
+                                  #------------------------------------------------------------------# 
+                                  #   function: computeAction
+                                  #     Computes which action to take. The current implementation 
+                                  #     corresponds to the mixed-strategy equilibrium as described 
+                                  #     in Diekmann & Przepiorka (2016), p.1317.
+                                  #------------------------------------------------------------------#
+                                  computeAction = function() {
+                                    othersCostUtilRatio <- 1
+                                    for (i in 1:length(othersCoopCosts)) {
+                                      othersCostUtilRatio <- othersCostUtilRatio *
+                                        (othersCoopCosts[i] / UTIL_MAX)
+                                    }
+                                    othersCostUtilRatio <- othersCostUtilRatio^(1/2)
+                                    coopProb <- 1 - (UTIL_MAX/coopCost) * othersCostUtilRatio
+                                    if (runif(1, 0, 1) < coopProb) {
+                                      return(COOPERATE)
+                                    } else {
+                                      return(DEVIATE)
+                                    }
+                                  }
+                                )
 )
 
 #####----------------------------------- ReinforcementPlayer ------------------------------------#####
@@ -340,33 +420,41 @@ computeSimulation <- function(modelType = "default",
   if (vodType == "all") {
     vodType <- VOD_TYPES
   }
-
+  
   for (currVodType in 1:length(vodType)) {
     
-    directory <- createVodDirectory(baseDirectory, vodType[currVodType])
+    currVodType <- vodType[currVodType]
+    directory <- createVodDirectory(baseDirectory, currVodType)
     
     # determining the cooperation costs per player, depending on VOD type
     coopCosts <- c()
-    if (vodType[currVodType] == "sym") {
+    if (currVodType == "sym") {
       coopCosts <- c(COOP_COST_SYMM, COOP_COST_SYMM, COOP_COST_SYMM)
-    } else if (vodType[currVodType] == "asym1") {
+    } else if (currVodType == "asym1") {
       coopCosts <- c(COOP_COST_ASYMM1, COOP_COST_SYMM, COOP_COST_SYMM)
-    } else if (vodType[currVodType] == "asym2") {
+    } else if (currVodType == "asym2") {
       coopCosts <- c(COOP_COST_ASYMM2, COOP_COST_SYMM, COOP_COST_SYMM)
     } else {
-      stop(paste("Unknown VOD type:", vodType[currVodType]))
+      stop(paste("Unknown VOD type:", currVodType))
     }
     
     # simulation rounds resembling the amount of VOD games played in groups of players
     for (currSim in 1:simulationCount) {
       
+      
+      
       # initializing the players
       players <- list()
       for (currPlayer in 1:PLAYERS_CNT) {
+        currCoopCosts <- coopCosts[currPlayer]
         if (modelType == "default") {
-          players[[currPlayer]] <- Player$new(currPlayer, coopCosts[currPlayer])
+          if (currVodType == "sym") {
+            players[[currPlayer]] <- Player$new(currPlayer, currCoopCosts)
+          } else {
+            players[[currPlayer]] <- AsymmetricPlayer$new(currPlayer, currCoopCosts, coopCosts[-currPlayer])
+          }
         } else if (modelType == "reinf") {
-          players[[currPlayer]] <- ReinforcementPlayer$new(currPlayer, coopCosts[currPlayer])
+          players[[currPlayer]] <- ReinforcementPlayer$new(currPlayer, currCoopCosts)
         } else if (modelType == "decl-mem") {
           stop("Declarative memory not implemented yet!")
         } else if (modelType == "mel-vs-max") {
