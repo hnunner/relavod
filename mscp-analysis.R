@@ -87,17 +87,21 @@ extractLNISequence <- function(vodData) {
 #   Computation of the Latent Norm Index (LNI) for the given VOD data.
 #   TODOs: 
 #       - generalize code for different sequence lengths (quite dodgy the way it is)
-#   param:  vodData
-#       the VOD data 
+#   param:  lniSequence
+#       the LNI sequence 
 #----------------------------------------------------------------------------------------------------#
-computeLNIs <- function(vodData) {
-  lniSequence <- extractLNISequence(vodData)
+computeLNIs <- function(lniSequence) {
   
   # 1-sequences
   oneSequences <- c()
   i <- 1
   while (i < length(lniSequence)) {
     currInteraction <- lniSequence[i]
+    
+    if (currInteraction[1] == -1) {
+      i <- i+1
+      next
+    }
     
     # compare current interaction with next interactions, 
     # as long as we haven't reached the end of the sequence
@@ -227,7 +231,8 @@ analyzeData <- function(modelType = "default",
     
     # row binding of all simulations per VOD type
     for (i in 1:length(vodSimData)) {
-      vodTypeLNIs <- rbind(vodTypeLNIs, computeLNIs(vodSimData[[i]]))
+      lniSequence <- extractLNISequence(vodSimData[[i]])
+      vodTypeLNIs <- rbind(vodTypeLNIs, computeLNIs(lniSequence))
     }
     colnames(vodTypeLNIs) <- c((paste(currVodType, "_h1", sep = "")),
                                (paste(currVodType, "_h2", sep = "")),
@@ -289,16 +294,32 @@ createLNITestSequence1 <- function() {
   return(c(1,1,2,2,2,3,3,3,3,1,2,3,2,2,2,2,2,2,2))
 }
 
+createLNITestSequence2 <- function() {
+  return(c(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1))
+}
+
 #----------------------------------------------------------------------------------------------------#
 # function: testAnalysis
 #     Starting point for test analysis.
 #----------------------------------------------------------------------------------------------------#
 testAnalysis <- function() {
   vodTestData <- createVodTestData1()
-  computeLNIs(vodTestData)
+  lniSequence <- extractLNISequence(vodTestData)
+  lniSequence
+  computeLNIs(lniSequence)
   
   vodTestData <- createVodTestData2()
-  computeLNIs(vodTestData)
+  lniSequence <- extractLNISequence(vodTestData)
+  lniSequence
+  computeLNIs(lniSequence)
+  
+  lniSequence <- createLNITestSequence1()
+  lniSequence
+  computeLNIs(lniSequence)
+  
+  lniSequence <- createLNITestSequence2()
+  lniSequence
+  computeLNIs(lniSequence)
 }
 
 
