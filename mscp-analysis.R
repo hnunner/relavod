@@ -3,7 +3,7 @@
 BASE_DIR <- paste(dirname(sys.frame(1)$ofile), "/simulations/", sep = "")
 BASE_FILENAME <- "sim-"
 # log level
-LOG_LEVEL <- "all"    # possible: "all", debug", "none"
+LOG_LEVEL <- "debug"    # possible: "all", debug", "none"
 # VOD types
 VOD_TYPES <- c("sym", "asym1", "asym2")
 
@@ -187,6 +187,59 @@ computeLNIs <- function(lniSequence) {
   return(data.frame(lni13, lni23, lni33))
 }
 
+
+plotInteractionPattern <- function(vodData) {
+  vodData <- importVodSimData()
+  singleVodData <- vodData[[1]]
+  singleVodData <- singleVodData[2:length(singleVodData$round),2:4]
+  rownames(singleVodData) <- seq(length=nrow(singleVodData))
+  
+  p1Cooperations <- data.frame(which(singleVodData[,1] == 1), 1)
+  p2Cooperations <- data.frame(which(singleVodData[,2] == 1), 2)
+  p3Cooperations <- data.frame(which(singleVodData[,3] == 1), 3)
+
+  
+  quartz(width=11,height=6)
+  par(mfrow=c(3,1))
+    
+  plot(p1Cooperations, ann=FALSE, xaxt = "n", yaxt = "n", 
+       type = 'p', pch = 'x',
+       xlim = range(0:nrow(singleVodData)), ylim = range(0.5:3.5))
+  
+  mtext(side=1,"Period",line=2)       ## x-axis label
+  mtext(side=2,"Player",line=2)       ## y-axis label
+  # mtext(side=3,"",line=2,cex=1.5)   ## title
+  axis(side=1,at=seq(0,nrow(singleVodData),1),labels=seq(0,nrow(singleVodData),1))
+  axis(side=2,at=seq(0,3,1),labels=seq(0,3,1))
+  
+  points(p2Cooperations, type = 'p', pch = 'x')
+  points(p3Cooperations, type = 'p', pch = 'x')
+  
+  stripchart(p1Cooperates)
+  plot(p1Cooperates, type = 'o', pch = 'x', ylab = '')
+  
+  
+  
+  which(firstData)
+  
+  
+  
+  x <- c(2,8,11,19)
+  x <- data.frame(x,1) ## 1 is your "height"
+  x
+  plot(x, type = 'o', pch = '|', ylab = '')
+  
+  
+  
+  x <- stats::rnorm(50)
+  xr <- round(x, 1)
+  
+  x
+  stripchart(x)
+  m <- mean(par("usr")[1:2])
+  
+}
+
 #----------------------------------------------------------------------------------------------------#
 # function: analyzeData
 #     Starting point for the data analysis.
@@ -289,11 +342,33 @@ createVodTestData2 <- function() {
   return(data.frame(round,player1,player2,player3,util1,util2,util3))
 }
 
-
+#----------------------------------------------------------------------------------------------------#
+# function: createLNITestSequence1
+#     Creates an LNI test sequence
+#----------------------------------------------------------------------------------------------------#
 createLNITestSequence1 <- function() {
   return(c(1,1,2,2,2,3,3,3,3,1,2,3,2,2,2,2,2,2,2))
 }
 
+#----------------------------------------------------------------------------------------------------#
+# function: createVodTestData3
+#     Creates the second LNI example data, as in Diekmann & Przepiorka (2016), p.1318
+#----------------------------------------------------------------------------------------------------#
+createVodTestData2 <- function() {
+  round <- c(0,1,2,3,4,5,6,7,8,9,10)
+  player1 <- c(NA,"c","d","c","d","c","d","d","d","c","d")
+  player2 <- c(NA,"c","c","d","c","d","c","c","c","d","d")
+  player3 <- c(NA,"d","d","d","d","d","d","d","d","d","c")
+  util1 <- c(0,60,100,60,100,60,100,100,100,60,100)
+  util2 <- c(0,60,60,100,60,100,60,60,60,100,100)
+  util3 <- c(0,100,100,100,100,100,100,100,100,100,60)
+  return(data.frame(round,player1,player2,player3,util1,util2,util3))
+}
+
+#----------------------------------------------------------------------------------------------------#
+# function: createLNITestSequence2
+#     Creates an LNI test sequence
+#----------------------------------------------------------------------------------------------------#
 createLNITestSequence2 <- function() {
   return(c(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1))
 }
@@ -303,23 +378,61 @@ createLNITestSequence2 <- function() {
 #     Starting point for test analysis.
 #----------------------------------------------------------------------------------------------------#
 testAnalysis <- function() {
+  
+  # test case 1
   vodTestData <- createVodTestData1()
   lniSequence <- extractLNISequence(vodTestData)
-  lniSequence
-  computeLNIs(lniSequence)
+  lnis <- computeLNIs(lniSequence)
+  if (lnis$lni13 != 0) stop(paste("Error during computation of test case 1:\n",
+                                  "\texpected value for lni13: 0\n",
+                                  "\tcomputed value for lni13:", lnis$lni13))
+  if (lnis$lni23 != 0) stop(paste("Error during computation of test case 1:\n",
+                                  "\texpected value for lni23: 0\n",
+                                  "\tcomputed value for lni23:", lnis$lni23))
+  if (lnis$lni33 != 70) stop(paste("Error during computation of test case 1:\n",
+                                   "\texpected value for lni33: 70\n",
+                                   "\tcomputed value for lni33:", lnis$lni33))
   
+  # test case 2
   vodTestData <- createVodTestData2()
   lniSequence <- extractLNISequence(vodTestData)
-  lniSequence
-  computeLNIs(lniSequence)
+  lnis <- computeLNIs(lniSequence)
+  if (lnis$lni13 != 30) stop(paste("Error during computation of test case 2:\n",
+                                   "\texpected value for lni13: 30\n",
+                                   "\tcomputed value for lni13:", lnis$lni13))
+  if (lnis$lni23 != 50) stop(paste("Error during computation of test case 2:\n",
+                                   "\texpected value for lni23: 50\n",
+                                   "\tcomputed value for lni23:", lnis$lni23))
+  if (lnis$lni33 != 30) stop(paste("Error during computation of test case 2:\n",
+                                   "\texpected value for lni33: 30\n",
+                                   "\tcomputed value for lni33:", lnis$lni33))
   
-  lniSequence <- createLNITestSequence1()
-  lniSequence
-  computeLNIs(lniSequence)
+  # test case 3
+  lnis <- computeLNIs(createLNITestSequence1())
+  if (round(lnis$lni13, 3) != 73.684) stop(paste("Error during computation of test case 2:\n",
+                                                 "\texpected value for lni13: 73.684\n",
+                                                 "\tcomputed value for lni13:", round(lnis$lni13, 3)))
+  if (round(lnis$lni23, 3) != 15.789) stop(paste("Error during computation of test case 2:\n",
+                                                 "\texpected value for lni23: 15.789\n",
+                                                 "\tcomputed value for lni23:", round(lnis$lni23, 3)))
+  if (round(lnis$lni33, 3) != 21.053) stop(paste("Error during computation of test case 2:\n",
+                                                 "\texpected value for lni33: 21.053\n",
+                                                 "\tcomputed value for lni33:", round(lnis$lni33, 3)))
   
-  lniSequence <- createLNITestSequence2()
-  lniSequence
-  computeLNIs(lniSequence)
+  # test case 4  
+  lnis <- computeLNIs(createLNITestSequence2())
+  if (lnis$lni13 != 0) stop(paste("Error during computation of test case 2:\n",
+                                  "\texpected value for lni13: 0\n",
+                                  "\tcomputed value for lni13:", round(lnis$lni13, 3)))
+  if (lnis$lni23 != 0) stop(paste("Error during computation of test case 2:\n",
+                                  "\texpected value for lni23: 0\n",
+                                  "\tcomputed value for lni23:", round(lnis$lni23, 3)))
+  if (lnis$lni33 != 0) stop(paste("Error during computation of test case 2:\n",
+                                  "\texpected value for lni33: 0\n",
+                                  "\tcomputed value for lni33:", round(lnis$lni33, 3)))
+  
+  # success message at the end of the test analysis
+  print("Success: Test analysis completed.")
 }
 
 

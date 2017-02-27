@@ -7,8 +7,8 @@ COOP_COST_ASYMM1 <- 30
 COOP_COST_ASYMM2 <- 10
 UTIL_NONE <- 0
 # actions
-COOPERATE <- "c"
-DEVIATE <- "d"
+COOPERATE <- 1
+DEVIATE <- 0
 # log level
 LOG_LEVEL <- "debug"    # possible: "debug", "none"
 # file system
