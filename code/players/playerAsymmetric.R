@@ -39,7 +39,7 @@ AsymmetricPlayer <- setRefClass("AsymmetricPlayer",
                                   initialize = function(ID, coopCost, othersCoopCosts) {
                                     othersCoopCosts <<- othersCoopCosts
                                     callSuper(ID, coopCost)
-                                    if (LOG_LEVEL == "debug") {
+                                    if (LOG_LEVEL == "all") {
                                       print(paste("Asymmetric Player", ID, "successfully created!"))
                                     }
                                   },

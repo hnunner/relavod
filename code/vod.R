@@ -38,7 +38,7 @@ Vod <- setRefClass("Vod",
                                               "util3" = numeric(1), stringsAsFactors=FALSE)
                        roundsPlayed <<- 0
                        validate()
-                       if (LOG_LEVEL == "debug") {
+                       if (LOG_LEVEL == "all") {
                          print("VOD successfully created!")
                        }
                      },

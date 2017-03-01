@@ -42,7 +42,7 @@ Player <- setRefClass("Player",
                                                  "player2" = character(1), "player3" = character(1),
                                                  "util" = numeric(1), stringsAsFactors=FALSE)
                           validate()
-                          if (LOG_LEVEL == "debug") {
+                          if (LOG_LEVEL == "all") {
                             print(paste("Player", ID, "successfully created!"))
                           }
                         },
