@@ -1,3 +1,4 @@
+######################################## SOURCING MOTHER CLASS #######################################
 if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
 
 #####------------------------------------- SymmetricPlayer --------------------------------------#####
