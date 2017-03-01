@@ -160,8 +160,7 @@ storeData <- function(data, directory, simulationCnt) {
 #     Start and central organizational point of the simulation. Within this function the whole logic
 #     is composed together to completely simulate the VOD and store the results.
 #   param:  modelType
-#       the type of model used for the simulation
-#       possible: "default", "reinf", "decl-mem", "mel-vs-max"
+#       the type of model used for the simulation - for details, see constants.R
 #   param:  vodType
 #       the type of VOD used for the simulation
 #       possible: "all", "sym", "asym1", "asym2"
@@ -170,7 +169,7 @@ storeData <- function(data, directory, simulationCnt) {
 #   param:  interactionRounds
 #       the amount of interaction rounds per simulation
 #----------------------------------------------------------------------------------------------------#
-computeSimulation <- function(modelType = "default",
+computeSimulation <- function(modelType = MODEL_TYPES[2],
                               vodType = "all",
                               simulationCount = 30,                  # 120 (subjects) / 4 (conditions)
                               interactionRounds = 56) {

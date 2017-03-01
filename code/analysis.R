@@ -21,7 +21,7 @@ source(paste(BASE_DIR, "constants.R", sep = ""))
 #         the type of VOD used for the simulation
 #         possible: "sym", "asym1", "asym2"
 #----------------------------------------------------------------------------------------------------#
-importVodSimData <- function(modelType = "default",
+importVodSimData <- function(modelType = MODEL_TYPES[2],
                              date = "latest",
                              dateCount = "latest", 
                              vodType = "sym") {
@@ -259,7 +259,7 @@ plotInteractionPatterns <- function(vodData = importVodSimData()) {
 #         the type of VOD used for the simulation
 #         possible: "all", "sym", "asym1", "asym2"
 #----------------------------------------------------------------------------------------------------#
-analyzeData <- function(modelType = "default",
+analyzeData <- function(modelType = MODEL_TYPES[2],
                         date = "latest",
                         dateCount = "latest",
                         vodType = "all") {
@@ -272,7 +272,7 @@ analyzeData <- function(modelType = "default",
   for (i in 1:length(vodType)) {
     currVodType <- vodType[i]
     
-    if (LOG_LEVEL == "all") {
+    if (LOG_LEVEL == "debug") {
       cat(paste("Analyzing data for:
                 model type:\t", modelType, "
                 date:\t\t", date, "

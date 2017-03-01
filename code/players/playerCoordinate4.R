@@ -19,6 +19,22 @@ Coordinate4Player <- setRefClass("Coordinate4Player",
                                    methods = list(
                                      
                                      #---------------------------------------------------------------# 
+                                     #   function: initialize
+                                     #     Initializes the Player.
+                                     #     param:  ID
+                                     #         the player's ID
+                                     #     param:  coopCost
+                                     #         the player's cost to cooperate
+                                     #---------------------------------------------------------------#
+                                     initialize = function(ID, coopCost) {
+                                       callSuper(ID, coopCost)
+                                       if (LOG_LEVEL == "debug") {
+                                         print(paste("Coordinate-4 Player", ID, 
+                                                     "successfully created!"))
+                                       }
+                                     },
+                                     
+                                     #---------------------------------------------------------------# 
                                      #  function: computeAction
                                      #    TODO
                                      #---------------------------------------------------------------#
