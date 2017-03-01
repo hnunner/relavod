@@ -1,133 +1,8 @@
 ########################################## GLOBAL PARAMETERS #########################################
-# game design
-PLAYERS_CNT <- 3
-UTIL_MAX <- 80
-COOP_COST_SYMM <- 50
-COOP_COST_ASYMM1 <- 30
-COOP_COST_ASYMM2 <- 10
-UTIL_NONE <- 0
-# actions
-COOPERATE <- 1
-DEVIATE <- 0
-# log level
-LOG_LEVEL <- "debug"    # possible: "debug", "none"
-# file system
-BASE_DIR <- paste(dirname(sys.frame(1)$ofile), "/simulations/", sep = "")
-BASE_FILENAME <- "sim-"
-# VOD types
-VOD_TYPES <- c("sym", "asym1", "asym2")
-
+BASE_DIR <- dirname(sys.frame(1)$ofile)
 
 ############################################## CLASSES ###############################################
-#####------------------------------------------- VOD --------------------------------------------#####
-# class: Vod
-#     Class representing the Volunteer's Dilemma game. It holds the basic game logic (function 
-#     "computeRound"), the players, the game history and a counter for the rounds played.
-#     ________________________________________________________________________________________
-#     "Reference Class" (RC) concept found at http://adv-r.had.co.nz/OO-essentials.html
-#----------------------------------------------------------------------------------------------------#
-Vod <- setRefClass("Vod",
-                   
-                   #---------------------------------------------------------------------------------# 
-                   #  class parameters (public by default)
-                   #    param:  players 
-                   #        list of players involved in the VOD
-                   #    param:  history
-                   #        game history, consisting of round, player actions, player utilities
-                   #    param:  roundsPlayed
-                   #        counter for played rounds of the VOD
-                   #---------------------------------------------------------------------------------# 
-                   fields = c("players", "history", "roundsPlayed"),
-                   
-                   #---------------------------------------------------------------------------------# 
-                   #  class methods (public by defualt)
-                   #---------------------------------------------------------------------------------# 
-                   methods = list(
-                     
-                     #-------------------------------------------------------------------------------# 
-                     #  function: initialize
-                     #    Initializes the VOD: players are set, history is initialized with an empty
-                     #    data frame, round counter is initialized with 0 and VOD is validated
-                     #    param:  players
-                     #        the players involved in the VOD
-                     #-------------------------------------------------------------------------------# 
-                     initialize = function(players) {
-                       players <<- players
-                       history <<- data.frame("round" = numeric(1), "player1" = character(1), 
-                                              "player2" = character(1), "player3" = character(1),
-                                              "util1" = numeric(1), "util2" = numeric(1), 
-                                              "util3" = numeric(1), stringsAsFactors=FALSE)
-                       roundsPlayed <<- 0
-                       validate()
-                       if (LOG_LEVEL == "debug") {
-                         print("VOD successfully created!")
-                       }
-                     },
-                     
-                     #-------------------------------------------------------------------------------# 
-                     #  function: validate
-                     #    Integrity check of the VOD: checking the right amount of players.
-                     #-------------------------------------------------------------------------------# 
-                     validate = function() {
-                       if (length(players) != PLAYERS_CNT) {
-                         stop(paste("Invalid amount of players. ", 
-                                    "Required: ", PLAYERS_CNT, "; ",
-                                    "Received: ", length(players)))
-                       } 
-                     },
-                     
-                     #-------------------------------------------------------------------------------# 
-                     #  function: computeRound
-                     #    Funciton holding the actual game logic of a single round of the VOD.
-                     #-------------------------------------------------------------------------------# 
-                     computeRound = function() {
-                       
-                       # 1. simulation of actions for each player
-                       actions <- c()
-                       coop <- FALSE
-                       for (i in 1:length(players)) {
-                         # retrieval of list objects with [[]], instead of just reference pointer 
-                         # with [] --- for further information, see: 
-                         # https://rforpublichealth.blogspot.nl/2015/03/basics-of-lists.html
-                         action <- players[[i]]$computeAction()
-                         if (action == COOPERATE) {
-                           coop <- TRUE 
-                         }
-                         actions <- c(actions, action)
-                       }
-                       
-                       # 2. calculation of utilities, based on the player's actions
-                       utils <- c()
-                       for (i in 1:length(players)) {
-                         if (!coop) {
-                           utils <- c(utils, UTIL_NONE)
-                         } else {
-                           if (actions[i] == COOPERATE) {
-                             utils <- c(utils, UTIL_MAX - players[[i]]$coopCost)
-                           } 
-                           if (actions[i] == DEVIATE) {
-                             utils <- c(utils, UTIL_MAX)
-                           }
-                         }
-                       }
-                       
-                       # round simulation completed
-                       roundsPlayed <<- roundsPlayed + 1
-                       
-                       # assessing the player's action
-                       for (i in 1:length(players)) {
-                         action <- players[[i]]$assessAction(roundsPlayed, actions, utils[i])
-                       }
-                       
-                       # updating the VOD's game history
-                       history <<- rbind(history, c(roundsPlayed, actions, utils))
-                       
-                       if (LOG_LEVEL == "debug") {
-                         print(paste("Round", roundsPlayed, "successfully computed!"))
-                       }
-                     }
-                   )
-)
+
 
 #####------------------------------------------ Player ------------------------------------------#####
 # class: Player
@@ -330,15 +205,103 @@ ReinforcementPlayer <- setRefClass("ReinforcementPlayer",
 
 ############################################# FUNCTIONS ##############################################
 #----------------------------------------------------------------------------------------------------#
-#   function: createBaseDirectory
+#   function: initSimulation
+#     Imports required classes.
+#     param:  modelType
+#         the type of model used for the simulation
+#----------------------------------------------------------------------------------------------------#
+initSimulation <- function(modelType) {
+  
+  # constants
+  source(paste(BASE_DIR, "constants.R", sep = ""))
+  
+  # VOD class
+  if(!exists("Vod", mode="function")) source(paste(BASE_DIR, "vod.R", sep = ""))
+  
+  modelTypeFound <- FALSE
+  # if default model: symmetric + asymmetric (one-shot VOD mixed strategy equilibria)
+  if (modelType == MODEL_TYPES[1]) {
+    if(!exists("SymmetricPlayer", mode="function")) source(paste(BASE_DIR,
+                                                                 "symmetric-player.R", sep = ""))
+    if(!exists("AsymmetricPlayer", mode="function")) source(paste(BASE_DIR,
+                                                                  "asymmetric-player.R", sep = ""))
+    modelTypeFound <- TRUE
+    
+    # if not: find required model
+  } else {
+    for (i in 2:length(MODEL_TYPES)) {
+      if (modelType == MODEL_TYPES[i]) {
+        playerType <- paste(MODEL_TYPES[i], "Player", sep = "")
+        playerFile <- paste(playerType, ".R", sep = "")
+        if(!exists(playerType, mode="function")) source(paste(BASE_DIR, playerFile, sep = ""))
+        modelTypeFound <- TRUE
+      }
+    }
+  }
+  
+  if (!modelTypeFound) {
+    stop(paste("Unknown model type:", modelType))
+  }
+}
+
+#----------------------------------------------------------------------------------------------------#
+#   function: initPlayers
+#     Initializes the players.
+#     param:  modelType
+#         the type of model used for the simulation
+#     param:  vodType
+#         the type of the VOD
+#----------------------------------------------------------------------------------------------------#
+initPlayers <- function(modelType, vodType) {
+
+  # determining the cooperation costs per player, depending on VOD type
+  coopCosts <- c()
+  if (vodType == VOD_TYPES[1]) {
+    coopCosts <- c(COOP_COST_SYMM, COOP_COST_SYMM, COOP_COST_SYMM)
+  } else if (currVodType == VOD_TYPES[2]) {
+    coopCosts <- c(COOP_COST_ASYMM1, COOP_COST_SYMM, COOP_COST_SYMM)
+  } else if (currVodType == VOD_TYPES[3]) {
+    coopCosts <- c(COOP_COST_ASYMM2, COOP_COST_SYMM, COOP_COST_SYMM)
+  } else {
+    stop(paste("Unknown VOD type:", currVodType))
+  }
+
+  # initialization of players
+  players <- list()
+  for (currPlayer in 1:PLAYERS_CNT) {
+    currCoopCosts <- coopCosts[currPlayer]
+    
+    # default
+    if (modelType == MODEL_TYPES[1]) {
+      if (vodType == VOD_TYPES[1]) {
+        players[[currPlayer]] <- SymmetricPlayer$new(currPlayer, currCoopCosts)
+      } else {
+        players[[currPlayer]] <- AsymmetricPlayer$new(currPlayer, currCoopCosts, coopCosts[-currPlayer])
+      }
+      
+      # coordinate-4
+    } else if (modelType == MODEL_TYPES[2]) {
+      players[[currPlayer]] <- Coordinate4Player$new(currPlayer, currCoopCosts)
+      
+      # unknown
+    } else {
+      stop(paste("Unknown model type:", modelType))
+    }
+  }
+  
+  return(players)
+}
+
+#----------------------------------------------------------------------------------------------------#
+#   function: createSimulationsBaseDirectory
 #     Creates the base directory to store VOD simulation data in.
 #     param:  modelType
 #         the type of model to create the directory for
 #----------------------------------------------------------------------------------------------------#
-createBaseDirectory <- function(modelType) {
+createSimulationsBaseDirectory <- function(modelType) {
   
   # creation of base directory for the model type
-  modelTypeDir <- paste(BASE_DIR, modelType, "/", sep = "")
+  modelTypeDir <- paste(BASE_DIR, "/simulations/", modelType, "/", sep = "")
   if (!file.exists(modelTypeDir)) {
     dir.create(modelTypeDir)
   }
@@ -415,8 +378,9 @@ computeSimulation <- function(modelType = "default",
                               simulationCount = 30,                  # 120 (subjects) / 4 (conditions)
                               interactionRounds = 56) {
   
-  baseDirectory <- createBaseDirectory(modelType)
-  
+  # initializations
+  initSimulation(modelType)
+  baseDirectory <- createSimulationsBaseDirectory(modelType)
   if (vodType == "all") {
     vodType <- VOD_TYPES
   }
@@ -426,43 +390,11 @@ computeSimulation <- function(modelType = "default",
     currVodType <- vodType[currVodType]
     directory <- createVodDirectory(baseDirectory, currVodType)
     
-    # determining the cooperation costs per player, depending on VOD type
-    coopCosts <- c()
-    if (currVodType == "sym") {
-      coopCosts <- c(COOP_COST_SYMM, COOP_COST_SYMM, COOP_COST_SYMM)
-    } else if (currVodType == "asym1") {
-      coopCosts <- c(COOP_COST_ASYMM1, COOP_COST_SYMM, COOP_COST_SYMM)
-    } else if (currVodType == "asym2") {
-      coopCosts <- c(COOP_COST_ASYMM2, COOP_COST_SYMM, COOP_COST_SYMM)
-    } else {
-      stop(paste("Unknown VOD type:", currVodType))
-    }
-    
     # simulation rounds resembling the amount of VOD games played in groups of players
     for (currSim in 1:simulationCount) {
       
-      
-      
       # initializing the players
-      players <- list()
-      for (currPlayer in 1:PLAYERS_CNT) {
-        currCoopCosts <- coopCosts[currPlayer]
-        if (modelType == "default") {
-          if (currVodType == "sym") {
-            players[[currPlayer]] <- Player$new(currPlayer, currCoopCosts)
-          } else {
-            players[[currPlayer]] <- AsymmetricPlayer$new(currPlayer, currCoopCosts, coopCosts[-currPlayer])
-          }
-        } else if (modelType == "reinf") {
-          players[[currPlayer]] <- ReinforcementPlayer$new(currPlayer, currCoopCosts)
-        } else if (modelType == "decl-mem") {
-          stop("Declarative memory not implemented yet!")
-        } else if (modelType == "mel-vs-max") {
-          stop("Melioration vs. maximization not implemented yet!")
-        } else {
-          stop(paste("Unknown model type:", modelType))
-        }
-      }
+      players <- initPlayers(modelType, currVodType)
       
       # creating a new VOD for the players
       vod <- Vod$new(players)

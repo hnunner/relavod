@@ -1,12 +1,5 @@
 ########################################## GLOBAL PARAMETERS #########################################
-# file system
 BASE_DIR <- paste(dirname(sys.frame(1)$ofile), "/simulations/", sep = "")
-BASE_FILENAME <- "sim-"
-# log level
-LOG_LEVEL <- "debug"    # possible: "all", debug", "none"
-# VOD types
-VOD_TYPES <- c("sym", "asym1", "asym2")
-
 
 #----------------------------------------------------------------------------------------------------#
 # function: importVodSimData
@@ -74,9 +67,15 @@ extractLNISequence <- function(vodData) {
   moves <- vodData[vodData$round >= 1,2:4]
   
   moves$lniSequence <- -1
-  moves[moves$player1 == "c" & moves$player2 == "d" & moves$player3 == "d", "lniSequence"] <- 1
-  moves[moves$player1 == "d" & moves$player2 == "c" & moves$player3 == "d", "lniSequence"] <- 2
-  moves[moves$player1 == "d" & moves$player2 == "d" & moves$player3 == "c", "lniSequence"] <- 3
+  moves[moves$player1 == COOPERATE 
+        & moves$player2 == DEVIATE 
+        & moves$player3 == DEVIATE, "lniSequence"] <- 1
+  moves[moves$player1 == DEVIATE 
+        & moves$player2 == COOPERATE 
+        & moves$player3 == DEVIATE, "lniSequence"] <- 2
+  moves[moves$player1 == DEVIATE 
+        & moves$player2 == DEVIATE 
+        & moves$player3 == COOPERATE, "lniSequence"] <- 3
   
   return(moves$lniSequence)
 }
@@ -84,7 +83,7 @@ extractLNISequence <- function(vodData) {
 
 #----------------------------------------------------------------------------------------------------#
 # function: computeLNIs
-#   Computation of the Latent Norm Index (LNI) for the given VOD data.
+#   Computation of the Latent Norm Index (LNI) for the given LNI sequence.
 #   TODOs: 
 #       - generalize code for different sequence lengths (quite dodgy the way it is)
 #   param:  lniSequence
@@ -187,57 +186,60 @@ computeLNIs <- function(lniSequence) {
   return(data.frame(lni13, lni23, lni33))
 }
 
-
-plotInteractionPattern <- function(vodData) {
-  vodData <- importVodSimData()
-  singleVodData <- vodData[[1]]
-  singleVodData <- singleVodData[2:length(singleVodData$round),2:4]
-  rownames(singleVodData) <- seq(length=nrow(singleVodData))
+#----------------------------------------------------------------------------------------------------#
+# function: plotInteractionPatterns
+#   Plots the interaction patterns for the given VOD data.
+#   param:  vodData
+#       the VOD data to plot
+#   param:  vodType
+#       the VOD type
+#----------------------------------------------------------------------------------------------------#
+plotInteractionPatterns <- function(vodData = importVodSimData()) {
   
-  p1Cooperations <- data.frame(which(singleVodData[,1] == 1), 1)
-  p2Cooperations <- data.frame(which(singleVodData[,2] == 1), 2)
-  p3Cooperations <- data.frame(which(singleVodData[,3] == 1), 3)
-
+  # setting up multiple plots
+  plotsPerImage <- 10
+  quartz(width=11,height=6.5)
+  par(mfrow=c(plotsPerImage,1),oma=c(3,0,0,0), mai = c(0.1, 0.6, 0.1, 0.2))
   
-  quartz(width=11,height=6)
-  par(mfrow=c(3,1))
+  for (i in 1:length(vodData)) {
+  
+    singleVodData <- vodData[[i]]
+    singleVodData <- singleVodData[2:length(singleVodData$round),2:4]
+    rownames(singleVodData) <- seq(length=nrow(singleVodData))
     
-  plot(p1Cooperations, ann=FALSE, xaxt = "n", yaxt = "n", 
-       type = 'p', pch = 'x',
-       xlim = range(0:nrow(singleVodData)), ylim = range(0.5:3.5))
-  
-  mtext(side=1,"Period",line=2)       ## x-axis label
-  mtext(side=2,"Player",line=2)       ## y-axis label
-  # mtext(side=3,"",line=2,cex=1.5)   ## title
-  axis(side=1,at=seq(0,nrow(singleVodData),1),labels=seq(0,nrow(singleVodData),1))
-  axis(side=2,at=seq(0,3,1),labels=seq(0,3,1))
-  
-  points(p2Cooperations, type = 'p', pch = 'x')
-  points(p3Cooperations, type = 'p', pch = 'x')
-  
-  stripchart(p1Cooperates)
-  plot(p1Cooperates, type = 'o', pch = 'x', ylab = '')
-  
-  
-  
-  which(firstData)
-  
-  
-  
-  x <- c(2,8,11,19)
-  x <- data.frame(x,1) ## 1 is your "height"
-  x
-  plot(x, type = 'o', pch = '|', ylab = '')
-  
-  
-  
-  x <- stats::rnorm(50)
-  xr <- round(x, 1)
-  
-  x
-  stripchart(x)
-  m <- mean(par("usr")[1:2])
-  
+    p1Cooperations <- data.frame(which(singleVodData[,1] == 1), 1)
+    p2Cooperations <- data.frame(which(singleVodData[,2] == 1), 2)
+    p3Cooperations <- data.frame(which(singleVodData[,3] == 1), 3)
+    
+    # basic plot - including cooperation data for player 1
+    plot(p1Cooperations, ann=FALSE, xaxt = "n", yaxt = "n", 
+         type = 'p', pch = 'x',
+         xlim = range(1:nrow(singleVodData)), ylim = range(0.5:3.5))
+    # y-axis per plot
+    axis(side=2,at=seq(0,3,1),labels=seq(0,3,1), cex.axis = 0.7)
+    # adding cooperation data for players 2 and 3
+    points(p2Cooperations, type = 'p', pch = 'x')
+    points(p3Cooperations, type = 'p', pch = 'x')
+    # adding horizontal lines
+    segments(x0 = 0, x1 = nrow(singleVodData), y0 = c(1,2,3), col = "gray60")
+    
+    if (i %% plotsPerImage == 0) {
+      # overall x-axis
+      mtext(side=1,"Period",line=2.5)       
+      axis(side=1,at=seq(0,nrow(singleVodData),1),labels=seq(0,nrow(singleVodData),1), 
+           cex.axis = 0.7)
+      # overall y-axis label
+      mtext('Group members\' decision across sessions (x = \'cooperation\')', side = 2, 
+            outer = TRUE, line = -1.8)
+      # title
+      #title("My Title", outer=TRUE)
+      
+      if (i < length(vodData)) {
+        quartz(width=11,height=6.5)
+        par(mfrow=c(plotsPerImage,1),oma=c(3,0,0,0), mai = c(0.1, 0.6, 0.1, 0.2))
+      }
+    }
+  }
 }
 
 #----------------------------------------------------------------------------------------------------#
@@ -318,9 +320,12 @@ analyzeData <- function(modelType = "default",
 #----------------------------------------------------------------------------------------------------#
 createVodTestData1 <- function() {
   round <- c(0,1,2,3,4,5,6,7,8,9,10)
-  player1 <- c(NA,"d","c","c","d","d","c","d","c","d","d")
-  player2 <- c(NA,"c","d","d","d","c","d","d","d","c","d")
-  player3 <- c(NA,"d","d","d","c","d","d","d","d","d","c")
+  player1 <- c(NA,DEVIATE,COOPERATE,COOPERATE,DEVIATE,DEVIATE,
+               COOPERATE,DEVIATE,COOPERATE,DEVIATE,DEVIATE)
+  player2 <- c(NA,COOPERATE,DEVIATE,DEVIATE,DEVIATE,COOPERATE,
+               DEVIATE,DEVIATE,DEVIATE,COOPERATE,DEVIATE)
+  player3 <- c(NA,DEVIATE,DEVIATE,DEVIATE,COOPERATE,DEVIATE,
+               DEVIATE,DEVIATE,DEVIATE,DEVIATE,COOPERATE)
   util1 <- c(0,100,60,60,100,100,60,0,60,100,100)
   util2 <- c(0,60,100,100,100,60,100,0,100,60,100)
   util3 <- c(0,100,100,100,60,100,100,0,100,100,60)
@@ -333,9 +338,12 @@ createVodTestData1 <- function() {
 #----------------------------------------------------------------------------------------------------#
 createVodTestData2 <- function() {
   round <- c(0,1,2,3,4,5,6,7,8,9,10)
-  player1 <- c(NA,"c","d","c","d","c","d","d","d","c","d")
-  player2 <- c(NA,"c","c","d","c","d","c","c","c","d","d")
-  player3 <- c(NA,"d","d","d","d","d","d","d","d","d","c")
+  player1 <- c(NA,COOPERATE,DEVIATE,COOPERATE,DEVIATE,COOPERATE,
+               DEVIATE,DEVIATE,DEVIATE,COOPERATE,DEVIATE)
+  player2 <- c(NA,COOPERATE,COOPERATE,DEVIATE,COOPERATE,DEVIATE,
+               COOPERATE,COOPERATE,COOPERATE,DEVIATE,DEVIATE)
+  player3 <- c(NA,DEVIATE,DEVIATE,DEVIATE,DEVIATE,DEVIATE,DEVIATE,
+               DEVIATE,DEVIATE,DEVIATE,COOPERATE)
   util1 <- c(0,60,100,60,100,60,100,100,100,60,100)
   util2 <- c(0,60,60,100,60,100,60,60,60,100,100)
   util3 <- c(0,100,100,100,100,100,100,100,100,100,60)
@@ -356,9 +364,12 @@ createLNITestSequence1 <- function() {
 #----------------------------------------------------------------------------------------------------#
 createVodTestData2 <- function() {
   round <- c(0,1,2,3,4,5,6,7,8,9,10)
-  player1 <- c(NA,"c","d","c","d","c","d","d","d","c","d")
-  player2 <- c(NA,"c","c","d","c","d","c","c","c","d","d")
-  player3 <- c(NA,"d","d","d","d","d","d","d","d","d","c")
+  player1 <- c(NA,COOPERATE,DEVIATE,COOPERATE,DEVIATE,COOPERATE,
+               DEVIATE,DEVIATE,DEVIATE,COOPERATE,DEVIATE)
+  player2 <- c(NA,COOPERATE,COOPERATE,DEVIATE,COOPERATE,DEVIATE,
+               COOPERATE,COOPERATE,COOPERATE,DEVIATE,DEVIATE)
+  player3 <- c(NA,DEVIATE,DEVIATE,DEVIATE,DEVIATE,DEVIATE,DEVIATE,
+               DEVIATE,DEVIATE,DEVIATE,COOPERATE)
   util1 <- c(0,60,100,60,100,60,100,100,100,60,100)
   util2 <- c(0,60,60,100,60,100,60,60,60,100,100)
   util3 <- c(0,100,100,100,100,100,100,100,100,100,60)
