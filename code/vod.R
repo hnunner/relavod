@@ -101,7 +101,7 @@ Vod <- setRefClass("Vod",
                        # updating the VOD's game history
                        history <<- rbind(history, c(roundsPlayed, actions, utils))
                        
-                       if (LOG_LEVEL == "debug") {
+                       if (LOG_LEVEL == "all") {
                          print(paste("Round", roundsPlayed, "successfully computed!"))
                        }
                      }

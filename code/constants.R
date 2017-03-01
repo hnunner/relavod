@@ -1,5 +1,7 @@
 ###################################### SHARED GLOBAL PARAMETERS ###################################### 
 # file system
+PLAYERS_DIR <<- paste(BASE_DIR, "players/", sep = "")
+SIM_DIR <<- paste(BASE_DIR, "../simulations/", sep = "")
 BASE_FILENAME <<- "sim-"
 
 # logging
@@ -35,6 +37,25 @@ UTIL_NONE <<- 0
 #     Checks the integrity of the constants.
 #----------------------------------------------------------------------------------------------------#
 checkIntegrity <- function() {
-  if (length(VOD_TYPES) != 2) stop("Data integrity check failed: wrong amount of VOD types")
+  if (length(VOD_TYPES) != 3) stop("Integrity check failed: invalid amount of VOD types")
+  if (VOD_TYPES[1] != "sym") stop("Integrity check failed: invalid first VOD type")
+  if (VOD_TYPES[2] != "asym1") stop("Integrity check failed: invalid second VOD type")
+  if (VOD_TYPES[3] != "asym2") stop("Integrity check failed: invalid third VOD type")
+  
+  if (length(MODEL_TYPES) != 2) stop("Integrity check failed: invalid amount of model types")
+  if (MODEL_TYPES[1] != "default") stop("Integrity check failed: invalid first model type")
+  if (MODEL_TYPES[2] != "Coordinate4") stop("Integrity check failed: invalid second model type")
+  
+  if (!file.exists(SIM_DIR)) {
+    stop("Integrity check failed: simulation directory missing")
+  }
+  
+  if (!file.exists(PLAYERS_DIR)) {
+    stop("Integrity check failed: players directory missing")
+  }
+  
+  if (LOG_LEVEL == "all") {
+    print("Success: Integrity check completed.")
+  }
 }
 checkIntegrity()
