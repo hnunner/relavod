@@ -18,7 +18,7 @@ VOD_TYPES <<- c("sym",
 # !!! ALWAYS APPEND NEW MODEL TYPES !!!
 # !!! DO NOT CHANGE ORDERING !!!
 MODEL_TYPES <<- c("default",                # one-shot VOD mixed strategy equilibria
-                  "Coordinate4")            # coordinate-x reinforcement strategy, with x=4
+                  "CoordinateX")            # coordinate-x reinforcement strategy
 
 # actions
 COOPERATE <<- 1
@@ -44,7 +44,7 @@ checkIntegrity <- function() {
   
   if (length(MODEL_TYPES) != 2) stop("Integrity check failed: invalid amount of model types")
   if (MODEL_TYPES[1] != "default") stop("Integrity check failed: invalid first model type")
-  if (MODEL_TYPES[2] != "Coordinate4") stop("Integrity check failed: invalid second model type")
+  if (MODEL_TYPES[2] != "CoordinateX") stop("Integrity check failed: invalid second model type")
   
   if (!file.exists(SIM_DIR)) {
     stop("Integrity check failed: simulation directory missing")

@@ -1,17 +1,21 @@
 ######################################## SOURCING MOTHER CLASS #######################################
 if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
-Q_START <<- 0.2
+PROP_START <<- 0.2
+X_MAX <<- 15
+EPSILON_START <<- 0.1
 
-#####------------------------------------ Coordinate4Player -------------------------------------#####
-# class: Coordinate4Player
+#####------------------------------------ CoordinateXPlayer -------------------------------------#####
+# class: CoordinateXPlayer
 #     Class extending the basic Player class. This class represents a player using a coordinate-x
-#     strategy, with x=4. Reinforcement learning is used to evaluate taken actions and thus as basis
-#     for decision making.
+#     strategy, with x representing at which position of an action sequence the player cooperates. 
+#     E.g., x=4 means that the player will deviate three times and then coordinate. Reinforcement 
+#     learning is used to evaluate taken actions and diminishing epsilon-greedy is used to balance 
+#     between exploration and exploitation.
 #     ________________________________________________________________________________________
 #     "Reference Class" (RC) concept found at http://adv-r.had.co.nz/OO-essentials.html
 #----------------------------------------------------------------------------------------------------#
-Coordinate4Player <- setRefClass("Coordinate4Player",
+CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                  
                                  #-------------------------------------------------------------------# 
                                  #  class inheritance
@@ -20,10 +24,16 @@ Coordinate4Player <- setRefClass("Coordinate4Player",
                                  
                                  #-------------------------------------------------------------------#
                                  #   class parameters (public by default)
-                                 #     param:  othersCoopCosts
-                                 #         the other player's costs to cooperate
+                                 #      param:  strategies
+                                 #          the player's strategies (see initialize())
+                                 #      param:  currentStrategy
+                                 #          the strategy currently used by the player
+                                 #      param:  actions
+                                 #          vector of action sequence for the upcoming rounds
+                                 #      param:  epsilon
+                                 #          balance between exploration and exploitation
                                  #-------------------------------------------------------------------#
-                                 fields = c("strategies", "currentStrategy", "actions"),
+                                 fields = c("strategies", "currentStrategy", "actions", "epsilon"),
                                  
                                  #-------------------------------------------------------------------#
                                  #  class methods (public by defualt)
@@ -38,29 +48,44 @@ Coordinate4Player <- setRefClass("Coordinate4Player",
                                    #     param:  coopCost
                                    #         the player's cost to cooperate
                                    #-----------------------------------------------------------------#
-                                   initialize = function(ID, coopCost) {
+                                   initialize = function(ID, coopCost, X) {
                                      
                                      # initialization of strategies
-                                     strategies <<- list(list("cooperate-1", Q_START, 
-                                                              COOPERATE), 
-                                                         list("cooperate-2", Q_START, 
-                                                              DEVIATE, COOPERATE),
-                                                         list("cooperate-3", Q_START, 
-                                                              DEVIATE, DEVIATE, COOPERATE),
-                                                         list("cooperate-4", Q_START, 
-                                                              DEVIATE, DEVIATE, DEVIATE, COOPERATE),
-                                                         list("cooperate-5", Q_START, 
-                                                              DEVIATE))
+                                     #    a single strategy is a tuple of:
+                                     #      1. after how many deviations a player cooperates
+                                     #      2. the player's propensity for the strategy
+                                     coord <- c(0:X)
+                                     prop <- rep(PROP_START, X+1)
+                                     strategies <<- data.frame(coord, prop)
                                      currentStrategy <<- NA
                                      
                                      # initialization of actions
                                      actions <<- c()
                                      
+                                     # initialization of epsilon
+                                     epsilon <<- EPSILON_START
+                                     
+                                     # initializations of super class
                                      callSuper(ID, coopCost)
+                                     
                                      if (LOG_LEVEL == "debug") {
-                                       print(paste("Coordinate-4 Player", ID, 
+                                       print(paste("Coordinate-X Player", ID, "whith X =", X,
                                                    "successfully created!"))
                                      }
+                                   },
+                                   
+                                   #----------------------------------------------------------------------------# 
+                                   #   function: validate
+                                   #     Integrity check for player: ID must be numeric.
+                                   #----------------------------------------------------------------------------#
+                                   validate = function() {
+                                     if (!is.numeric(X)) {
+                                       stop("Error during player validation: 'X' must be numeric!")
+                                     }
+                                     if (X > X_MAX) {
+                                       warning(paste("X =", X, "appears to be irrationally high!"))
+                                     }
+                                     callSuper()
                                    },
                                    
                                    #----------------------------------------------------------------------------# 
@@ -100,36 +125,40 @@ Coordinate4Player <- setRefClass("Coordinate4Player",
                                    #---------------------------------------------------------------#
                                    computeAction = function() {
                                      
-                                     # random number between 0 and sum of all propensities
-                                     randMax <- 0
-                                     for (i in 1:length(strategies)) {
-                                       randMax <- randMax + strategies[[i]][[2]]
-                                     }
-                                     
-                                     # selection of strategy / actions for the upcoming round(s)
-                                     if (length(actions) == 0) {
-                                       rand <- runif(1, 0, randMax)
-                                       addedPropensity <- 0
-                                       for (i in 1:length(strategies)) {
-                                         addedPropensity <- addedPropensity + strategies[[i]][[2]]
-                                         if (rand < addedPropensity) {
-                                           currentStrategy <<- strategies[[i]]
-                                           actions <<- tail(currentStrategy, 
-                                                            (length(currentStrategy) - 2))
-                                           if (LOG_LEVEL == "debug") {
-                                             print(paste("rand:", rand, 
-                                                         " - propensity:", addedPropensity,
-                                                         " - strategy:", currentStrategy[1]))
-                                           }
-                                           break()
+                                     # if no more actions planned ahead, choose a strategy
+                                     if (length(actions) <= 0) {
+                                       
+                                       # either explore other strategies, or exploit best strategy
+                                       #    using epsilon-greedy approach, as suggested by
+                                       #    Sutton & Barto (1998), p.148f.
+                                       if (runif(1) <= epsilon) {     # explore (epsilon %)
+                                         # sort by descending propensity and pick any but first 
+                                         # coord value
+                                         currentStrategy <<- strategies[
+                                           with(strategies, order(-prop)),1][sample(1:X+1,1)]
+                                       } else {                       # exploit (1-epsilon %)
+                                         # sort by descending propensity and pick first coord value
+                                         currentStrategy <<- strategies[
+                                           with(strategies, order(-prop)),1][1]
+                                       }
+                                       
+                                       # choose action sequence based on strategy
+                                       if (currentStrategy == 0) {
+                                         actions <<- c(DEVIATE)
+                                       } else {
+                                         actions <<- c()
+                                         i <- 1
+                                         while (i < currentStrategy) {
+                                           actions <<- c(actions, DEVIATE)
+                                           i <- i+1
                                          }
+                                         actions <<- c(actions, COOPERATE)
                                        }
                                      }
-                                     
+
                                      # extract current action
                                      action <- actions[[1]]
                                      actions <<- tail(actions, (length(actions) - 1))
-                                     
                                      return(action)
                                    }
                                  )
@@ -139,15 +168,15 @@ Coordinate4Player <- setRefClass("Coordinate4Player",
 testFunction <- function() {
   source('~/git/uu/mscp-model/code/simulation.R')
   source('~/git/uu/mscp-model/code/constants.R')
-  source('~/git/uu/mscp-model/code/players/playerCoordinate4.R')
+  source('~/git/uu/mscp-model/code/players/playerCoordinateX.R')
   
-  player <- Coordinate4Player$new(1, 2)
+  player <- CoordinateXPlayer$new(1, 2)
   
   for (i in 1:50) {
     dummyAction <- player$computeAction()
     player$assessAction(1,2,3)
   }
-
+  
   player$strategies[[1]][[1]]
   player$strategies[[1]][[2]]
   player$strategies[[2]][[1]]
