@@ -257,12 +257,12 @@ plotInteractionPatterns <- function(vodData = importVodSimData()) {
 #         (if undefined: latest available round of simulations)
 #     param:  vodType
 #         the type of VOD used for the simulation
-#         possible: "all", "sym", "asym1", "asym2"
+#         possible: "all", "VOD_TYPES[x]"
 #----------------------------------------------------------------------------------------------------#
 analyzeData <- function(modelType = MODEL_TYPES[2],
                         date = "latest",
                         dateCount = "latest",
-                        vodType = "all") {
+                        vodType = VOD_TYPES[1]) {
   
   if (vodType == "all") {
     vodType <- VOD_TYPES

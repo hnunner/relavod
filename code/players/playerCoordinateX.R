@@ -1,17 +1,33 @@
 ######################################## SOURCING MOTHER CLASS #######################################
 if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
-PROP_START <<- 0.2
-X_MAX <<- 15
-EPSILON_START <<- 0.1
+PROP_START <<- 100        # initial propensity for each strategy
+X_MAX <<- 15              # triggers a warning during initialization, when X exceeds X_MAX
+EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
+ALPHA <<- 0.1             # RL learning rate, the higher the more important recently learned 
+# information; 0 < ALPHA <= 1
+GAMMA <<- 0.1             # RL discount factor, the higher the more important the future rewards;
+# 0 <= GAMMA <= 1
 
 #####------------------------------------ CoordinateXPlayer -------------------------------------#####
 # class: CoordinateXPlayer
 #     Class extending the basic Player class. This class represents a player using a coordinate-x
 #     strategy, with x representing at which position of an action sequence the player cooperates. 
 #     E.g., x=4 means that the player will deviate three times and then coordinate. Reinforcement 
-#     learning is used to evaluate taken actions and diminishing epsilon-greedy is used to balance 
-#     between exploration and exploitation.
+#     learning is used to evaluate taken actions and epsilon-decay is used to balance between
+#     exploration and exploitation.
+#
+#     Free parameters:
+#       - PROP_START
+#       - EPSILON_START
+#       - ALPHA
+#       - GAMMA
+#       - optimalFutureProp
+#       - X
+#
+#     TODOs:
+#       - epsilon-decay
+#
 #     ________________________________________________________________________________________
 #     "Reference Class" (RC) concept found at http://adv-r.had.co.nz/OO-essentials.html
 #----------------------------------------------------------------------------------------------------#
@@ -32,8 +48,11 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                  #          vector of action sequence for the upcoming rounds
                                  #      param:  epsilon
                                  #          balance between exploration and exploitation
+                                 #      param:  optimalFutureProp
+                                 #          the optimal future propensity estimate
                                  #-------------------------------------------------------------------#
-                                 fields = c("strategies", "currentStrategy", "actions", "epsilon"),
+                                 fields = c("X", "strategies", "currentStrategy", "actions", 
+                                            "epsilon", "optimalFutureProp"),
                                  
                                  #-------------------------------------------------------------------#
                                  #  class methods (public by defualt)
@@ -47,8 +66,13 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #         the player's ID
                                    #     param:  coopCost
                                    #         the player's cost to cooperate
+                                   #     param:  X
+                                   #         the maximum position to cooperate in a sequence of 
+                                   #         actions
                                    #-----------------------------------------------------------------#
                                    initialize = function(ID, coopCost, X) {
+                                     
+                                     X <<- X
                                      
                                      # initialization of strategies
                                      #    a single strategy is a tuple of:
@@ -65,6 +89,9 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      # initialization of epsilon
                                      epsilon <<- EPSILON_START
                                      
+                                     # initialization of the optimal future propensity estimate
+                                     optimalFutureProp <<- (2*UTIL_MAX + UTIL_MAX-coopCost) / 3
+                                     
                                      # initializations of super class
                                      callSuper(ID, coopCost)
                                      
@@ -74,10 +101,10 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      }
                                    },
                                    
-                                   #----------------------------------------------------------------------------# 
+                                   #-----------------------------------------------------------------#
                                    #   function: validate
                                    #     Integrity check for player: ID must be numeric.
-                                   #----------------------------------------------------------------------------#
+                                   #-----------------------------------------------------------------#
                                    validate = function() {
                                      if (!is.numeric(X)) {
                                        stop("Error during player validation: 'X' must be numeric!")
@@ -88,41 +115,41 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      callSuper()
                                    },
                                    
-                                   #----------------------------------------------------------------------------# 
+                                   #-----------------------------------------------------------------#
                                    #   function: assessAction
                                    #     Assesses the player's action.
                                    #     param:  round
-                                   #         the round
+                                   #          the round
                                    #     param:  actions
-                                   #         actions played in the corresponding round by all players
+                                   #          actions played in the corresponding round by all players
                                    #     param:  util
-                                   #         utility earned in the corresponding round, based on the action taken
-                                   #----------------------------------------------------------------------------#
+                                   #          utility earned in the corresponding round, based on the 
+                                   #          action taken
+                                   #-----------------------------------------------------------------#
                                    assessAction = function(round, actions, util) {
                                      
-                                     # update the propensity for current strategy
-                                     # TODO - implement propper reinforcement learning algorithm
-                                     # to update propensities
-                                     currentStrategy[[2]] <<- currentStrategy[[2]] + 0.1
+                                     # new propensity based on update function by 
+                                     # Sutton & Barto (1998), p.148
+                                     oldProp <- strategies[strategies$coord == currentStrategy,2]
+                                     newProp <- oldProp + ALPHA * (util + GAMMA * 
+                                                                     optimalFutureProp - oldProp)
+                                     strategies[strategies$coord == currentStrategy,2] <<- newProp
                                      
-                                     
-                                     
-                                     
-                                     
-                                     for (i in 1:length(strategies)) {
-                                       if (strategies[[i]][[1]] == currentStrategy[[1]]) {
-                                         strategies[[i]][[2]] <<- currentStrategy[[2]]
+                                     if (LOG_LEVEL == "debug") {
+                                       if (ID == 1) {
+                                         print(strategies)
                                        }
                                      }
+                                     
                                      callSuper(round, actions, util)
                                    },
                                    
-                                   #---------------------------------------------------------------# 
+                                   #-----------------------------------------------------------------#
                                    #  function: computeAction
                                    #    Selects the first action from the actions list. If the 
                                    #    action list is empty, it will be refilled based on the
                                    #    propensities for the different strategies.
-                                   #---------------------------------------------------------------#
+                                   #-----------------------------------------------------------------#
                                    computeAction = function() {
                                      
                                      # if no more actions planned ahead, choose a strategy
@@ -155,7 +182,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                          actions <<- c(actions, COOPERATE)
                                        }
                                      }
-
+                                     
                                      # extract current action
                                      action <- actions[[1]]
                                      actions <<- tail(actions, (length(actions) - 1))
@@ -163,28 +190,3 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    }
                                  )
 )
-
-
-testFunction <- function() {
-  source('~/git/uu/mscp-model/code/simulation.R')
-  source('~/git/uu/mscp-model/code/constants.R')
-  source('~/git/uu/mscp-model/code/players/playerCoordinateX.R')
-  
-  player <- CoordinateXPlayer$new(1, 2)
-  
-  for (i in 1:50) {
-    dummyAction <- player$computeAction()
-    player$assessAction(1,2,3)
-  }
-  
-  player$strategies[[1]][[1]]
-  player$strategies[[1]][[2]]
-  player$strategies[[2]][[1]]
-  player$strategies[[2]][[2]]
-  player$strategies[[3]][[1]]
-  player$strategies[[3]][[2]]
-  player$strategies[[4]][[1]]
-  player$strategies[[4]][[2]]
-  player$strategies[[5]][[1]]
-  player$strategies[[5]][[2]]
-}

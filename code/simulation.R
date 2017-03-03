@@ -163,16 +163,16 @@ storeData <- function(data, directory, simulationCnt) {
 #       the type of model used for the simulation - for details, see constants.R
 #   param:  vodType
 #       the type of VOD used for the simulation
-#       possible: "all", "sym", "asym1", "asym2"
+#       possible: "all", "VOD_TYPES[x]"
 #   param:  simulationCount
 #       the amount of overall simulations
 #   param:  interactionRounds
 #       the amount of interaction rounds per simulation
 #----------------------------------------------------------------------------------------------------#
 computeSimulation <- function(modelType = MODEL_TYPES[2],
-                              vodType = "all",
-                              simulationCount = 30,                  # 120 (subjects) / 4 (conditions)
-                              interactionRounds = 56) {
+                              vodType = VOD_TYPES[1],
+                              simulationCount = 10,             # 120 (subjects) / 4 (conditions)
+                              interactionRounds = 1000) {     # was 56
   
   # initializations
   initSimulation(modelType)
