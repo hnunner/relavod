@@ -187,6 +187,51 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      action <- actions[[1]]
                                      actions <<- tail(actions, (length(actions) - 1))
                                      return(action)
+                                   },
+                                   
+                                   #----------------------------------------------------------------------------# 
+                                   #   function: getParameters
+                                   #     Returns the player's parametrical settings.
+                                   #----------------------------------------------------------------------------#
+                                   getParameters = function() {
+                                     return(c(callSuper(), 
+                                              paste("p", ID, "_X", sep = ""), X, 
+                                              paste("p", ID, "_prop_start", sep = ""), PROP_START, 
+                                              paste("p", ID, "_epsilon_start", sep = ""), EPSILON_START, 
+                                              paste("p", ID, "_alpha", sep = ""), ALPHA, 
+                                              paste("p", ID, "_gamma", sep = ""), GAMMA))
+                                   },
+                                   
+                                   #----------------------------------------------------------------------------# 
+                                   #   function: getPersonalDetailColumns
+                                   #     Returns the player's columns for personal details.
+                                   #----------------------------------------------------------------------------#
+                                   getPersonalDetailColumns = function() {
+                                     columns <- c(paste("p", ID, "_currstrat", sep = ""),
+                                                  paste("p", ID, "_actions", sep = ""),
+                                                  paste("p", ID, "_futprop", sep = ""))
+                                     for (i in 1:length(strategies$coord)) {
+                                       columns <- c(columns, paste("p", ID, "_coord", strategies[i,1], sep = ""))
+                                     }
+                                     return(columns)
+                                   },
+                                   
+                                   #-----------------------------------------------------------------#
+                                   #   function: getCurrentPersonalDetails
+                                   #     Returns the player's current personal details. In this case
+                                   #     the player's peronal strategy settings.
+                                   #     Formatting: c(prop_coord-0, prop_coord-1, ..., prop_coord-x)
+                                   #-----------------------------------------------------------------#
+                                   getCurrentPersonalDetails = function() {
+                                     actionSeq <- ""
+                                     for (action in actions) {
+                                       actionSeq <- paste(actionSeq, action)
+                                     }
+                                     details <- c(currentStrategy, actionSeq, round(optimalFutureProp, digits = 2))
+                                     for (i in 1:length(strategies$coord)) {
+                                       details <- c(details, round(strategies[i,2], digits = 2))
+                                     }
+                                     return(details)
                                    }
                                  )
 )

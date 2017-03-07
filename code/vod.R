@@ -32,10 +32,21 @@ Vod <- setRefClass("Vod",
                      #-------------------------------------------------------------------------------# 
                      initialize = function(players) {
                        players <<- players
-                       history <<- data.frame("round" = numeric(1), "player1" = character(1), 
-                                              "player2" = character(1), "player3" = character(1),
+                       history <<- data.frame("round" = numeric(1), "player1" = numeric(1), 
+                                              "player2" = numeric(1), "player3" = numeric(1),
                                               "util1" = numeric(1), "util2" = numeric(1), 
                                               "util3" = numeric(1), stringsAsFactors=FALSE)
+                       
+                       # additional player details
+                       for (i in 1:length(players)) {
+                         additionaCols <- players[[i]]$getPersonalDetailColumns()
+                         if (!all(is.na(additionaCols))) {
+                           for (currCol in additionaCols) {
+                             history[currCol] <<- numeric(1)
+                           }
+                         }
+                       }
+                       
                        roundsPlayed <<- 0
                        validate()
                        if (LOG_LEVEL == "all") {
@@ -99,7 +110,14 @@ Vod <- setRefClass("Vod",
                        }
                        
                        # updating the VOD's game history
-                       history <<- rbind(history, c(roundsPlayed, actions, utils))
+                       playersDetails <- c()
+                       for (i in 1:length(players)) {
+                         playerDetails <- players[[i]]$getCurrentPersonalDetails()
+                         if (!all(is.na(playerDetails))) {
+                           playersDetails <- c(playersDetails, playerDetails)
+                         }
+                       }
+                       history <<- rbind(history, c(roundsPlayed, actions, utils, playersDetails))
                        
                        if (LOG_LEVEL == "all") {
                          print(paste("Round", roundsPlayed, "successfully computed!"))

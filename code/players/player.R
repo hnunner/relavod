@@ -82,6 +82,32 @@ Player <- setRefClass("Player",
                         #----------------------------------------------------------------------------#
                         computeAction = function() {
                           return(COOPERATE)
+                        },
+                        
+                        #----------------------------------------------------------------------------# 
+                        #   function: getParameters
+                        #     Returns the player's parametrical settings.
+                        #----------------------------------------------------------------------------#
+                        getParameters = function() {
+                          return(c(paste("p", ID, "_coop_cost", sep = ""), coopCost))
+                        },
+                        
+                        #----------------------------------------------------------------------------# 
+                        #   function: getPersonalDetailColumns
+                        #     Returns the player's columns for personal details.
+                        #----------------------------------------------------------------------------#
+                        getPersonalDetailColumns = function() {
+                          return(NA)
+                        },
+                        
+                        #----------------------------------------------------------------------------# 
+                        #   function: getCurrentPersonalDetails
+                        #     Returns the player's current personal details, such as propensities.
+                        #     This can be used to extend the VOD's game history for each round.
+                        #----------------------------------------------------------------------------#
+                        getCurrentPersonalDetails = function() {
+                          return(NA)
                         }
+                        
                       )
 )

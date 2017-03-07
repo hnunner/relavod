@@ -50,7 +50,7 @@ initSimulation <- function(modelType) {
 #         the type of the VOD
 #----------------------------------------------------------------------------------------------------#
 initPlayers <- function(modelType, vodType) {
-
+  
   # determining the cooperation costs per player, depending on VOD type
   coopCosts <- c()
   if (vodType == VOD_TYPES[1]) {
@@ -62,7 +62,7 @@ initPlayers <- function(modelType, vodType) {
   } else {
     stop(paste("Unknown VOD type:", vodType))
   }
-
+  
   # initialization of players
   players <- list()
   for (currPlayer in 1:PLAYERS_CNT) {
@@ -141,17 +141,51 @@ createVodDirectory <- function(baseDir, vodType) {
 }
 
 #----------------------------------------------------------------------------------------------------#
+#  function: storeModelParameters
+#    Stores the model parameters in a CSV file.
+#    param:  directory
+#        the directory to store the parameters in
+#----------------------------------------------------------------------------------------------------#
+storeModelParameters <- function(directory, vod, modelType, vodType, vodCount, roundsPerVod) {
+
+  players <- vod$players
+  playersCount <- length(players)
+  
+  modelParams <- data.frame("model_type" = modelType, 
+                            "vod_type" = vodType, 
+                            "vod_count" = vodCount, 
+                            "rounds_per_vod" = roundsPerVod,
+                            "players_count" = playersCount,
+                            "util_max" = UTIL_MAX,
+                            "util_none" = UTIL_NONE,
+                            stringsAsFactors=FALSE)
+  
+  playerParameters <- c()
+  for (i in 1:playersCount) {
+    playerParameters <- c(playerParameters, players[[i]]$getParameters())
+  } 
+  
+  j <- 1
+  while (j < length(playerParameters)) {
+    modelParams[playerParameters[j]] <- playerParameters[j+1]
+    j <- j+2
+  }
+  
+  write.csv(modelParams, file = paste(directory, "model-params.csv", sep = ""))
+}
+
+#----------------------------------------------------------------------------------------------------#
 #   function: storeData
 #     Stores the given data.
 #     param:  data
 #         the data to be stored
 #     param:  directory
 #         the directory to store the data in
-#     param:  simulationCnt
-#         the counter of the simulation to be stored
+#     param:  vodCount
+#         the counter of the vod to be stored
 #----------------------------------------------------------------------------------------------------#
-storeData <- function(data, directory, simulationCnt) {
-  filename <- paste(directory, BASE_FILENAME, simulationCnt, ".Rdata", sep = "")
+storeData <- function(data, directory, vodCount) {
+  filename <- paste(directory, BASE_FILENAME, vodCount, ".Rdata", sep = "")
   save(data, file=filename)
 }
 
@@ -164,15 +198,15 @@ storeData <- function(data, directory, simulationCnt) {
 #   param:  vodType
 #       the type of VOD used for the simulation
 #       possible: "all", "VOD_TYPES[x]"
-#   param:  simulationCount
-#       the amount of overall simulations
-#   param:  interactionRounds
-#       the amount of interaction rounds per simulation
+#   param:  vodCount
+#       the amount of VODs
+#   param:  roundsPerVod
+#       the amount of interaction rounds per VOD
 #----------------------------------------------------------------------------------------------------#
-computeSimulation <- function(modelType = MODEL_TYPES[2],
-                              vodType = VOD_TYPES[1],
-                              simulationCount = 10,             # 120 (subjects) / 4 (conditions)
-                              interactionRounds = 1000) {     # was 56
+computeSimulation <- function(modelType = MODEL_TYPES[1],
+                              vodType = "all",
+                              vodCount = 10,             # 120 (subjects) / 4 (conditions)
+                              roundsPerVod = 25) {      # was 56
   
   # initializations
   initSimulation(modelType)
@@ -187,7 +221,7 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
     directory <- createVodDirectory(baseDirectory, currVodType)
     
     # simulation rounds resembling the amount of VOD games played in groups of players
-    for (currSim in 1:simulationCount) {
+    for (currVod in 1:vodCount) {
       
       # initializing the players
       players <- initPlayers(modelType, currVodType)
@@ -196,12 +230,13 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
       vod <- Vod$new(players)
       
       # actual VOD simulation
-      for (currInteractionRound in 1:interactionRounds) {
+      for (currRound in 1:roundsPerVod) {
         vod$computeRound()
       }
       
       # data storage
-      storeData(vod$history, directory, currSim)
+      storeModelParameters(directory, vod, modelType, currVodType, vodCount, roundsPerVod)
+      storeData(vod$history, directory, currVod)
     }
   }
 }

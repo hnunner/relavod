@@ -78,6 +78,19 @@ AsymmetricPlayer <- setRefClass("AsymmetricPlayer",
                                     } else {
                                       return(DEVIATE)
                                     }
+                                  },
+                                  
+                                  #----------------------------------------------------------------------------# 
+                                  #   function: getParameters
+                                  #     Returns the player's parametrical settings.
+                                  #----------------------------------------------------------------------------#
+                                  getParameters = function() {
+                                    othersCoopCostsSeq <- ""
+                                    for (othersCoopCost in othersCoopCosts) {
+                                      othersCoopCostsSeq <- paste(othersCoopCostsSeq, othersCoopCost)
+                                    }
+                                    return(c(callSuper(), 
+                                             paste("p", ID, "_others_coop_cost", sep = ""), othersCoopCostsSeq))
                                   }
                                 )
 )
