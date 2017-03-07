@@ -203,10 +203,10 @@ storeData <- function(data, directory, vodCount) {
 #   param:  roundsPerVod
 #       the amount of interaction rounds per VOD
 #----------------------------------------------------------------------------------------------------#
-computeSimulation <- function(modelType = MODEL_TYPES[1],
+computeSimulation <- function(modelType = MODEL_TYPES[2],
                               vodType = "all",
                               vodCount = 10,             # 120 (subjects) / 4 (conditions)
-                              roundsPerVod = 25) {      # was 56
+                              roundsPerVod = 56) {      # was 56
   
   # initializations
   initSimulation(modelType)

@@ -32,6 +32,11 @@ COOP_COST_ASYMM1 <<- 30
 COOP_COST_ASYMM2 <<- 10
 UTIL_NONE <<- 0
 
+# LNIs taken from experiment 1 (Diekmann & Przepiorka, 2016, p.1321, Table 3.)
+LNIS_EXP1 <- data.frame("sym_h1" = 3.3, "sym_h2" = 8.0, "sym_h3" = 49.5,
+                        "asym1_h1" = 34.9, "asym1_h2" = 8.2, "asym1_h3" = 13.4,
+                        "asym2_h1" = 61.7, "asym2_h2" = 1.5, "asym2_h3" = 6.7)
+
 #----------------------------------------------------------------------------------------------------#
 #   function: checkIntegrity
 #     Checks the integrity of the constants.

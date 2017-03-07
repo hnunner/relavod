@@ -46,7 +46,7 @@ importVodSimData <- function(modelType = MODEL_TYPES[2],
   
   vodSimData = list()
   simCountFiles <- list.files(vodTypeDir, recursive = FALSE)
-  for (i in 1:length(simCountFiles)) {
+  for (i in 1:(length(simCountFiles)-1)) {
     filename <- paste(vodTypeDir, "/", BASE_FILENAME, i, ".Rdata", sep = "")
     vodSimData[[i]] <- get(load(filename))
   }
@@ -203,7 +203,7 @@ plotInteractionPatterns <- function(vodData = importVodSimData()) {
   par(mfrow=c(plotsPerImage,1),oma=c(3,0,0,0), mai = c(0.1, 0.6, 0.1, 0.2))
   
   for (i in 1:length(vodData)) {
-  
+    
     singleVodData <- vodData[[i]]
     singleVodData <- singleVodData[2:length(singleVodData$round),2:4]
     rownames(singleVodData) <- seq(length=nrow(singleVodData))
@@ -243,6 +243,47 @@ plotInteractionPatterns <- function(vodData = importVodSimData()) {
   }
 }
 
+computeRMSE <- function(meanLNIs) {
+  return(sqrt(mean((meanLNIs - LNIS_EXP1)^2)))
+}
+
+plotGOF <- function(meanLNIs) {
+  
+  par(mfrow=c(1,3), oma = c(0, 0, 3, 0), mar = c(5, 3, 1, 1))
+  
+  LNIs <- rbind(meanLNIs, LNIS_EXP1)
+  cols <- c("gray", "black")
+  
+  # compare model and experimental data: Symmetric
+  plotDataSym1 <- data.frame(h1 = LNIs$sym_h1,
+                         h2 = LNIs$sym_h2,
+                         h3 = LNIs$sym_h3)
+  barplot(as.matrix(plotDataSym1), #main = "Symmetric", 
+          ylab = "LNI", xlab = "Symmetric", beside = TRUE, col = cols,
+          ylim = range(0:70))
+  
+  # compare model and experimental data: Asymmetric 1
+  plotDataAsym1 <- data.frame(h1 = LNIs$asym1_h1,
+                         h2 = LNIs$asym1_h2,
+                         h3 = LNIs$asym1_h3)
+  barplot(as.matrix(plotDataAsym1), #main = "Asymmetric 1", 
+          yaxt = "n", xlab = "Asymmetric 1", beside = TRUE, col = cols,
+          ylim = range(0:70))
+  
+  # compare model and experimental data: Asymmetric 2
+  plotDataAsym2 <- data.frame(h1 = LNIs$asym2_h1,
+                              h2 = LNIs$asym2_h2,
+                              h3 = LNIs$asym2_h3)
+  barplot(as.matrix(plotDataAsym2), #main = "Asymmetric 2", 
+          yaxt = "n", xlab = "Asymmetric 2", beside = TRUE, col = cols,
+          ylim = range(0:70))
+  
+  # legend and title
+  legend(x = "topright", y = 10, c("Model","Experiment"), cex=0.8, fill=cols)
+  title("Model Data vs. Experimental Data", outer=TRUE)
+}
+
+
 #----------------------------------------------------------------------------------------------------#
 # function: analyzeData
 #     Starting point for the data analysis.
@@ -262,7 +303,7 @@ plotInteractionPatterns <- function(vodData = importVodSimData()) {
 analyzeData <- function(modelType = MODEL_TYPES[2],
                         date = "latest",
                         dateCount = "latest",
-                        vodType = VOD_TYPES[1]) {
+                        vodType = "all") {
   
   if (vodType == "all") {
     vodType <- VOD_TYPES
@@ -272,7 +313,7 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
   for (i in 1:length(vodType)) {
     currVodType <- vodType[i]
     
-    if (LOG_LEVEL == "debug") {
+    if (LOG_LEVEL == "all") {
       cat(paste("Analyzing data for:
                 model type:\t", modelType, "
                 date:\t\t", date, "
@@ -307,9 +348,15 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
   }
   
   meanLNIs <- colMeans(LNIs)
+  RMSE <- computeRMSE(meanLNIs)
   
   if (LOG_LEVEL == "debug" || LOG_LEVEL == "all") {
+    print("mean LNIs simulation:\n")
     print(meanLNIs)
+    print("LNIs Experiment 1 - Diekmann & Przepiorka (2016):\n")
+    print(LNIS_EXP1)
+    print(paste("RMSE: ", RMSE, sep = ""))
+    plotGOF(meanLNIs)
   }
 }
 
