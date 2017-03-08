@@ -4,6 +4,7 @@ if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep
 PROP_START <<- 100        # initial propensity for each strategy
 X_MAX <<- 15              # triggers a warning during initialization, when X exceeds X_MAX
 EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
+EPSILON_DECAY <<- 0.995   # rate at which epsilon is decreasing over time
 ALPHA <<- 0.1             # RL learning rate, the higher the more important recently learned 
 # information; 0 < ALPHA <= 1
 GAMMA <<- 0.1             # RL discount factor, the higher the more important the future rewards;
@@ -131,15 +132,23 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #-----------------------------------------------------------------#
                                    assessAction = function(round, allPlayersActions, util) {
                                      
+                                     # if strategy has not been fully performed yet, add up 
+                                     # strategy's utility
                                      if (length(actions) > 0) {
                                        currentUtility <<- currentUtility + util
                                      } else {
-                                       # new propensity based on update function by 
+                                       # else, calculate new propensity based on update function by 
                                        # Sutton & Barto (1998), p.148
                                        oldProp <- strategies[strategies$coord == currentStrategy,2]
                                        newProp <- oldProp + ALPHA * 
                                          (currentUtility + GAMMA * optimalExpectedUtility - oldProp)
                                        strategies[strategies$coord == currentStrategy,2] <<- newProp
+                                       
+                                       # decaying of epsilon - after a strategy has been fully
+                                       # performed, not after each action, to ensure that each
+                                       # player has an equal probability to explore the same
+                                       # amount of strategies
+                                       epsilon <- epsilon * EPSILON_DECAY
                                      }
                                      
                                      if (LOG_LEVEL == "debug") {
@@ -221,7 +230,8 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #     Returns the player's columns for personal details.
                                    #-----------------------------------------------------------------#
                                    getPersonalDetailColumns = function() {
-                                     columns <- c(paste("p", ID, "_currstrat", sep = ""),
+                                     columns <- c(paste("p", ID, "_epsilon", sep = ""),
+                                                  paste("p", ID, "_currstrat", sep = ""),
                                                   paste("p", ID, "_actions", sep = ""),
                                                   paste("p", ID, "_optutil", sep = ""),
                                                   paste("p", ID, "_currutil", sep = ""))
@@ -243,7 +253,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      for (action in actions) {
                                        actionSeq <- paste(actionSeq, action)
                                      }
-                                     details <- c(currentStrategy, actionSeq, 
+                                     details <- c(epsilon, currentStrategy, actionSeq, 
                                                   round(optimalExpectedUtility, digits = 2),
                                                   round(currentUtility, digits = 2))
                                      for (i in 1:length(strategies$coord)) {
