@@ -46,7 +46,7 @@ importVodSimData <- function(modelType = MODEL_TYPES[2],
   
   vodSimData = list()
   simCountFiles <- list.files(vodTypeDir, recursive = FALSE)
-  for (i in 1:(length(simCountFiles)-1)) {
+  for (i in 1:(length(simCountFiles))) {
     filename <- paste(vodTypeDir, "/", BASE_FILENAME, i, ".Rdata", sep = "")
     vodSimData[[i]] <- get(load(filename))
   }

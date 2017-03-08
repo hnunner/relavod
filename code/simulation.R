@@ -141,12 +141,12 @@ createVodDirectory <- function(baseDir, vodType) {
 }
 
 #----------------------------------------------------------------------------------------------------#
-#  function: storeModelParameters
+#  function: getModelParameters
 #    Stores the model parameters in a CSV file.
 #    param:  directory
 #        the directory to store the parameters in
 #----------------------------------------------------------------------------------------------------#
-storeModelParameters <- function(directory, vod, modelType, vodType, vodCount, roundsPerVod) {
+getModelParameters <- function(vod, modelType, vodType, vodCount, roundsPerVod) {
 
   players <- vod$players
   playersCount <- length(players)
@@ -171,8 +171,18 @@ storeModelParameters <- function(directory, vod, modelType, vodType, vodCount, r
     j <- j+2
   }
   
-  write.csv(modelParams, file = paste(directory, "model-params.csv", sep = ""))
+  return(modelParams)
 }
+
+
+storeModelParameters <- function(modelParams, directory) {
+  parameterRows <- modelParams[[1]]
+  for (i in 2:length(modelParams)) {
+    parameterRows <- rbind(parameterRows, modelParams[[i]])
+  }
+  write.csv(parameterRows, file = paste(directory, "model-params.csv", sep = ""))
+}
+
 
 #----------------------------------------------------------------------------------------------------#
 #   function: storeData
@@ -206,7 +216,7 @@ storeData <- function(data, directory, vodCount) {
 computeSimulation <- function(modelType = MODEL_TYPES[2],
                               vodType = "all",
                               vodCount = 10,              # 120 (subjects) / 4 (conditions)
-                              roundsPerVod = 100) {      # was 56
+                              roundsPerVod = 15) {      # was 56
   
   # initializations
   initSimulation(modelType)
@@ -214,6 +224,8 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
   if (vodType == "all") {
     vodType <- VOD_TYPES
   }
+  
+  modelParams <- list()
   
   for (currVodType in 1:length(vodType)) {
     
@@ -235,8 +247,13 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
       }
       
       # data storage
-      storeModelParameters(directory, vod, modelType, currVodType, vodCount, roundsPerVod)
       storeData(vod$history, directory, currVod)
+      
+      # caching of current model's parameters
+      modelParams[[currVodType]] <- getModelParameters(vod, modelType, currVodType, vodCount, 
+                                                       roundsPerVod)
     }
   }
+  # joint storing of all model parameters
+  storeModelParameters(modelParams, baseDirectory)
 }
