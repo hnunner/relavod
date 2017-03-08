@@ -2,6 +2,31 @@
 BASE_DIR <<- paste(dirname(sys.frame(1)$ofile), "/", sep = "")
 source(paste(BASE_DIR, "constants.R", sep = ""))
 
+
+
+
+getVodBaseDir <- function(modelType = MODEL_TYPES[2],
+                          date = "latest",
+                          dateCount = "latest") {
+  modelDir <- paste(SIM_DIR, modelType, sep = "")
+  
+  if (date == "latest") {
+    dateDirs <- list.dirs(modelDir, recursive = FALSE)
+    dates <- gsub(paste(modelDir, "/", sep = ""), "", dateDirs, fixed = TRUE)
+    date <- max(dates)
+  }
+  dateDir <- paste(modelDir, "/", date, sep = "")
+  
+  if (dateCount == "latest") {
+    dateCountDirs <- list.dirs(dateDir, recursive = FALSE)
+    dateCounts <- gsub(paste(dateDir, "/", sep = ""), "", dateCountDirs, fixed = TRUE)
+    dateCount <- max(dateCounts)
+  }
+  dateCountDir <- paste(dateDir, "/", dateCount, sep = "")
+  return(dateCountDir)
+}
+
+
 #----------------------------------------------------------------------------------------------------#
 # function: importVodSimData
 #     Imports VOD simulation data. 
@@ -26,23 +51,9 @@ importVodSimData <- function(modelType = MODEL_TYPES[2],
                              dateCount = "latest", 
                              vodType = "sym") {
   
-  modelDir <- paste(SIM_DIR, modelType, sep = "")
+  vodBaseDir <- getVodBaseDir(modelType, date, dateCount)
   
-  if (date == "latest") {
-    dateDirs <- list.dirs(modelDir, recursive = FALSE)
-    dates <- gsub(paste(modelDir, "/", sep = ""), "", dateDirs, fixed = TRUE)
-    date <- max(dates)
-  }
-  dateDir <- paste(modelDir, "/", date, sep = "")
-  
-  if (dateCount == "latest") {
-    dateCountDirs <- list.dirs(dateDir, recursive = FALSE)
-    dateCounts <- gsub(paste(dateDir, "/", sep = ""), "", dateCountDirs, fixed = TRUE)
-    dateCount <- max(dateCounts)
-  }
-  dateCountDir <- paste(dateDir, "/", dateCount, sep = "")
-  
-  vodTypeDir <- paste(dateCountDir, "/", vodType, sep = "")
+  vodTypeDir <- paste(vodBaseDir, "/", vodType, sep = "")
   
   vodSimData = list()
   simCountFiles <- list.files(vodTypeDir, recursive = FALSE)
@@ -199,7 +210,7 @@ plotInteractionPatterns <- function(vodData = importVodSimData()) {
   
   # setting up multiple plots
   plotsPerImage <- 10
-  quartz(width=11,height=6.5)
+  #quartz(width=11,height=6.5)
   par(mfrow=c(plotsPerImage,1),oma=c(3,0,0,0), mai = c(0.1, 0.6, 0.1, 0.2))
   
   for (i in 1:length(vodData)) {
@@ -235,10 +246,10 @@ plotInteractionPatterns <- function(vodData = importVodSimData()) {
       # title
       #title("My Title", outer=TRUE)
       
-      if (i < length(vodData)) {
-        quartz(width=11,height=6.5)
-        par(mfrow=c(plotsPerImage,1),oma=c(3,0,0,0), mai = c(0.1, 0.6, 0.1, 0.2))
-      }
+      # if (i < length(vodData)) {
+      #   quartz(width=11,height=6.5)
+      #   par(mfrow=c(plotsPerImage,1),oma=c(3,0,0,0), mai = c(0.1, 0.6, 0.1, 0.2))
+      # }
     }
   }
 }
@@ -247,9 +258,9 @@ computeRMSE <- function(meanLNIs) {
   return(sqrt(mean((meanLNIs - LNIS_EXP1)^2)))
 }
 
-plotGOF <- function(meanLNIs) {
+plotGOF <- function(meanLNIs, RMSE) {
   
-  par(mfrow=c(1,3), oma = c(0, 1, 3, 0), mar = c(5, 3, 1, 1))
+  par(mfrow=c(1,3), oma = c(0, 4, 3, 0), mar = c(5, 2, 1, 1))
   
   LNIs <- rbind(meanLNIs, LNIS_EXP1)
   cols <- c("gray", "black")
@@ -258,29 +269,28 @@ plotGOF <- function(meanLNIs) {
   plotDataSym1 <- data.frame(h1 = LNIs$sym_h1,
                          h2 = LNIs$sym_h2,
                          h3 = LNIs$sym_h3)
-  barplot(as.matrix(plotDataSym1), #main = "Symmetric", 
-          ylab = "LNI", xlab = "Symmetric", beside = TRUE, col = cols,
-          ylim = range(0:100))
+  barplot(as.matrix(plotDataSym1), xlab = "Symmetric", 
+          beside = TRUE, col = cols, ylim = range(0:80))
   
   # compare model and experimental data: Asymmetric 1
   plotDataAsym1 <- data.frame(h1 = LNIs$asym1_h1,
                          h2 = LNIs$asym1_h2,
                          h3 = LNIs$asym1_h3)
-  barplot(as.matrix(plotDataAsym1), #main = "Asymmetric 1", 
-          yaxt = "n", xlab = "Asymmetric 1", beside = TRUE, col = cols,
-          ylim = range(0:100))
+  barplot(as.matrix(plotDataAsym1), yaxt = "n", xlab = "Asymmetric 1", 
+          beside = TRUE, col = cols, ylim = range(0:80))
   
   # compare model and experimental data: Asymmetric 2
   plotDataAsym2 <- data.frame(h1 = LNIs$asym2_h1,
                               h2 = LNIs$asym2_h2,
                               h3 = LNIs$asym2_h3)
-  barplot(as.matrix(plotDataAsym2), #main = "Asymmetric 2", 
-          yaxt = "n", xlab = "Asymmetric 2", beside = TRUE, col = cols,
-          ylim = range(0:100))
+  barplot(as.matrix(plotDataAsym2), yaxt = "n", xlab = "Asymmetric 2", 
+          beside = TRUE, col = cols, ylim = range(0:80))
   
   # legend and title
-  legend(x = "topright", y = 10, c("Model","Experiment"), cex=0.8, fill=cols)
-  title("Model Data vs. Experimental Data", outer=TRUE)
+  legend(x = "topright", y = 10, c("Model","Diekmann & Przepiorka (2016)"), cex=0.7, fill=cols)
+  title(paste("Model Data vs. Experimental Data (RMSE = ", 
+              round(RMSE, digits = 2), ")", sep = ""), outer=TRUE)
+  mtext('average LNI', side = 2, outer = TRUE, line = 1.5, cex = 0.7)
 }
 
 
@@ -341,6 +351,19 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
     } else {
       LNIs <- cbind(LNIs, vodTypeLNIs)
     }
+    
+    
+    
+    # exporting interaction patterns
+    w <- 1900                                           # width
+    h <- 1200                                            # height
+    u <- "px"                                           # units
+    r <- 196                                            # resolution
+    png(paste(getVodBaseDir(), "/", currVodType, "-interaction-patterns.png", sep = ""),
+        width = w, height = h, units = u, res = r)
+    plotInteractionPatterns(vodSimData)
+    dev.off()
+    
   }
   
   if (LOG_LEVEL == "all") {
@@ -350,13 +373,27 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
   meanLNIs <- colMeans(LNIs)
   RMSE <- computeRMSE(meanLNIs)
   
-  if (LOG_LEVEL == "debug" || LOG_LEVEL == "all") {
+  # exporting Goodness of Fit
+  w <- 1200                                           # width
+  h <- 700                                            # height
+  u <- "px"                                           # units
+  r <- 196                                            # resolution
+  png(paste(getVodBaseDir(), "/gof.png", sep = ""),
+      width = w, height = h, units = u, res = r)
+  plotGOF(meanLNIs, RMSE)
+  dev.off()
+  
+  # exporting LNI comparison data (model vs. experiment)
+  comparison <- rbind(meanLNIs, LNIS_EXP1)
+  comparison$source <- c("model", "experiment")
+  write.csv(comparison, file = paste(getVodBaseDir(), "/model-vs-experiment.csv", sep = ""))
+  
+  if (LOG_LEVEL == "all") {
     print("mean LNIs simulation:\n")
     print(meanLNIs)
     print("LNIs Experiment 1 - Diekmann & Przepiorka (2016):\n")
     print(LNIS_EXP1)
     print(paste("RMSE: ", RMSE, sep = ""))
-    plotGOF(meanLNIs)
   }
 }
 

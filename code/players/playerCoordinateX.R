@@ -93,7 +93,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      # initializations of super class
                                      callSuper(ID, coopCost)
                                      
-                                     if (LOG_LEVEL == "debug") {
+                                     if (LOG_LEVEL == "all") {
                                        print(paste("Coordinate-X Player", ID, "whith X =", X,
                                                    "successfully created!"))
                                      }
@@ -139,7 +139,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      # amount of strategies
                                      epsilon <<- epsilon * EPSILON_DECAY
                                    
-                                     if (LOG_LEVEL == "debug") {
+                                     if (LOG_LEVEL == "all") {
                                        if (ID == 1) {
                                          print(strategies)
                                        }

@@ -216,7 +216,7 @@ storeData <- function(data, directory, vodCount) {
 computeSimulation <- function(modelType = MODEL_TYPES[2],
                               vodType = "all",
                               vodCount = 10,              # 120 (subjects) / 4 (conditions)
-                              roundsPerVod = 15) {      # was 56
+                              roundsPerVod = 100) {       # was 56
   
   # initializations
   initSimulation(modelType)
