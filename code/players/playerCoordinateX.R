@@ -22,7 +22,7 @@ GAMMA <<- 0.1             # RL discount factor, the higher the more important th
 #       - EPSILON_START
 #       - ALPHA
 #       - GAMMA
-#       - optimalUtility
+#       - optimalExpectedUtility
 #       - X
 #
 #     TODOs:
@@ -48,11 +48,11 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                  #          vector of action sequence for the upcoming rounds
                                  #      param:  epsilon
                                  #          balance between exploration and exploitation
-                                 #      param:  optimalUtility
+                                 #      param:  optimalExpectedUtility
                                  #          the optimal utility estimate
                                  #-------------------------------------------------------------------#
                                  fields = c("X", "strategies", "currentStrategy", "actions", 
-                                            "epsilon", "optimalUtility", "currentUtility"),
+                                            "epsilon", "optimalExpectedUtility", "currentUtility"),
                                  
                                  #-------------------------------------------------------------------#
                                  #  class methods (public by defualt)
@@ -90,7 +90,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      epsilon <<- EPSILON_START
                                      
                                      # initialization of the optimal utility estimate
-                                     optimalUtility <<- UTIL_NONE
+                                     optimalExpectedUtility <<- UTIL_NONE
                                      
                                      # initialization of the current utility
                                      currentUtility <<- 0
@@ -137,8 +137,8 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                        # new propensity based on update function by 
                                        # Sutton & Barto (1998), p.148
                                        oldProp <- strategies[strategies$coord == currentStrategy,2]
-                                       newProp <- oldProp + ALPHA * (currentUtility + GAMMA * 
-                                                                       optimalUtility - oldProp)
+                                       newProp <- oldProp + ALPHA * 
+                                         (currentUtility + GAMMA * optimalExpectedUtility - oldProp)
                                        strategies[strategies$coord == currentStrategy,2] <<- newProp
                                      }
                                      
@@ -178,20 +178,22 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                        
                                        # choose action sequence and corresponding optimal expected 
                                        # utility based on strategy
-                                       optimalUtility <<- UTIL_NONE
+                                       optimalExpectedUtility <<- UTIL_NONE
                                        if (currentStrategy == 0) {
                                          actions <<- c(DEVIATE)
-                                         optimalUtility <<- UTIL_MAX
+                                         optimalExpectedUtility <<- UTIL_MAX
                                        } else {
                                          actions <<- c()
                                          i <- 1
                                          while (i < currentStrategy) {
                                            actions <<- c(actions, DEVIATE)
-                                           optimalUtility <<- optimalUtility + UTIL_MAX
+                                           optimalExpectedUtility <<- 
+                                             optimalExpectedUtility + UTIL_MAX
                                            i <- i+1
                                          }
                                          actions <<- c(actions, COOPERATE)
-                                         optimalUtility <<- optimalUtility + (UTIL_MAX - coopCost)
+                                         optimalExpectedUtility <<- 
+                                           optimalExpectedUtility + (UTIL_MAX - coopCost)
                                        }
                                      }
                                      
@@ -242,7 +244,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                        actionSeq <- paste(actionSeq, action)
                                      }
                                      details <- c(currentStrategy, actionSeq, 
-                                                  round(optimalUtility, digits = 2),
+                                                  round(optimalExpectedUtility, digits = 2),
                                                   round(currentUtility, digits = 2))
                                      for (i in 1:length(strategies$coord)) {
                                        details <- c(details, round(strategies[i,2], digits = 2))
