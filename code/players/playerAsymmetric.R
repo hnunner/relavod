@@ -81,10 +81,10 @@ AsymmetricPlayer <- setRefClass("AsymmetricPlayer",
                                   },
                                   
                                   #----------------------------------------------------------------------------# 
-                                  #   function: getParameters
+                                  #   function: getModelParameters
                                   #     Returns the player's parametrical settings.
                                   #----------------------------------------------------------------------------#
-                                  getParameters = function() {
+                                  getModelParameters = function() {
                                     othersCoopCostsSeq <- ""
                                     for (othersCoopCost in othersCoopCosts) {
                                       othersCoopCostsSeq <- paste(othersCoopCostsSeq, othersCoopCost)

@@ -73,7 +73,7 @@ Vod <- setRefClass("Vod",
                      computeRound = function() {
                        
                        # 1. simulation of actions for each player
-                       actions <- c()
+                       allPlayersActions <- c()
                        coop <- FALSE
                        for (i in 1:length(players)) {
                          # retrieval of list objects with [[]], instead of just reference pointer 
@@ -83,19 +83,19 @@ Vod <- setRefClass("Vod",
                          if (action == COOPERATE) {
                            coop <- TRUE 
                          }
-                         actions <- c(actions, action)
+                         allPlayersActions <- c(allPlayersActions, action)
                        }
                        
-                       # 2. calculation of utilities, based on the player's actions
+                       # 2. calculation of utilities, based on all player's actions
                        utils <- c()
                        for (i in 1:length(players)) {
                          if (!coop) {
                            utils <- c(utils, UTIL_NONE)
                          } else {
-                           if (actions[i] == COOPERATE) {
+                           if (allPlayersActions[i] == COOPERATE) {
                              utils <- c(utils, UTIL_MAX - players[[i]]$coopCost)
                            } 
-                           if (actions[i] == DEVIATE) {
+                           if (allPlayersActions[i] == DEVIATE) {
                              utils <- c(utils, UTIL_MAX)
                            }
                          }
@@ -106,7 +106,7 @@ Vod <- setRefClass("Vod",
                        
                        # assessing the player's action
                        for (i in 1:length(players)) {
-                         action <- players[[i]]$assessAction(roundsPlayed, actions, utils[i])
+                         action <- players[[i]]$assessAction(roundsPlayed, allPlayersActions, utils[i])
                        }
                        
                        # updating the VOD's game history
@@ -117,7 +117,7 @@ Vod <- setRefClass("Vod",
                            playersDetails <- c(playersDetails, playerDetails)
                          }
                        }
-                       history <<- rbind(history, c(roundsPlayed, actions, utils, playersDetails))
+                       history <<- rbind(history, c(roundsPlayed, allPlayersActions, utils, playersDetails))
                        
                        if (LOG_LEVEL == "all") {
                          print(paste("Round", roundsPlayed, "successfully computed!"))

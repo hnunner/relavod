@@ -65,13 +65,13 @@ Player <- setRefClass("Player",
                         #     Assesses the player's action.
                         #     param:  round
                         #         the round
-                        #     param:  actions
+                        #     param:  allPlayersActions
                         #         actions played in the corresponding round by all players
                         #     param:  util
                         #         utility earned in the corresponding round, based on the action taken
                         #----------------------------------------------------------------------------#
-                        assessAction = function(round, actions, util) {
-                          history <<- rbind(history, c(round, actions, util))
+                        assessAction = function(round, allPlayersActions, util) {
+                          history <<- rbind(history, c(round, allPlayersActions, util))
                         },
                         
                         #----------------------------------------------------------------------------# 
@@ -85,10 +85,10 @@ Player <- setRefClass("Player",
                         },
                         
                         #----------------------------------------------------------------------------# 
-                        #   function: getParameters
+                        #   function: getModelParameters
                         #     Returns the player's parametrical settings.
                         #----------------------------------------------------------------------------#
-                        getParameters = function() {
+                        getModelParameters = function() {
                           return(c(paste("p", ID, "_coop_cost", sep = ""), coopCost))
                         },
                         

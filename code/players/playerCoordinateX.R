@@ -22,7 +22,7 @@ GAMMA <<- 0.1             # RL discount factor, the higher the more important th
 #       - EPSILON_START
 #       - ALPHA
 #       - GAMMA
-#       - optimalFutureProp
+#       - optimalUtility
 #       - X
 #
 #     TODOs:
@@ -48,11 +48,11 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                  #          vector of action sequence for the upcoming rounds
                                  #      param:  epsilon
                                  #          balance between exploration and exploitation
-                                 #      param:  optimalFutureProp
-                                 #          the optimal future propensity estimate
+                                 #      param:  optimalUtility
+                                 #          the optimal utility estimate
                                  #-------------------------------------------------------------------#
                                  fields = c("X", "strategies", "currentStrategy", "actions", 
-                                            "epsilon", "optimalFutureProp"),
+                                            "epsilon", "optimalUtility", "currentUtility"),
                                  
                                  #-------------------------------------------------------------------#
                                  #  class methods (public by defualt)
@@ -89,8 +89,11 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      # initialization of epsilon
                                      epsilon <<- EPSILON_START
                                      
-                                     # initialization of the optimal future propensity estimate
-                                     optimalFutureProp <<- (2*UTIL_MAX + UTIL_MAX-coopCost) / 3
+                                     # initialization of the optimal utility estimate
+                                     optimalUtility <<- UTIL_NONE
+                                     
+                                     # initialization of the current utility
+                                     currentUtility <<- 0
                                      
                                      # initializations of super class
                                      callSuper(ID, coopCost)
@@ -120,20 +123,24 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #     Assesses the player's action.
                                    #     param:  round
                                    #          the round
-                                   #     param:  actions
+                                   #     param:  allPlayersActions
                                    #          actions played in the corresponding round by all players
                                    #     param:  util
                                    #          utility earned in the corresponding round, based on the 
                                    #          action taken
                                    #-----------------------------------------------------------------#
-                                   assessAction = function(round, actions, util) {
+                                   assessAction = function(round, allPlayersActions, util) {
                                      
-                                     # new propensity based on update function by 
-                                     # Sutton & Barto (1998), p.148
-                                     oldProp <- strategies[strategies$coord == currentStrategy,2]
-                                     newProp <- oldProp + ALPHA * (util + GAMMA * 
-                                                                     optimalFutureProp - oldProp)
-                                     strategies[strategies$coord == currentStrategy,2] <<- newProp
+                                     if (length(actions) > 0) {
+                                       currentUtility <<- currentUtility + util
+                                     } else {
+                                       # new propensity based on update function by 
+                                       # Sutton & Barto (1998), p.148
+                                       oldProp <- strategies[strategies$coord == currentStrategy,2]
+                                       newProp <- oldProp + ALPHA * (currentUtility + GAMMA * 
+                                                                       optimalUtility - oldProp)
+                                       strategies[strategies$coord == currentStrategy,2] <<- newProp
+                                     }
                                      
                                      if (LOG_LEVEL == "debug") {
                                        if (ID == 1) {
@@ -141,7 +148,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                        }
                                      }
                                      
-                                     callSuper(round, actions, util)
+                                     callSuper(round, allPlayersActions, util)
                                    },
                                    
                                    #-----------------------------------------------------------------#
@@ -169,17 +176,22 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                            with(strategies, order(-prop)),1][1]
                                        }
                                        
-                                       # choose action sequence based on strategy
+                                       # choose action sequence and corresponding optimal expected 
+                                       # utility based on strategy
+                                       optimalUtility <<- UTIL_NONE
                                        if (currentStrategy == 0) {
                                          actions <<- c(DEVIATE)
+                                         optimalUtility <<- UTIL_MAX
                                        } else {
                                          actions <<- c()
                                          i <- 1
                                          while (i < currentStrategy) {
                                            actions <<- c(actions, DEVIATE)
+                                           optimalUtility <<- optimalUtility + UTIL_MAX
                                            i <- i+1
                                          }
                                          actions <<- c(actions, COOPERATE)
+                                         optimalUtility <<- optimalUtility + (UTIL_MAX - coopCost)
                                        }
                                      }
                                      
@@ -189,11 +201,11 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      return(action)
                                    },
                                    
-                                   #----------------------------------------------------------------------------# 
-                                   #   function: getParameters
+                                   #-----------------------------------------------------------------#
+                                   #   function: getModelParameters
                                    #     Returns the player's parametrical settings.
-                                   #----------------------------------------------------------------------------#
-                                   getParameters = function() {
+                                   #-----------------------------------------------------------------#
+                                   getModelParameters = function() {
                                      return(c(callSuper(), 
                                               paste("p", ID, "_X", sep = ""), X, 
                                               paste("p", ID, "_prop_start", sep = ""), PROP_START, 
@@ -202,16 +214,18 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                               paste("p", ID, "_gamma", sep = ""), GAMMA))
                                    },
                                    
-                                   #----------------------------------------------------------------------------# 
+                                   #-----------------------------------------------------------------#
                                    #   function: getPersonalDetailColumns
                                    #     Returns the player's columns for personal details.
-                                   #----------------------------------------------------------------------------#
+                                   #-----------------------------------------------------------------#
                                    getPersonalDetailColumns = function() {
                                      columns <- c(paste("p", ID, "_currstrat", sep = ""),
                                                   paste("p", ID, "_actions", sep = ""),
-                                                  paste("p", ID, "_futprop", sep = ""))
+                                                  paste("p", ID, "_optutil", sep = ""),
+                                                  paste("p", ID, "_currutil", sep = ""))
                                      for (i in 1:length(strategies$coord)) {
-                                       columns <- c(columns, paste("p", ID, "_coord", strategies[i,1], sep = ""))
+                                       columns <- c(columns, paste("p", ID, "_coord", 
+                                                                   strategies[i,1], sep = ""))
                                      }
                                      return(columns)
                                    },
@@ -227,7 +241,9 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      for (action in actions) {
                                        actionSeq <- paste(actionSeq, action)
                                      }
-                                     details <- c(currentStrategy, actionSeq, round(optimalFutureProp, digits = 2))
+                                     details <- c(currentStrategy, actionSeq, 
+                                                  round(optimalUtility, digits = 2),
+                                                  round(currentUtility, digits = 2))
                                      for (i in 1:length(strategies$coord)) {
                                        details <- c(details, round(strategies[i,2], digits = 2))
                                      }
