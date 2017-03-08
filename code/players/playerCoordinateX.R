@@ -1,14 +1,14 @@
 ######################################## SOURCING MOTHER CLASS #######################################
 if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
-PROP_START <<- 100        # initial propensity for each strategy
 X_MAX <<- 15              # triggers a warning during initialization, when X exceeds X_MAX
+PROP_START <<- 100        # initial propensity for each strategy
 EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
-EPSILON_DECAY <<- 0.995   # rate at which epsilon is decreasing over time
-ALPHA <<- 0.1             # RL learning rate, the higher the more important recently learned 
-# information; 0 < ALPHA <= 1
-GAMMA <<- 0.1             # RL discount factor, the higher the more important the future rewards;
-# 0 <= GAMMA <= 1
+EPSILON_DECAY <<- 0.995   # rate at which epsilon is decreasing after each completion of a strategy
+ALPHA <<- 0.4             # RL learning rate, the higher the more important recently learned 
+                          # information; 0 < ALPHA <= 1
+GAMMA <<- 0.6             # RL discount factor, the higher the more important the future rewards;
+                          # 0 <= GAMMA <= 1
 
 #####------------------------------------ CoordinateXPlayer -------------------------------------#####
 # class: CoordinateXPlayer
@@ -19,15 +19,12 @@ GAMMA <<- 0.1             # RL discount factor, the higher the more important th
 #     exploration and exploitation.
 #
 #     Free parameters:
+#       - X
 #       - PROP_START
 #       - EPSILON_START
+#       - EPSILON_DECAY
 #       - ALPHA
 #       - GAMMA
-#       - optimalExpectedUtility
-#       - X
-#
-#     TODOs:
-#       - epsilon-decay
 #
 #     ________________________________________________________________________________________
 #     "Reference Class" (RC) concept found at http://adv-r.had.co.nz/OO-essentials.html
@@ -53,7 +50,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                  #          the optimal utility estimate
                                  #-------------------------------------------------------------------#
                                  fields = c("X", "strategies", "currentStrategy", "actions", 
-                                            "epsilon", "optimalExpectedUtility", "currentUtility"),
+                                            "epsilon", "optimalExpectedUtility"),
                                  
                                  #-------------------------------------------------------------------#
                                  #  class methods (public by defualt)
@@ -93,9 +90,6 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      # initialization of the optimal utility estimate
                                      optimalExpectedUtility <<- UTIL_NONE
                                      
-                                     # initialization of the current utility
-                                     currentUtility <<- 0
-                                     
                                      # initializations of super class
                                      callSuper(ID, coopCost)
                                      
@@ -132,25 +126,19 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #-----------------------------------------------------------------#
                                    assessAction = function(round, allPlayersActions, util) {
                                      
-                                     # if strategy has not been fully performed yet, add up 
-                                     # strategy's utility
-                                     if (length(actions) > 0) {
-                                       currentUtility <<- currentUtility + util
-                                     } else {
-                                       # else, calculate new propensity based on update function by 
-                                       # Sutton & Barto (1998), p.148
-                                       oldProp <- strategies[strategies$coord == currentStrategy,2]
-                                       newProp <- oldProp + ALPHA * 
-                                         (currentUtility + GAMMA * optimalExpectedUtility - oldProp)
-                                       strategies[strategies$coord == currentStrategy,2] <<- newProp
-                                       
-                                       # decaying of epsilon - after a strategy has been fully
-                                       # performed, not after each action, to ensure that each
-                                       # player has an equal probability to explore the same
-                                       # amount of strategies
-                                       epsilon <- epsilon * EPSILON_DECAY
-                                     }
+                                     # if all actions have been performces, calculate new propensity 
+                                     # based on update function by Sutton & Barto (1998), p.148
+                                     oldProp <- strategies[strategies$coord == currentStrategy,2]
+                                     newProp <- oldProp + ALPHA * 
+                                       (util + GAMMA * optimalExpectedUtility - oldProp)
+                                     strategies[strategies$coord == currentStrategy,2] <<- newProp
                                      
+                                     # decaying of epsilon - after a strategy has been fully
+                                     # performed, not after each action, to ensure that each
+                                     # player has an equal probability to explore the same
+                                     # amount of strategies
+                                     epsilon <<- epsilon * EPSILON_DECAY
+                                   
                                      if (LOG_LEVEL == "debug") {
                                        if (ID == 1) {
                                          print(strategies)
@@ -203,6 +191,9 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                          actions <<- c(actions, COOPERATE)
                                          optimalExpectedUtility <<- 
                                            optimalExpectedUtility + (UTIL_MAX - coopCost)
+                                         
+                                         optimalExpectedUtility <<- 
+                                           optimalExpectedUtility / length(actions)
                                        }
                                      }
                                      
@@ -220,7 +211,8 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      return(c(callSuper(), 
                                               paste("p", ID, "_X", sep = ""), X, 
                                               paste("p", ID, "_prop_start", sep = ""), PROP_START, 
-                                              paste("p", ID, "_epsilon_start", sep = ""), EPSILON_START, 
+                                              paste("p", ID, "_epsilon_start", sep = ""), EPSILON_START,
+                                              paste("p", ID, "_epsilon_decay", sep = ""), EPSILON_DECAY,
                                               paste("p", ID, "_alpha", sep = ""), ALPHA, 
                                               paste("p", ID, "_gamma", sep = ""), GAMMA))
                                    },
@@ -233,8 +225,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      columns <- c(paste("p", ID, "_epsilon", sep = ""),
                                                   paste("p", ID, "_currstrat", sep = ""),
                                                   paste("p", ID, "_actions", sep = ""),
-                                                  paste("p", ID, "_optutil", sep = ""),
-                                                  paste("p", ID, "_currutil", sep = ""))
+                                                  paste("p", ID, "_optexputil", sep = ""))
                                      for (i in 1:length(strategies$coord)) {
                                        columns <- c(columns, paste("p", ID, "_coord", 
                                                                    strategies[i,1], sep = ""))
@@ -253,9 +244,10 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      for (action in actions) {
                                        actionSeq <- paste(actionSeq, action)
                                      }
-                                     details <- c(epsilon, currentStrategy, actionSeq, 
-                                                  round(optimalExpectedUtility, digits = 2),
-                                                  round(currentUtility, digits = 2))
+                                     details <- c(round(epsilon, digits = 5), 
+                                                  currentStrategy, 
+                                                  actionSeq, 
+                                                  round(optimalExpectedUtility, digits = 2))
                                      for (i in 1:length(strategies$coord)) {
                                        details <- c(details, round(strategies[i,2], digits = 2))
                                      }

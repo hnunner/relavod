@@ -162,7 +162,7 @@ storeModelParameters <- function(directory, vod, modelType, vodType, vodCount, r
   
   playerParameters <- c()
   for (i in 1:playersCount) {
-    playerParameters <- c(playerParameters, players[[i]]$getParameters())
+    playerParameters <- c(playerParameters, players[[i]]$getModelParameters())
   } 
   
   j <- 1
@@ -205,8 +205,8 @@ storeData <- function(data, directory, vodCount) {
 #----------------------------------------------------------------------------------------------------#
 computeSimulation <- function(modelType = MODEL_TYPES[2],
                               vodType = "all",
-                              vodCount = 10,             # 120 (subjects) / 4 (conditions)
-                              roundsPerVod = 56) {      # was 56
+                              vodCount = 10,              # 120 (subjects) / 4 (conditions)
+                              roundsPerVod = 100) {      # was 56
   
   # initializations
   initSimulation(modelType)

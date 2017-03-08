@@ -249,7 +249,7 @@ computeRMSE <- function(meanLNIs) {
 
 plotGOF <- function(meanLNIs) {
   
-  par(mfrow=c(1,3), oma = c(0, 0, 3, 0), mar = c(5, 3, 1, 1))
+  par(mfrow=c(1,3), oma = c(0, 1, 3, 0), mar = c(5, 3, 1, 1))
   
   LNIs <- rbind(meanLNIs, LNIS_EXP1)
   cols <- c("gray", "black")
@@ -260,7 +260,7 @@ plotGOF <- function(meanLNIs) {
                          h3 = LNIs$sym_h3)
   barplot(as.matrix(plotDataSym1), #main = "Symmetric", 
           ylab = "LNI", xlab = "Symmetric", beside = TRUE, col = cols,
-          ylim = range(0:70))
+          ylim = range(0:100))
   
   # compare model and experimental data: Asymmetric 1
   plotDataAsym1 <- data.frame(h1 = LNIs$asym1_h1,
@@ -268,7 +268,7 @@ plotGOF <- function(meanLNIs) {
                          h3 = LNIs$asym1_h3)
   barplot(as.matrix(plotDataAsym1), #main = "Asymmetric 1", 
           yaxt = "n", xlab = "Asymmetric 1", beside = TRUE, col = cols,
-          ylim = range(0:70))
+          ylim = range(0:100))
   
   # compare model and experimental data: Asymmetric 2
   plotDataAsym2 <- data.frame(h1 = LNIs$asym2_h1,
@@ -276,7 +276,7 @@ plotGOF <- function(meanLNIs) {
                               h3 = LNIs$asym2_h3)
   barplot(as.matrix(plotDataAsym2), #main = "Asymmetric 2", 
           yaxt = "n", xlab = "Asymmetric 2", beside = TRUE, col = cols,
-          ylim = range(0:70))
+          ylim = range(0:100))
   
   # legend and title
   legend(x = "topright", y = 10, c("Model","Experiment"), cex=0.8, fill=cols)
