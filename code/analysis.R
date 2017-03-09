@@ -223,29 +223,38 @@ computeRMSE <- function(meanLNIs) {
 }
 
 
-############################################### PLOTS ################################################
+########################################## PLOTS / EXPORTS ###########################################
 #----------------------------------------------------------------------------------------------------#
 # function: plotInteractionPatterns
 #   Plots the interaction patterns for the given VOD data.
 #   param:  vodData
 #       the VOD data to plot
 #----------------------------------------------------------------------------------------------------#
-plotInteractionPatterns <- function(vodData = importVodSimData()) {
+plotInteractionPatterns <- function(vodData) {
   
   # setting up multiple plots
   plotsPerImage <- 10
-  #quartz(width=11,height=6.5)
   par(mfrow=c(plotsPerImage,1),oma=c(3,0,0,0), mai = c(0.1, 0.6, 0.1, 0.2))
   
+  # looping over the available VODs
   for (i in 1:length(vodData)) {
     
     singleVodData <- vodData[[i]]
     singleVodData <- singleVodData[2:length(singleVodData$round),2:4]
     rownames(singleVodData) <- seq(length=nrow(singleVodData))
     
-    p1Cooperations <- data.frame(which(singleVodData[,1] == 1), 1)
-    p2Cooperations <- data.frame(which(singleVodData[,2] == 1), 2)
-    p3Cooperations <- data.frame(which(singleVodData[,3] == 1), 3)
+    p1Cooperations <- data.frame("which" = numeric(1), "X1" = numeric(1))
+    if (length(which(singleVodData[,1] == 0)) < length(singleVodData$player1)) {
+      p1Cooperations <- data.frame(which(singleVodData[,1] == 1), 1)
+    }
+    p2Cooperations <- data.frame("which" = numeric(1), "X2" = numeric(1))
+    if (length(which(singleVodData[,2] == 0)) < length(singleVodData$player2)) {
+      p2Cooperations <- data.frame(which(singleVodData[,2] == 1), 2)
+    }
+    p3Cooperations <- data.frame("which" = numeric(1), "X3" = numeric(1))
+    if (length(which(singleVodData[,3] == 0)) < length(singleVodData$player3)) {
+      p3Cooperations <- data.frame(which(singleVodData[,3] == 1), 3)
+    }
     
     # basic plot - including cooperation data for player 1
     plot(p1Cooperations, ann=FALSE, xaxt = "n", yaxt = "n", 
@@ -259,7 +268,7 @@ plotInteractionPatterns <- function(vodData = importVodSimData()) {
     # adding horizontal lines
     segments(x0 = 0, x1 = nrow(singleVodData), y0 = c(1,2,3), col = "gray60")
     
-    if (i %% plotsPerImage == 0) {
+    if (i == length(vodData)) {
       # overall x-axis
       mtext(side=1,"Period",line=2.5)       
       axis(side=1,at=seq(0,nrow(singleVodData),1),labels=seq(0,nrow(singleVodData),1), 
@@ -267,21 +276,44 @@ plotInteractionPatterns <- function(vodData = importVodSimData()) {
       # overall y-axis label
       mtext('Group members\' decision across sessions (x = \'cooperation\')', side = 2, 
             outer = TRUE, line = -1.8)
-      # title
-      #title("My Title", outer=TRUE)
-      
-      # if (i < length(vodData)) {
-      #   quartz(width=11,height=6.5)
-      #   par(mfrow=c(plotsPerImage,1),oma=c(3,0,0,0), mai = c(0.1, 0.6, 0.1, 0.2))
-      # }
     }
+  }
+}
+
+#----------------------------------------------------------------------------------------------------#
+# function: exportInteractionPatterns
+#   Exports the interaction patterns for the given VOD data.
+#   param:  directory
+#       the storage directory
+#   param:  vodType
+#       the type of VOD (e.g., sym, asym1, asym2)
+#   param:  vodData
+#       the VOD data to export
+#----------------------------------------------------------------------------------------------------#
+exportInteractionPatterns <- function(directory, vodType, vodData) {
+  
+  fileNumber <- 1
+  while (length(vodData) > 0) {
+    maxLength <- if(length(vodData) > 10) 10 else length(vodData)
+    filename <- paste(directory, vodType, "-interaction-patterns-", fileNumber, ".png", sep = "") 
+
+    png(filename,
+        width = 1900, 
+        height = 1200, 
+        units = "px", 
+        res = 196)
+    plotInteractionPatterns(vodData[1:maxLength])
+    dev.off() 
+    
+    vodData[1:maxLength] <- NULL
+    fileNumber <- fileNumber+1
   }
 }
 
 #----------------------------------------------------------------------------------------------------#
 # function: plotGOF
 #   Plots the goodness of fit between the mean LNIs of a simulation and the mean LNIs of 
-#   experiment 1 in Diekmann & Przepiorka (2016)
+#   experiment 1 in Diekmann & Przepiorka (2016).
 #   param:  meanLNIs
 #       the mean LNIs of the simulation
 #----------------------------------------------------------------------------------------------------#
@@ -322,6 +354,40 @@ plotGOF <- function(meanLNIs) {
   mtext('average LNI', side = 2, outer = TRUE, line = 1.5, cex = 0.7)
 }
 
+#----------------------------------------------------------------------------------------------------#
+# function: exportGOF
+#   Exports the goodness of fit between the mean LNIs of a simulation and the mean LNIs of 
+#   experiment 1 in Diekmann & Przepiorka (2016).
+#   param:  directory
+#       the storage directory
+#   param:  meanLNIs
+#       the mean LNIs of the simulation
+#----------------------------------------------------------------------------------------------------#
+exportGOF <- function(directory, meanLNIs) {
+  png(paste(directory, "gof.png", sep = ""), 
+      width = 1200, 
+      height = 700, 
+      units = "px", 
+      res = 196)
+  plotGOF(meanLNIs)
+  dev.off()  
+}
+
+#----------------------------------------------------------------------------------------------------#
+# function: exportLNIComparison
+#   Exports the table showing the direct comparison between the mean LNIs of a simulation and 
+#   the mean LNIs of experiment 1 in Diekmann & Przepiorka (2016).
+#   param:  directory
+#       the storage directory
+#   param:  meanLNIs
+#       the mean LNIs of the simulation
+#----------------------------------------------------------------------------------------------------#
+exportLNIComparison <- function(directory, meanLNIs) {
+  comparison <- rbind(meanLNIs, LNIS_EXP1)
+  comparison$source <- c("model", "experiment")
+  write.csv(comparison, file = paste(directory, "model-vs-experiment.csv", sep = ""))
+}
+
 
 ############################################ COMPOSITIONS ############################################
 #----------------------------------------------------------------------------------------------------#
@@ -345,28 +411,29 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
                         dateCount = "latest",
                         vodType = "all") {
   
+  # initializations
+  exportDir <- paste(getVodBaseDir(modelType = modelType, 
+                                   date = date, 
+                                   dateCount = dateCount),
+                     "/", sep = "")
   if (vodType == "all") {
     vodType <- VOD_TYPES
   }
-  
   LNIs <- data.frame()
+  
+  # looping over the VOD types to be analyzed (e.g.: sym -> asym1 -> asym2)
   for (i in 1:length(vodType)) {
     currVodType <- vodType[i]
     
-    if (LOG_LEVEL == "all") {
-      cat(paste("Analyzing data for:
-                model type:\t", modelType, "
-                date:\t\t", date, "
-                date count:\t", dateCount, "
-                vod type:\t", currVodType,"
-                ########################\n"))
-    }
-    
+    # importing the required simulated data
     vodSimData <- importVodSimData(modelType = modelType, date = date, 
                                    dateCount = dateCount, vodType = currVodType)
-    vodTypeLNIs <- data.frame()
     
-    # row binding of all simulations per VOD type
+    # exporting interaction patterns
+    exportInteractionPatterns(exportDir, currVodType, vodSimData)
+        
+    # computation of LNIs per VOD type (e.g., sym, asym1, asym2)
+    vodTypeLNIs <- data.frame()
     for (i in 1:length(vodSimData)) {
       lniSequence <- extractLNISequence(vodSimData[[i]])
       vodTypeLNIs <- rbind(vodTypeLNIs, computeLNIs(lniSequence))
@@ -375,62 +442,23 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
                                (paste(currVodType, "_h2", sep = "")),
                                (paste(currVodType, "_h3", sep = "")))
     
-    # column binding of different VOD types
+    # column binding of LNIs for all different VOD types
     if (nrow(LNIs) == 0) {
       LNIs <- vodTypeLNIs
     } else {
       LNIs <- cbind(LNIs, vodTypeLNIs)
     }
-    
-    
-    
-    # exporting interaction patterns
-    # w <- 1900                                           # width
-    # h <- 1200                                            # height
-    # u <- "px"                                           # units
-    # r <- 196                                            # resolution
-    # png(paste(getVodBaseDir(modelType = modelType, date = date, dateCount = dateCount), 
-    #     "/", currVodType, "-interaction-patterns.png", sep = ""),
-    #     width = w, height = h, units = u, res = r)
-    # plotInteractionPatterns(vodSimData)
-    # dev.off()
-    
   }
   
-  if (LOG_LEVEL == "all") {
-    print(LNIs)
-  }
-  
+  # computation of mean LNIs
   meanLNIs <- colMeans(LNIs)
   
   # exporting Goodness of Fit
-  w <- 1200                                           # width
-  h <- 700                                            # height
-  u <- "px"                                           # units
-  r <- 196                                            # resolution
-  png(paste(getVodBaseDir(modelType = modelType, 
-                          date = date, 
-                          dateCount = dateCount), 
-            "/gof.png", sep = ""),
-      width = w, height = h, units = u, res = r)
-  plotGOF(meanLNIs)
-  dev.off()
+  exportGOF(exportDir, meanLNIs)
   
   # exporting LNI comparison data (model vs. experiment)
-  comparison <- rbind(meanLNIs, LNIS_EXP1)
-  comparison$source <- c("model", "experiment")
-  write.csv(comparison, file = paste(getVodBaseDir(modelType = modelType, 
-                                                   date = date, 
-                                                   dateCount = dateCount), 
-                                     "/model-vs-experiment.csv", sep = ""))
+  exportLNIComparison(exportDir, meanLNIs)
   
-  if (LOG_LEVEL == "all") {
-    print("mean LNIs simulation:\n")
-    print(meanLNIs)
-    print("LNIs Experiment 1 - Diekmann & Przepiorka (2016):\n")
-    print(LNIS_EXP1)
-    print(paste("RMSE: ", RMSE, sep = ""))
-  }
 }
 
 
