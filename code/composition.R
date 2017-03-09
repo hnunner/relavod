@@ -1,10 +1,36 @@
 ########################################## GLOBAL PARAMETERS #########################################
 BASE_DIR <<- paste(dirname(sys.frame(1)$ofile), "/", sep = "")
 
-source(paste(BASE_DIR, "simulation.R", sep = ""))
-source(paste(BASE_DIR, "analysis.R", sep = ""))
+############################################# FUNCTIONS ##############################################
+#----------------------------------------------------------------------------------------------------#
+#   function: initComposition
+#     Sources required files and classes.
+#----------------------------------------------------------------------------------------------------#
+initComposition <- function() {
+  source(paste(BASE_DIR, "constants.R", sep = ""))
+  source(paste(BASE_DIR, "simulation.R", sep = ""))
+  source(paste(BASE_DIR, "analysis.R", sep = ""))
+}
+initComposition()
 
-simulateAndAnalyze <- function() {
-  computeSimulation()
-  analyzeData()
+#----------------------------------------------------------------------------------------------------#
+#   function: simulateAndAnalyze
+#     Composition of a full simulation including data analysis.
+#----------------------------------------------------------------------------------------------------#
+simulateAndAnalyze <- function(modelType = MODEL_TYPES[1],
+                               vodType = "all",
+                               vodCount = 10,
+                               roundsPerVod = 100,
+                               date = "latest",
+                               dateCount = "latest") {
+  
+  # composition
+  computeSimulation(modelType = modelType,
+                    vodType = vodType,
+                    vodCount = vodCount,
+                    roundsPerVod = roundsPerVod)
+  analyzeData(modelType = modelType,
+              date = date,
+              dateCount = dateCount,
+              vodType = vodType)
 }

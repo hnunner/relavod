@@ -1,6 +1,6 @@
 ########################################## GLOBAL PARAMETERS #########################################
-BASE_DIR <<- paste(dirname(sys.frame(1)$ofile), "/", sep = "")
-source(paste(BASE_DIR, "constants.R", sep = ""))
+if (is.na(BASE_DIR)) BASE_DIR <<- paste(dirname(sys.frame(1)$ofile), "/", sep = "")
+if (!exists("MODEL_TYPES")) source(paste(BASE_DIR, "constants.R", sep = ""))
 
 
 
@@ -355,14 +355,14 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
     
     
     # exporting interaction patterns
-    w <- 1900                                           # width
-    h <- 1200                                            # height
-    u <- "px"                                           # units
-    r <- 196                                            # resolution
-    png(paste(getVodBaseDir(), "/", currVodType, "-interaction-patterns.png", sep = ""),
-        width = w, height = h, units = u, res = r)
-    plotInteractionPatterns(vodSimData)
-    dev.off()
+    # w <- 1900                                           # width
+    # h <- 1200                                            # height
+    # u <- "px"                                           # units
+    # r <- 196                                            # resolution
+    # png(paste(getVodBaseDir(modelType = modelType), "/", currVodType, "-interaction-patterns.png", sep = ""),
+    #     width = w, height = h, units = u, res = r)
+    # plotInteractionPatterns(vodSimData)
+    # dev.off()
     
   }
   
@@ -378,7 +378,7 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
   h <- 700                                            # height
   u <- "px"                                           # units
   r <- 196                                            # resolution
-  png(paste(getVodBaseDir(), "/gof.png", sep = ""),
+  png(paste(getVodBaseDir(modelType = modelType), "/gof.png", sep = ""),
       width = w, height = h, units = u, res = r)
   plotGOF(meanLNIs, RMSE)
   dev.off()
@@ -386,7 +386,7 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
   # exporting LNI comparison data (model vs. experiment)
   comparison <- rbind(meanLNIs, LNIS_EXP1)
   comparison$source <- c("model", "experiment")
-  write.csv(comparison, file = paste(getVodBaseDir(), "/model-vs-experiment.csv", sep = ""))
+  write.csv(comparison, file = paste(getVodBaseDir(modelType = modelType), "/model-vs-experiment.csv", sep = ""))
   
   if (LOG_LEVEL == "all") {
     print("mean LNIs simulation:\n")

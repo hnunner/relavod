@@ -70,6 +70,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #-----------------------------------------------------------------#
                                    initialize = function(ID, coopCost, X) {
                                      
+                                     # the 'X' in 'CoordinateX'
                                      X <<- X
                                      
                                      # initialization of strategies
@@ -126,17 +127,17 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #-----------------------------------------------------------------#
                                    assessAction = function(round, allPlayersActions, util) {
                                      
-                                     # if all actions have been performces, calculate new propensity 
+                                     # if all actions have been performed, calculate new propensity 
                                      # based on update function by Sutton & Barto (1998), p.148
                                      oldProp <- strategies[strategies$coord == currentStrategy,2]
                                      newProp <- oldProp + ALPHA * 
                                        (util + GAMMA * optimalExpectedUtility - oldProp)
                                      strategies[strategies$coord == currentStrategy,2] <<- newProp
                                      
-                                     # decaying of epsilon - after a strategy has been fully
-                                     # performed, not after each action, to ensure that each
+                                     # Decay of epsilon: after a strategy has been fully
+                                     # performed. Not after each action, to ensure that each
                                      # player has an equal probability to explore the same
-                                     # amount of strategies
+                                     # amount of strategies.
                                      epsilon <<- epsilon * EPSILON_DECAY
                                    
                                      if (LOG_LEVEL == "all") {
@@ -160,8 +161,8 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      if (length(actions) <= 0) {
                                        
                                        # either explore other strategies, or exploit best strategy
-                                       #    using epsilon-greedy approach, as suggested by
-                                       #    Sutton & Barto (1998), p.148f.
+                                       # using epsilon-greedy approach, as suggested by
+                                       # Sutton & Barto (1998), p.148f.
                                        if (runif(1) <= epsilon) {     # explore (epsilon %)
                                          # sort by descending propensity and pick any but first 
                                          # coord value

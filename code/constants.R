@@ -8,7 +8,7 @@ BASE_FILENAME <<- "sim-"
 LOG_LEVEL <<- "debug"    # possible: "all", debug", "none"
 
 # VOD types
-# !!! ALWAYS APPEND NEW MODEL TYPES !!!
+# !!! ALWAYS APPEND NEW VOD TYPES !!!
 # !!! DO NOT CHANGE ORDERING !!!
 VOD_TYPES <<- c("sym", 
                 "asym1", 
@@ -37,30 +37,6 @@ LNIS_EXP1 <- data.frame("sym_h1" = 3.3, "sym_h2" = 8.0, "sym_h3" = 49.5,
                         "asym1_h1" = 34.9, "asym1_h2" = 8.2, "asym1_h3" = 13.4,
                         "asym2_h1" = 61.7, "asym2_h2" = 1.5, "asym2_h3" = 6.7)
 
-#----------------------------------------------------------------------------------------------------#
-#   function: checkIntegrity
-#     Checks the integrity of the constants.
-#----------------------------------------------------------------------------------------------------#
-checkIntegrity <- function() {
-  if (length(VOD_TYPES) != 3) stop("Integrity check failed: invalid amount of VOD types")
-  if (VOD_TYPES[1] != "sym") stop("Integrity check failed: invalid first VOD type")
-  if (VOD_TYPES[2] != "asym1") stop("Integrity check failed: invalid second VOD type")
-  if (VOD_TYPES[3] != "asym2") stop("Integrity check failed: invalid third VOD type")
-  
-  if (length(MODEL_TYPES) != 2) stop("Integrity check failed: invalid amount of model types")
-  if (MODEL_TYPES[1] != "default") stop("Integrity check failed: invalid first model type")
-  if (MODEL_TYPES[2] != "CoordinateX") stop("Integrity check failed: invalid second model type")
-  
-  if (!file.exists(SIM_DIR)) {
-    stop("Integrity check failed: simulation directory missing")
-  }
-  
-  if (!file.exists(PLAYERS_DIR)) {
-    stop("Integrity check failed: players directory missing")
-  }
-  
-  if (LOG_LEVEL == "all") {
-    print("Success: Integrity check completed.")
-  }
-}
-checkIntegrity()
+
+###################################### EVENTUAL INTEGRITY CHECKS #####################################
+source(paste(BASE_DIR, "/tests/testConstants.R", sep = ""))

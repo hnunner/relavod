@@ -94,7 +94,9 @@ Player <- setRefClass("Player",
                         
                         #----------------------------------------------------------------------------# 
                         #   function: getPersonalDetailColumns
-                        #     Returns the player's columns for personal details.
+                        #     Returns the player's columns for personal details, such as 
+                        #     propensities. This can be used to extend the VOD's game history data 
+                        #     frame.
                         #----------------------------------------------------------------------------#
                         getPersonalDetailColumns = function() {
                           return(NA)

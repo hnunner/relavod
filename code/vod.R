@@ -109,7 +109,7 @@ Vod <- setRefClass("Vod",
                          action <- players[[i]]$assessAction(roundsPlayed, allPlayersActions, utils[i])
                        }
                        
-                       # updating the VOD's game history
+                       # updating the VOD's game history, including player's personal details, if available
                        playersDetails <- c()
                        for (i in 1:length(players)) {
                          playerDetails <- players[[i]]$getCurrentPersonalDetails()
