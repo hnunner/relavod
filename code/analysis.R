@@ -1,5 +1,5 @@
 ########################################## GLOBAL PARAMETERS #########################################
-if (is.na(BASE_DIR)) BASE_DIR <<- paste(dirname(sys.frame(1)$ofile), "/", sep = "")
+if (!exists("BASE_DIR")) BASE_DIR <<- paste(dirname(sys.frame(1)$ofile), "/", sep = "")
 if (!exists("MODEL_TYPES")) source(paste(BASE_DIR, "constants.R", sep = ""))
 
 
