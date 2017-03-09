@@ -3,11 +3,24 @@ if (is.na(BASE_DIR)) BASE_DIR <<- paste(dirname(sys.frame(1)$ofile), "/", sep = 
 if (!exists("MODEL_TYPES")) source(paste(BASE_DIR, "constants.R", sep = ""))
 
 
-
-
-getVodBaseDir <- function(modelType = MODEL_TYPES[2],
-                          date = "latest",
-                          dateCount = "latest") {
+######################################## FILE SYSTEM / IMPORTS #######################################
+#----------------------------------------------------------------------------------------------------#
+# function: getVodBaseDir
+#     Returns the base directory of a model.
+#     Data is stored as: "SIM_DIR/modelType/Date/dateCount/vodType/sim-X.Rdata"
+#     Base directory corresponds to: "SIM_DIR/modelType/Date/dateCount/."
+#     For available for modelTypes, see constants.R - 'MODEL_TYPES'
+#     Date format: yyyymmdd
+#     param:  modelType
+#         the model type used by the simulation
+#     param:  date
+#         the date of the simulation 
+#         (if undefined: latest available date)
+#     param:  dateCount
+#         defines the round of simulation of the given date
+#         (if undefined: latest available round of simulations)
+#----------------------------------------------------------------------------------------------------#
+getVodBaseDir <- function(modelType, date = "latest", dateCount = "latest") {
   modelDir <- paste(SIM_DIR, modelType, sep = "")
   
   if (date == "latest") {
@@ -22,20 +35,19 @@ getVodBaseDir <- function(modelType = MODEL_TYPES[2],
     dateCounts <- gsub(paste(dateDir, "/", sep = ""), "", dateCountDirs, fixed = TRUE)
     dateCount <- max(dateCounts)
   }
-  dateCountDir <- paste(dateDir, "/", dateCount, sep = "")
-  return(dateCountDir)
+  baseDir <- paste(dateDir, "/", dateCount, sep = "")
+  
+  return(baseDir)
 }
-
 
 #----------------------------------------------------------------------------------------------------#
 # function: importVodSimData
 #     Imports VOD simulation data. 
-#     Data is stored as: "SIM_DIR/modelType/Date-dateCount/sim-simCount.Rdata"
-#     Available for modelType: "default", "reinf", "decl-mem", "mel-vs-max"
+#     Data is stored as: "SIM_DIR/modelType/Date/dateCount/vodType/sim-X.Rdata"
+#     For available for modelTypes, see constants.R - 'MODEL_TYPES'
 #     Date format: yyyymmdd
 #     param:  modelType
 #         the model type used by the simulation
-#         possible: "default", "reinf", "decl-mem", "mel-vs-max"
 #     param:  date
 #         the date of the simulation 
 #         (if undefined: latest available date)
@@ -52,7 +64,6 @@ importVodSimData <- function(modelType = MODEL_TYPES[2],
                              vodType = "sym") {
   
   vodBaseDir <- getVodBaseDir(modelType, date, dateCount)
-  
   vodTypeDir <- paste(vodBaseDir, "/", vodType, sep = "")
   
   vodSimData = list()
@@ -61,9 +72,12 @@ importVodSimData <- function(modelType = MODEL_TYPES[2],
     filename <- paste(vodTypeDir, "/", BASE_FILENAME, i, ".Rdata", sep = "")
     vodSimData[[i]] <- get(load(filename))
   }
+  
   return(vodSimData)
 }
 
+
+###################################### STATISTICAL COMPUTATIONS ######################################
 #----------------------------------------------------------------------------------------------------#
 # function: extractLNISequence
 #   Extracts the interaction sequence required to compute the LNI. For details, see Diekmann & 
@@ -91,7 +105,6 @@ extractLNISequence <- function(vodData) {
   
   return(moves$lniSequence)
 }
-
 
 #----------------------------------------------------------------------------------------------------#
 # function: computeLNIs
@@ -199,12 +212,23 @@ computeLNIs <- function(lniSequence) {
 }
 
 #----------------------------------------------------------------------------------------------------#
+# function: computeRMSE
+#   Computes the root mean square error (RMSE) for the mean LNIs of a simulation and the mean LNIs
+#   from experiment 1 in Diekmann & Przepiorka (2016).
+#   param:  meanLNIs
+#       the mean LNIs of a simulation to compute the RMSE for
+#----------------------------------------------------------------------------------------------------#
+computeRMSE <- function(meanLNIs) {
+  return(sqrt(mean((meanLNIs - LNIS_EXP1)^2)))
+}
+
+
+############################################### PLOTS ################################################
+#----------------------------------------------------------------------------------------------------#
 # function: plotInteractionPatterns
 #   Plots the interaction patterns for the given VOD data.
 #   param:  vodData
 #       the VOD data to plot
-#   param:  vodType
-#       the VOD type
 #----------------------------------------------------------------------------------------------------#
 plotInteractionPatterns <- function(vodData = importVodSimData()) {
   
@@ -254,16 +278,21 @@ plotInteractionPatterns <- function(vodData = importVodSimData()) {
   }
 }
 
-computeRMSE <- function(meanLNIs) {
-  return(sqrt(mean((meanLNIs - LNIS_EXP1)^2)))
-}
-
-plotGOF <- function(meanLNIs, RMSE) {
+#----------------------------------------------------------------------------------------------------#
+# function: plotGOF
+#   Plots the goodness of fit between the mean LNIs of a simulation and the mean LNIs of 
+#   experiment 1 in Diekmann & Przepiorka (2016)
+#   param:  meanLNIs
+#       the mean LNIs of the simulation
+#----------------------------------------------------------------------------------------------------#
+plotGOF <- function(meanLNIs) {
   
+  # three diagrams - one per VOD type (sym, asym1, asym2)
   par(mfrow=c(1,3), oma = c(0, 4, 3, 0), mar = c(5, 2, 1, 1))
-  
-  LNIs <- rbind(meanLNIs, LNIS_EXP1)
   cols <- c("gray", "black")
+  
+  # binding of simulation and experimental data
+  LNIs <- rbind(meanLNIs, LNIS_EXP1)
   
   # compare model and experimental data: Symmetric
   plotDataSym1 <- data.frame(h1 = LNIs$sym_h1,
@@ -289,26 +318,27 @@ plotGOF <- function(meanLNIs, RMSE) {
   # legend and title
   legend(x = "topright", y = 10, c("Model","Diekmann & Przepiorka (2016)"), cex=0.7, fill=cols)
   title(paste("Model Data vs. Experimental Data (RMSE = ", 
-              round(RMSE, digits = 2), ")", sep = ""), outer=TRUE)
+              round(computeRMSE(meanLNIs), digits = 2), ")", sep = ""), outer=TRUE)
   mtext('average LNI', side = 2, outer = TRUE, line = 1.5, cex = 0.7)
 }
 
 
+############################################ COMPOSITIONS ############################################
 #----------------------------------------------------------------------------------------------------#
 # function: analyzeData
 #     Starting point for the data analysis.
 #     param:  modelType
 #         the model type used by the simulation
-#         possible: "default", "reinf", "decl-mem", "mel-vs-max"
+#         For available for modelTypes, see constants.R - 'MODEL_TYPES'
 #     param:  date
-#         the date of the simulation 
+#         the date of the simulation, format: 'yyyymmdd'
 #         (if undefined: latest available date)
 #     param:  dateCount
-#         defines the round of simulations of the given date
-#         (if undefined: latest available round of simulations)
+#         defines the number of the performed simulation of the given date
+#         (if undefined: latest available simulation)
 #     param:  vodType
 #         the type of VOD used for the simulation
-#         possible: "all", "VOD_TYPES[x]"
+#         possible: 'all', constants.R: 'VOD_TYPES[x]'
 #----------------------------------------------------------------------------------------------------#
 analyzeData <- function(modelType = MODEL_TYPES[2],
                         date = "latest",
@@ -359,7 +389,8 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
     # h <- 1200                                            # height
     # u <- "px"                                           # units
     # r <- 196                                            # resolution
-    # png(paste(getVodBaseDir(modelType = modelType), "/", currVodType, "-interaction-patterns.png", sep = ""),
+    # png(paste(getVodBaseDir(modelType = modelType, date = date, dateCount = dateCount), 
+    #     "/", currVodType, "-interaction-patterns.png", sep = ""),
     #     width = w, height = h, units = u, res = r)
     # plotInteractionPatterns(vodSimData)
     # dev.off()
@@ -371,22 +402,27 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
   }
   
   meanLNIs <- colMeans(LNIs)
-  RMSE <- computeRMSE(meanLNIs)
   
   # exporting Goodness of Fit
   w <- 1200                                           # width
   h <- 700                                            # height
   u <- "px"                                           # units
   r <- 196                                            # resolution
-  png(paste(getVodBaseDir(modelType = modelType), "/gof.png", sep = ""),
+  png(paste(getVodBaseDir(modelType = modelType, 
+                          date = date, 
+                          dateCount = dateCount), 
+            "/gof.png", sep = ""),
       width = w, height = h, units = u, res = r)
-  plotGOF(meanLNIs, RMSE)
+  plotGOF(meanLNIs)
   dev.off()
   
   # exporting LNI comparison data (model vs. experiment)
   comparison <- rbind(meanLNIs, LNIS_EXP1)
   comparison$source <- c("model", "experiment")
-  write.csv(comparison, file = paste(getVodBaseDir(modelType = modelType), "/model-vs-experiment.csv", sep = ""))
+  write.csv(comparison, file = paste(getVodBaseDir(modelType = modelType, 
+                                                   date = date, 
+                                                   dateCount = dateCount), 
+                                     "/model-vs-experiment.csv", sep = ""))
   
   if (LOG_LEVEL == "all") {
     print("mean LNIs simulation:\n")
