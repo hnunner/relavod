@@ -17,8 +17,10 @@ VOD_TYPES <<- c("sym",
 # model types 
 # !!! ALWAYS APPEND NEW MODEL TYPES !!!
 # !!! DO NOT CHANGE ORDERING !!!
-MODEL_TYPES <<- c("default",                # one-shot VOD mixed strategy equilibria
-                  "CoordinateX")            # coordinate-x reinforcement strategy
+MODEL_TYPES <<- c("OneShot",                # one-shot VOD mixed strategy equilibria
+                  "CoordinateX",            # coordinate-x reinforcement strategy
+                  "ClassicQ",               # classical Q-Learning reinforcement strategy
+                  "Random")                 # classical Q-Learning reinforcement strategy
 
 # actions
 COOPERATE <<- 1

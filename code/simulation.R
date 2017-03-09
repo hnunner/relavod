@@ -68,7 +68,7 @@ initPlayers <- function(modelType, vodType) {
   for (currPlayer in 1:PLAYERS_CNT) {
     currCoopCosts <- coopCosts[currPlayer]
     
-    # default = one-shot mixed strategy equilibria for symmetric / asymmetric VODs
+    # one-shot mixed strategy equilibria for symmetric / asymmetric VODs
     if (modelType == MODEL_TYPES[1]) {
       if (vodType == VOD_TYPES[1]) {
         players[[currPlayer]] <- SymmetricPlayer$new(currPlayer, currCoopCosts)
@@ -79,6 +79,14 @@ initPlayers <- function(modelType, vodType) {
       # coordinate-4
     } else if (modelType == MODEL_TYPES[2]) {
       players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, currCoopCosts, 4)
+      
+      # classic-q
+    } else if (modelType == MODEL_TYPES[3]) {
+      players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, currCoopCosts)
+      
+      # random
+    } else if (modelType == MODEL_TYPES[4]) {
+      players[[currPlayer]] <- RandomPlayer$new(currPlayer, currCoopCosts)
       
       # unknown
     } else {
