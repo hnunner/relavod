@@ -211,17 +211,6 @@ computeLNIs <- function(lniSequence) {
   return(data.frame(lni13, lni23, lni33))
 }
 
-#----------------------------------------------------------------------------------------------------#
-# function: computeRMSE
-#   Computes the root mean square error (RMSE) for the mean LNIs of a simulation and the mean LNIs
-#   from experiment 1 in Diekmann & Przepiorka (2016).
-#   param:  meanLNIs
-#       the mean LNIs of a simulation to compute the RMSE for
-#----------------------------------------------------------------------------------------------------#
-computeRMSE <- function(meanLNIs) {
-  return(sqrt(mean((meanLNIs - LNIS_EXP1)^2)))
-}
-
 
 ########################################## PLOTS / EXPORTS ###########################################
 #----------------------------------------------------------------------------------------------------#
@@ -346,62 +335,12 @@ plotGOF <- function(meanLNIs) {
                               h3 = LNIs$asym2_h3)
   barplot(as.matrix(plotDataAsym2), yaxt = "n", xlab = "Asymmetric 2", 
           beside = TRUE, col = cols, ylim = range(0:80))
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  # meanLNIs <- data.frame("sym_h1" = 0, "sym_h2" = 3.7, "sym_h3" = 55.4,
-  #                         "asym1_h1" = 12.6, "asym1_h2" = 2.5, "asym1_h3" = 8.6,
-  #                         "asym2_h1" = 25.3, "asym2_h2" = 1.2, "asym2_h3" = 1)
-  # 
-  # LNIS_EXP1 <- data.frame("sym_h1" = 3.3, "sym_h2" = 8.0, "sym_h3" = 49.5,
-  #                         "asym1_h1" = 34.9, "asym1_h2" = 8.2, "asym1_h3" = 13.4,
-  #                         "asym2_h1" = 61.7, "asym2_h2" = 1.5, "asym2_h3" = 6.7)
-  
 
   # GOF values
   library(hydroGOF)
   RMSE <- rmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
   NRMSE <- nrmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
   RSQ <- summary(lm(as.numeric(LNIS_EXP1) ~ as.numeric(meanLNIs)))$r.squared
-  
-  # summary(lm(as.numeric(meanLNIs) ~ as.numeric(LNIS_EXP1)))$r.squared
-  # summary(lm(as.numeric(LNIS_EXP1) ~ as.numeric(meanLNIs)))$r.squared
-  # 
-  # 
-  # print(paste("R^2 = ", expression(R^2)))
-  # 
-  # 
-  # file_path <- "http://www.statslab.cam.ac.uk/~rds37/teaching/statistical_modelling/"
-  # BrainSize <- read.csv(paste0(file_path, "BrainSize.csv"))
-  # BrainSize[1:5, ]
-  # cor(BrainSize[, -1])
-  # 
-  # BrainSizeLM1 <- lm(PIQ ~ MRI_Count, data = BrainSize)
-  # summary(BrainSizeLM1)$r.squared
-  # 
-  
-  # 
-  # vec=c(1,10,100,1000,10000,100000,1000000,10000000)
-  # plot(vec,vec,log="xy",axes = F)
-  # axis(1, at=10^c(0,2,4,6), labels=expression(1, 10^2,
-  #                                             10^4, 10^6))
-  # axis(2, at=10^c(0,2,4,6), labels=expression(1, 10^2,
-  #                                             10^4, 10^6), las=1)
-  # box()
-  # title(cat("Model Data vs. Experimental Data (RMSE = ", 
-  #             expression(R^2), " = ", 66.6, ")", sep = ""))
-  # 
-  # x<- 232323
-  # plot(1:10, main = bquote(paste(ARL[1], " curve for ", S^2, "; x=",.(x))))
-
-  
   
   # legend and title
   legend(x = "topright", y = 10, c("Model","Diekmann & Przepiorka (2016)"), cex=0.7, fill=cols)
