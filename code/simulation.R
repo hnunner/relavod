@@ -78,7 +78,7 @@ initPlayers <- function(modelType, vodType) {
       
       # coordinate-4
     } else if (modelType == MODEL_TYPES[2]) {
-      players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, currCoopCosts, 4)
+      players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, currCoopCosts, COORD_X)
       
       # classic-q
     } else if (modelType == MODEL_TYPES[3]) {
