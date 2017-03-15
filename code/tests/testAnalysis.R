@@ -43,24 +43,6 @@ createLNITestSequence1 <- function() {
 }
 
 #----------------------------------------------------------------------------------------------------#
-# function: createVodTestData3
-#     Creates the second LNI example data, as in Diekmann & Przepiorka (2016), p.1318
-#----------------------------------------------------------------------------------------------------#
-createVodTestData2 <- function() {
-  round <- c(0,1,2,3,4,5,6,7,8,9,10)
-  player1 <- c(NA,COOPERATE,DEVIATE,COOPERATE,DEVIATE,COOPERATE,
-               DEVIATE,DEVIATE,DEVIATE,COOPERATE,DEVIATE)
-  player2 <- c(NA,COOPERATE,COOPERATE,DEVIATE,COOPERATE,DEVIATE,
-               COOPERATE,COOPERATE,COOPERATE,DEVIATE,DEVIATE)
-  player3 <- c(NA,DEVIATE,DEVIATE,DEVIATE,DEVIATE,DEVIATE,DEVIATE,
-               DEVIATE,DEVIATE,DEVIATE,COOPERATE)
-  util1 <- c(0,60,100,60,100,60,100,100,100,60,100)
-  util2 <- c(0,60,60,100,60,100,60,60,60,100,100)
-  util3 <- c(0,100,100,100,100,100,100,100,100,100,60)
-  return(data.frame(round,player1,player2,player3,util1,util2,util3))
-}
-
-#----------------------------------------------------------------------------------------------------#
 # function: createLNITestSequence2
 #     Creates an LNI test sequence
 #----------------------------------------------------------------------------------------------------#
