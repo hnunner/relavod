@@ -163,16 +163,22 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                        # either explore other strategies, or exploit best strategy
                                        # using epsilon-greedy approach, as suggested by
                                        # Sutton & Barto (1998), p.148f.
+                                       pickableStrategies <- NA
                                        if (runif(1) <= epsilon) {     # explore (epsilon %)
-                                         # sort by descending propensity and pick any but first 
-                                         # coord value
-                                         currentStrategy <<- strategies[
-                                           with(strategies, order(-prop)),1][sample(1:X+1,1)]
+                                         # pick a random strategy with a lower than highest strategy
+                                         pickableStrategies <- 
+                                           strategies[strategies$prop < max(strategies$prop),]
+                                         if (!nrow(pickableStrategies)) {
+                                           pickableStrategies <- strategies
+                                         }
                                        } else {                       # exploit (1-epsilon %)
-                                         # sort by descending propensity and pick first coord value
-                                         currentStrategy <<- strategies[
-                                           with(strategies, order(-prop)),1][1]
+                                         # pick a random strategy with the highest propensity
+                                         pickableStrategies <- 
+                                           strategies[strategies$prop == max(strategies$prop),]
                                        }
+                                       currentStrategy <<- 
+                                         pickableStrategies[sample(1:length(pickableStrategies$coord), 
+                                                                   1), ]$coord
                                        
                                        # choose action sequence and corresponding optimal expected 
                                        # utility based on strategy
