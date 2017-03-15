@@ -208,7 +208,7 @@ computeLNIs <- function(lniSequence) {
   threeSequences <- threeSequences[threeSequences >= 3]
   lni33 <- 100 * sum(threeSequences) / length(lniSequence)
   
-  return(data.frame(lni13, lni23, lni33))
+  return(data.frame(lni13, lni23, lni33, (100 - sum(lni13, lni23, lni33))))
 }
 
 
@@ -318,21 +318,24 @@ plotGOF <- function(meanLNIs) {
   # compare model and experimental data: Symmetric
   plotDataSym1 <- data.frame(h1 = LNIs$sym_h1,
                          h2 = LNIs$sym_h2,
-                         h3 = LNIs$sym_h3)
+                         h3 = LNIs$sym_h3,
+                         others = LNIs$sym_others)
   barplot(as.matrix(plotDataSym1), xlab = "Symmetric", 
           beside = TRUE, col = cols, ylim = range(0:80))
   
   # compare model and experimental data: Asymmetric 1
   plotDataAsym1 <- data.frame(h1 = LNIs$asym1_h1,
                          h2 = LNIs$asym1_h2,
-                         h3 = LNIs$asym1_h3)
+                         h3 = LNIs$asym1_h3,
+                         others = LNIs$asym1_others)
   barplot(as.matrix(plotDataAsym1), yaxt = "n", xlab = "Asymmetric 1", 
           beside = TRUE, col = cols, ylim = range(0:80))
   
   # compare model and experimental data: Asymmetric 2
   plotDataAsym2 <- data.frame(h1 = LNIs$asym2_h1,
                               h2 = LNIs$asym2_h2,
-                              h3 = LNIs$asym2_h3)
+                              h3 = LNIs$asym2_h3,
+                              others = LNIs$asym2_others)
   barplot(as.matrix(plotDataAsym2), yaxt = "n", xlab = "Asymmetric 2", 
           beside = TRUE, col = cols, ylim = range(0:80))
 
@@ -437,7 +440,8 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
     }
     colnames(vodTypeLNIs) <- c((paste(currVodType, "_h1", sep = "")),
                                (paste(currVodType, "_h2", sep = "")),
-                               (paste(currVodType, "_h3", sep = "")))
+                               (paste(currVodType, "_h3", sep = "")),
+                               (paste(currVodType, "_others", sep = "")))
     
     # column binding of LNIs for all different VOD types
     if (nrow(LNIs) == 0) {
