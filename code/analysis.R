@@ -58,7 +58,7 @@ getVodBaseDir <- function(modelType, date = "latest", dateCount = "latest") {
 #         the type of VOD used for the simulation
 #         possible: "sym", "asym1", "asym2"
 #----------------------------------------------------------------------------------------------------#
-importVodSimData <- function(modelType = MODEL_TYPES[2],
+importVodSimData <- function(modelType = MODEL_TYPES[3],
                              date = "latest",
                              dateCount = "latest", 
                              vodType = "sym") {
@@ -406,7 +406,7 @@ exportLNIComparison <- function(directory, meanLNIs) {
 #         the type of VOD used for the simulation
 #         possible: 'all', constants.R: 'VOD_TYPES[x]'
 #----------------------------------------------------------------------------------------------------#
-analyzeData <- function(modelType = MODEL_TYPES[2],
+analyzeData <- function(modelType = MODEL_TYPES[3],
                         date = "latest",
                         dateCount = "latest",
                         vodType = "all") {
