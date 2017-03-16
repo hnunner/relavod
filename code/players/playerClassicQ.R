@@ -2,15 +2,15 @@
 if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
 ROUNDS_PER_STATE <<- 3    # the amount of rounds representing a state; e.g., 3 means that a player
-# looks at all actions taken by the player herself in the previous 3 rounds 
-# and takes the action that produced the highest utility
+                          # looks at all actions taken by the player herself in the previous 3 rounds 
+                          # and takes the action that produced the highest utility
 PROP_START <<- 100        # initial propensity for each strategy
 EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
 EPSILON_DECAY <<- 0.995   # rate at which epsilon is decreasing after each completion of a strategy
 ALPHA <<- 0.4             # RL learning rate, the higher the more important recently learned 
-# information; 0 < ALPHA <= 1
+                          # information; 0 < ALPHA <= 1
 GAMMA <<- 0.6             # RL discount factor, the higher the more important the previous rewards;
-# 0 <= GAMMA <= 1
+                          # 0 <= GAMMA <= 1
 
 #####-------------------------------------- ClassicQPlayer --------------------------------------#####
 # class: ClassicQPlayer
@@ -99,9 +99,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                     callSuper(round, allPlayersActions, util)
                                     return()
                                   }
-                                    
-                                  # calculate new propensity based on update function by 
-                                  # Sutton & Barto (1998), p.148
+                                  
                                   ownAction <- allPlayersActions[ID]
                                   qRow <- qTable[qTable$state == currState, ]
                                   
@@ -114,6 +112,8 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                     stop(paste("Unknown action: ", ownAction))
                                   }
                                   
+                                  # calculate new propensity based on update function by 
+                                  # Sutton & Barto (1998), p.148
                                   newProp <- oldProp + ALPHA *
                                     (util + GAMMA * optimalExpectedUtility - oldProp)
                                   
@@ -162,24 +162,34 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                     # choose random action, if none is preferred
                                     if (qRow$c_prop == qRow$d_prop) {
                                       action <- if(runif(1) > 0.5) COOPERATE else DEVIATE
-                                    }
-                                    
-                                    # epsilon-greedy balancing between explore and exploit
-                                    if (runif(1) <= epsilon) {     # explore (epsilon %)
-                                      if (qRow$c_prop < qRow$d_prop) {
-                                        action <- COOPERATE
-                                      } else {
-                                        action <- DEVIATE
-                                      }
-                                    } else {                       # exploit (1-epsilon %)
-                                      if (qRow$c_prop < qRow$d_prop) {
-                                        action <- DEVIATE
-                                      } else {
-                                        action <- COOPERATE
+                                      
+                                    # else use epsilon-greedy balancing between explore and exploit
+                                    } else {
+                                      if (runif(1) <= epsilon) {     # explore (epsilon %)
+                                        if (qRow$c_prop < qRow$d_prop) {
+                                          action <- COOPERATE
+                                        } else {
+                                          action <- DEVIATE
+                                        }
+                                      } else {                       # exploit (1-epsilon %)
+                                        if (qRow$c_prop < qRow$d_prop) {
+                                          action <- DEVIATE
+                                        } else {
+                                          action <- COOPERATE
+                                        }
                                       }
                                     }
                                   }
-                                  
+                                  setOEU(action)
+                                  return(action)
+                                },
+                                
+                                #--------------------------------------------------------------------#
+                                #   function: setOEU
+                                #     Sets the overall expected utility based on the prospective 
+                                #     action.
+                                #--------------------------------------------------------------------#
+                                setOEU = function(action) {
                                   if (action == COOPERATE) {
                                     optimalExpectedUtility <<- UTIL_MAX - coopCost
                                   } else if (action == DEVIATE) {
@@ -187,7 +197,6 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   } else {
                                     stop(paste("Unknown action: ", action))
                                   }
-                                  return(action)
                                 },
                                 
                                 #--------------------------------------------------------------------#

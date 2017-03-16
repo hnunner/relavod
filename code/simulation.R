@@ -80,7 +80,7 @@ initPlayers <- function(modelType, vodType) {
     } else if (modelType == MODEL_TYPES[2]) {
       players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, currCoopCosts, COORD_X)
       
-      # classic-q
+      # classic Q-Learning
     } else if (modelType == MODEL_TYPES[3]) {
       players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, currCoopCosts)
       
@@ -88,9 +88,13 @@ initPlayers <- function(modelType, vodType) {
     } else if (modelType == MODEL_TYPES[4]) {
       players[[currPlayer]] <- RandomPlayer$new(currPlayer, currCoopCosts)
       
-      # coordinate-4-epsilon-noise
+      # coordinate-4 with epsilon as noise factor
     } else if (modelType == MODEL_TYPES[5]) {
       players[[currPlayer]] <- CoordinateXEpsilonNoisePlayer$new(currPlayer, currCoopCosts, COORD_X)
+      
+      # classic Q-Learning with epsilon as noise factor
+    } else if (modelType == MODEL_TYPES[6]) {
+      players[[currPlayer]] <- ClassicQEpsilonNoisePlayer$new(currPlayer, currCoopCosts)
       
       # unknown
     } else {
