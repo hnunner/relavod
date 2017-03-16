@@ -180,34 +180,44 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                          pickableStrategies[sample(1:length(pickableStrategies$coord), 
                                                                    1), ]$coord
                                        
-                                       # choose action sequence and corresponding optimal expected 
-                                       # utility based on strategy
-                                       optimalExpectedUtility <<- UTIL_NONE
-                                       if (currentStrategy == 0) {
-                                         actions <<- c(DEVIATE)
-                                         optimalExpectedUtility <<- UTIL_MAX
-                                       } else {
-                                         actions <<- c()
-                                         i <- 1
-                                         while (i < currentStrategy) {
-                                           actions <<- c(actions, DEVIATE)
-                                           optimalExpectedUtility <<- 
-                                             optimalExpectedUtility + UTIL_MAX
-                                           i <- i+1
-                                         }
-                                         actions <<- c(actions, COOPERATE)
-                                         optimalExpectedUtility <<- 
-                                           optimalExpectedUtility + (UTIL_MAX - coopCost)
-                                         
-                                         optimalExpectedUtility <<- 
-                                           optimalExpectedUtility / length(actions)
-                                       }
+                                       # set new list of actions and OEU
+                                       setActionsAndOEU()
                                      }
                                      
                                      # extract current action
                                      action <- actions[[1]]
                                      actions <<- tail(actions, (length(actions) - 1))
                                      return(action)
+                                   },
+                                   
+                                   #-----------------------------------------------------------------#
+                                   #  function: setActionsAndOEU
+                                   #    Selects the list of actions and the corresponding optimal
+                                   #    expected utility (OEU) based on the current strategy.
+                                   #-----------------------------------------------------------------#
+                                   setActionsAndOEU = function() {
+                                     # choose action sequence and corresponding optimal expected 
+                                     # utility based on strategy
+                                     optimalExpectedUtility <<- UTIL_NONE
+                                     if (currentStrategy == 0) {
+                                       actions <<- c(DEVIATE)
+                                       optimalExpectedUtility <<- UTIL_MAX
+                                     } else {
+                                       actions <<- c()
+                                       i <- 1
+                                       while (i < currentStrategy) {
+                                         actions <<- c(actions, DEVIATE)
+                                         optimalExpectedUtility <<- 
+                                           optimalExpectedUtility + UTIL_MAX
+                                         i <- i+1
+                                       }
+                                       actions <<- c(actions, COOPERATE)
+                                       optimalExpectedUtility <<- 
+                                         optimalExpectedUtility + (UTIL_MAX - coopCost)
+                                       
+                                       optimalExpectedUtility <<- 
+                                         optimalExpectedUtility / length(actions)
+                                     }
                                    },
                                    
                                    #-----------------------------------------------------------------#

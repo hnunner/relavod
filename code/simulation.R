@@ -88,6 +88,10 @@ initPlayers <- function(modelType, vodType) {
     } else if (modelType == MODEL_TYPES[4]) {
       players[[currPlayer]] <- RandomPlayer$new(currPlayer, currCoopCosts)
       
+      # coordinate-4-epsilon-noise
+    } else if (modelType == MODEL_TYPES[5]) {
+      players[[currPlayer]] <- CoordinateXEpsilonNoisePlayer$new(currPlayer, currCoopCosts, COORD_X)
+      
       # unknown
     } else {
       stop(paste("Unknown model type:", modelType))
