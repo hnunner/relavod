@@ -66,12 +66,17 @@ AsymmetricPlayer <- setRefClass("AsymmetricPlayer",
                                   #     games, as described in Diekmann & Przepiorka (2016), p.1317.
                                   #------------------------------------------------------------------#
                                   computeAction = function() {
+                                    
+                                    # othersCoopCosts <- c(30, 50)
+                                    # coopCost <- 50
+                                    # UTIL_MAX <- 80
+                                    
                                     othersCostUtilRatio <- 1
                                     for (i in 1:length(othersCoopCosts)) {
                                       othersCostUtilRatio <- othersCostUtilRatio *
                                         (othersCoopCosts[i] / UTIL_MAX)
                                     }
-                                    othersCostUtilRatio <- othersCostUtilRatio^(1/2)
+                                    othersCostUtilRatio <- othersCostUtilRatio^(1/length(othersCoopCosts))
                                     coopProb <- 1 - (UTIL_MAX/coopCost) * othersCostUtilRatio
                                     if (runif(1, 0, 1) < coopProb) {
                                       return(COOPERATE)
