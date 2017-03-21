@@ -96,6 +96,10 @@ initPlayers <- function(modelType, vodType) {
     } else if (modelType == MODEL_TYPES[6]) {
       players[[currPlayer]] <- ClassicQEpsilonNoisePlayer$new(currPlayer, currCoopCosts)
       
+      # win-stay loose-shift (Helbing, 2008)
+    } else if (modelType == MODEL_TYPES[7]) {
+      players[[currPlayer]] <- WinStayLooseShiftPlayer$new(currPlayer, currCoopCosts)
+      
       # unknown
     } else {
       stop(paste("Unknown model type:", modelType))
@@ -171,7 +175,7 @@ createVodDirectory <- function(baseDir, vodType) {
 #         the amount of rounds played in one VOD instance
 #----------------------------------------------------------------------------------------------------#
 getModelParameters <- function(vod, modelType, vodType, vodCount, roundsPerVod) {
-
+  
   players <- vod$players
   playersCount <- length(players)
   
@@ -261,7 +265,7 @@ storeData <- function(data, directory, vodCount) {
 #     param:  roundsPerVod
 #         the amount of interaction rounds per VOD
 #----------------------------------------------------------------------------------------------------#
-computeSimulation <- function(modelType = MODEL_TYPES[2],
+computeSimulation <- function(modelType = MODEL_TYPES[7],
                               vodType = "all",
                               vodCount = 10,              
                               roundsPerVod = 100) {       

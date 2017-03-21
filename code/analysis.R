@@ -58,7 +58,7 @@ getVodBaseDir <- function(modelType, date = "latest", dateCount = "latest") {
 #         the type of VOD used for the simulation
 #         possible: "sym", "asym1", "asym2"
 #----------------------------------------------------------------------------------------------------#
-importVodSimData <- function(modelType = MODEL_TYPES[3],
+importVodSimData <- function(modelType = MODEL_TYPES[7],
                              date = "latest",
                              dateCount = "latest", 
                              vodType = "sym") {

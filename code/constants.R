@@ -22,7 +22,8 @@ MODEL_TYPES <<- c("OneShot",                  # one-shot VOD mixed strategy equi
                   "ClassicQ",                 # classical Q-Learning reinforcement strategy
                   "Random",                   # purely random action selection
                   "CoordinateXEpsilonNoise",  # coordinate-x with epsilon as noise factor
-                  "ClassicQEpsilonNoise")     # classical Q-Learning with epsilon as noise factor
+                  "ClassicQEpsilonNoise",     # classical Q-Learning with epsilon as noise factor
+                  "WinStayLooseShift")        # win-stay, loose-shift strategy (Helbing, 2008)
 
 # actions
 COOPERATE <<- 1
