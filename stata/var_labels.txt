@@ -1,0 +1,41 @@
+Contains data from vod2.dta
+  obs:        18,240                          
+ vars:            28                          30 Apr 2012 05:45
+ size:       766,080                          
+--------------------------------------------------------------------------------
+              storage   display    value
+variable name   type    format     label      variable label
+--------------------------------------------------------------------------------
+session         byte    %9.0g                 Experimental session
+sgame           byte    %9.0g                 Super game
+gid             int     %9.0g                 Group ID
+subject         byte    %9.0g                 Experimental subject
+sid             int     %9.0g                 Subject ID
+period          byte    %9.0g                 Period number
+treat           byte    %12.0g     treat      Experimental treatment
+group           byte    %9.0g                 Group of subjects
+member          byte    %9.0g                 Subject in group
+strong          byte    %9.0g                 Strong/focal player
+dec             byte    %11.0g     dec        Decision
+dectotal        byte    %9.0g                 Number of volunteers
+vol             byte    %9.0g                 At least one volunteer
+vlr             byte    %9.0g                 Exactly one volunteer
+x               byte    %9.0g                 Outcome of interaction (1, 2, 3 or
+                                                -1)
+xs              byte    %9.0g                 Outcome of interaction
+                                                (strong/focal player only)
+lbda1           byte    %9.0g                 Lambda_1,3 at t
+lbda1s          byte    %9.0g                 Lambda_1,3 at t (strong/focal
+                                                player only)
+lbda2           byte    %9.0g                 Lambda_2,3 at t
+lbda3           byte    %9.0g                 Lambda_3,3 at t
+L1              byte    %9.0g                 Lambda_1,3 entire sequence
+L1s             byte    %9.0g                 Lambda_1,3 entire sequence
+                                                (strong/focal player only)
+L2              byte    %9.0g                 Lambda_2,3 entire sequence
+L3              byte    %9.0g                 Lambda_3,3 entire sequence
+lni1            float   %9.0g                 LNI_1,3
+lni1s           float   %9.0g                 LNI_1,3 (strong/focal player only)
+lni2            float   %9.0g                 LNI_2,3
+lni3            float   %9.0g                 LNI_3,3
+--------------------------------------------------------------------------------
