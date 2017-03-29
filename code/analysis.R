@@ -321,7 +321,7 @@ plotGOF <- function(meanLNIs) {
                          h3 = LNIs$sym_h3,
                          others = LNIs$sym_others)
   barplot(as.matrix(plotDataSym1), xlab = "Symmetric", 
-          beside = TRUE, col = cols, ylim = range(0:80))
+          beside = TRUE, col = cols, ylim = range(0:100))
   
   # compare model and experimental data: Asymmetric 1
   plotDataAsym1 <- data.frame(h1 = LNIs$asym1_h1,
@@ -329,7 +329,7 @@ plotGOF <- function(meanLNIs) {
                          h3 = LNIs$asym1_h3,
                          others = LNIs$asym1_others)
   barplot(as.matrix(plotDataAsym1), yaxt = "n", xlab = "Asymmetric 1", 
-          beside = TRUE, col = cols, ylim = range(0:80))
+          beside = TRUE, col = cols, ylim = range(0:100))
   
   # compare model and experimental data: Asymmetric 2
   plotDataAsym2 <- data.frame(h1 = LNIs$asym2_h1,
@@ -337,7 +337,7 @@ plotGOF <- function(meanLNIs) {
                               h3 = LNIs$asym2_h3,
                               others = LNIs$asym2_others)
   barplot(as.matrix(plotDataAsym2), yaxt = "n", xlab = "Asymmetric 2", 
-          beside = TRUE, col = cols, ylim = range(0:80))
+          beside = TRUE, col = cols, ylim = range(0:100))
 
   # GOF values
   library(hydroGOF)
@@ -406,7 +406,7 @@ exportLNIComparison <- function(directory, meanLNIs) {
 #         the type of VOD used for the simulation
 #         possible: 'all', constants.R: 'VOD_TYPES[x]'
 #----------------------------------------------------------------------------------------------------#
-analyzeData <- function(modelType = MODEL_TYPES[3],
+analyzeData <- function(modelType = MODEL_TYPES[1],
                         date = "latest",
                         dateCount = "latest",
                         vodType = "all") {
@@ -452,7 +452,7 @@ analyzeData <- function(modelType = MODEL_TYPES[3],
   }
   
   # computation of mean LNIs
-  meanLNIs <- colMeans(LNIs)
+  meanLNIs <- apply(LNIs, 2, median)
   
   # exporting Goodness of Fit
   exportGOF(exportDir, meanLNIs)
