@@ -1,0 +1,4 @@
+"","model_type","vod_type","vod_count","rounds_per_vod","players_count","util_max","util_none","p1_coop_cost","p2_coop_cost","p3_coop_cost"
+"1","Random","sym",15,150,3,80,0,"50","50","50"
+"2","Random","asym1",15,150,3,80,0,"30","50","50"
+"3","Random","asym2",15,150,3,80,0,"10","50","50"

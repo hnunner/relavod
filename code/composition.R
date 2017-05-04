@@ -17,10 +17,10 @@ initComposition()
 #   function: simulateAndAnalyze
 #     Composition of a full simulation including data analysis.
 #----------------------------------------------------------------------------------------------------#
-simulateAndAnalyze <- function(modelType = MODEL_TYPES[7],
+simulateAndAnalyze <- function(modelType = MODEL_TYPES[4],
                                vodType = "all",
-                               vodCount = 10,
-                               roundsPerVod = 100,
+                               vodCount = 15,
+                               roundsPerVod = 150,
                                date = "latest",
                                dateCount = "latest") {
   

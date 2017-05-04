@@ -27,7 +27,7 @@ RandomPlayer <- setRefClass("RandomPlayer",
                               #    propensities for the different strategies.
                               #----------------------------------------------------------------------#
                               computeAction = function() {
-                                action <- if(runif(1) > 0.5) COOPERATE else DEVIATE
+                                action <- if(runif(1) <= (1/3)) COOPERATE else DEVIATE
                                 return(action)
                               }
                             )
