@@ -82,7 +82,7 @@ initPlayers <- function(modelType, vodType) {
       
       # classic Q-Learning
     } else if (modelType == MODEL_TYPES[3]) {
-      players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, currCoopCosts)
+      players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, currCoopCosts, CLASSIC_X)
       
       # random
     } else if (modelType == MODEL_TYPES[4]) {
@@ -94,7 +94,7 @@ initPlayers <- function(modelType, vodType) {
       
       # classic Q-Learning with epsilon as noise factor
     } else if (modelType == MODEL_TYPES[6]) {
-      players[[currPlayer]] <- ClassicQEpsilonNoisePlayer$new(currPlayer, currCoopCosts)
+      players[[currPlayer]] <- ClassicQEpsilonNoisePlayer$new(currPlayer, currCoopCosts, CLASSIC_X)
       
       # win-stay loose-shift (Helbing, 2008)
     } else if (modelType == MODEL_TYPES[7]) {

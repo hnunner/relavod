@@ -1,9 +1,6 @@
 ######################################## SOURCING MOTHER CLASS #######################################
 if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
-ROUNDS_PER_STATE <<- 3    # the amount of rounds representing a state; e.g., 3 means that a player
-                          # looks at all actions taken by the player herself in the previous 3 rounds 
-                          # and takes the action that produced the highest utility
 PROP_START <<- 100        # initial propensity for each strategy
 EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
 EPSILON_DECAY <<- 0.995   # rate at which epsilon is decreasing after each completion of a strategy
@@ -19,7 +16,7 @@ GAMMA <<- 0.6             # RL discount factor, the higher the more important th
 #     by actions of all players in the previous rounds.
 #
 #     Free parameters:
-#       - ROUNDS_PER_STATE
+#       - X
 #       - PROP_START
 #       - EPSILON_START
 #       - EPSILON_DECAY
@@ -38,10 +35,16 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                               
                               #----------------------------------------------------------------------#
                               #   class parameters (public by default)
+                              #      param:  X
+                              #           the amount of rounds representing a state; e.g., 3 means 
+                              #           that a player looks at all actions taken by the player 
+                              #           herself in the previous 3 rounds and takes the action 
+                              #           that produced the highest utility
                               #      param:  epsilon
-                              #          balance between exploration and exploitation
+                              #           balance between exploration and exploitation
                               #----------------------------------------------------------------------#
-                              fields = c("qTable", "currState", "epsilon", "optimalExpectedUtility"),
+                              fields = c("X", "qTable", "currState", "epsilon", 
+                                         "optimalExpectedUtility"),
                               
                               #----------------------------------------------------------------------#
                               #  class methods (public by defualt)
@@ -52,17 +55,29 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #   function: initialize
                                 #     Initializes the Player.
                                 #     param:  ID
-                                #         the player's ID
+                                #           the player's ID
                                 #     param:  coopCost
-                                #         the player's cost to cooperate
+                                #           the player's cost to cooperate
+                                #      param:  X
+                                #           the amount of rounds representing a state; e.g., 3 means 
+                                #           that a player looks at all actions taken by the player 
+                                #           herself in the previous 3 rounds and takes the action 
+                                #           that produced the highest utility
                                 #--------------------------------------------------------------------#
-                                initialize = function(ID, coopCost) {
+                                initialize = function(ID, coopCost, X) {
+                                  
+                                  X <<- X
                                   
                                   # initialization of the q-table
-                                  # TODO: generalize initialization of q-table
-                                  state <- c("000", "001", "010", "011", "100", "101", "110", "111")
-                                  c_prop <- c(rep(PROP_START, 8))
-                                  d_prop <- c(rep(PROP_START, 8))
+                                  library(gtools)
+                                  states <- permutations(2, X,c(0,1), set = FALSE, repeats.allowed = TRUE)
+                                  state <- c()
+                                  for (i in 1:nrow(states)) {
+                                    state <- c(state, paste(states[i,], collapse = ""))
+                                  }
+                                  
+                                  c_prop <- c(rep(PROP_START, length(state)))
+                                  d_prop <- c(rep(PROP_START, length(state)))
                                   qTable <<- data.frame(state, c_prop, d_prop)
                                   
                                   # initialization of current state
@@ -148,7 +163,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   prevActions <- history[history$round >= 1, ID + 1]
                                   
                                   # if not enough actions performed yet, choose random action
-                                  if (length(prevActions) < ROUNDS_PER_STATE) {
+                                  if (length(prevActions) < X) {
                                     action <- if(runif(1) > 0.5) COOPERATE else DEVIATE
                                     
                                     # if enough actions performed, choose accordingly
@@ -156,7 +171,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                     
                                     # get the row from the q-table that corresponds to the actions from the
                                     # previous rounds
-                                    currState <<- paste(tail(prevActions, ROUNDS_PER_STATE), collapse = "")
+                                    currState <<- paste(tail(prevActions, X), collapse = "")
                                     qRow <- qTable[qTable$state == currState, ]
                                     
                                     # choose random action, if none is preferred
@@ -205,7 +220,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #--------------------------------------------------------------------#
                                 getModelParameters = function() {
                                   return(c(callSuper(), 
-                                           paste("p", ID, "_rounds_per_state", sep = ""), ROUNDS_PER_STATE, 
+                                           paste("p", ID, "_X", sep = ""), X, 
                                            paste("p", ID, "_prop_start", sep = ""), PROP_START, 
                                            paste("p", ID, "_epsilon_start", sep = ""), EPSILON_START,
                                            paste("p", ID, "_epsilon_decay", sep = ""), EPSILON_DECAY,
@@ -220,23 +235,12 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 getPersonalDetailColumns = function() {
                                   columns <- c(paste("p", ID, "_epsilon", sep = ""),
                                                paste("p", ID, "_currstate", sep = ""),
-                                               paste("p", ID, "_oeu", sep = ""),
-                                               paste("p", ID, "_c_000", sep = ""),
-                                               paste("p", ID, "_d_000", sep = ""),
-                                               paste("p", ID, "_c_001", sep = ""),
-                                               paste("p", ID, "_d_001", sep = ""),
-                                               paste("p", ID, "_c_010", sep = ""),
-                                               paste("p", ID, "_d_010", sep = ""),
-                                               paste("p", ID, "_c_011", sep = ""),
-                                               paste("p", ID, "_d_011", sep = ""),
-                                               paste("p", ID, "_c_100", sep = ""),
-                                               paste("p", ID, "_d_100", sep = ""),
-                                               paste("p", ID, "_c_101", sep = ""),
-                                               paste("p", ID, "_d_101", sep = ""),
-                                               paste("p", ID, "_c_110", sep = ""),
-                                               paste("p", ID, "_d_110", sep = ""),
-                                               paste("p", ID, "_c_111", sep = ""),
-                                               paste("p", ID, "_d_111", sep = ""))
+                                               paste("p", ID, "_oeu", sep = ""))
+                                  for (i in 1:nrow(qTable)) {
+                                    columns <- c(columns,
+                                                 paste("p", ID, "_c_", paste(qTable[i,]$state), sep = ""),
+                                                 paste("p", ID, "_d_", paste(qTable[i,]$state), sep = ""))
+                                  }
                                   return(columns)
                                 },
                                 
@@ -247,23 +251,13 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 getCurrentPersonalDetails = function() {
                                   details <- c(round(epsilon, digits = 5),
                                                currState,
-                                               optimalExpectedUtility,
-                                               qTable[qTable$state == "000", ]$c_prop,
-                                               qTable[qTable$state == "000", ]$d_prop,
-                                               qTable[qTable$state == "001", ]$c_prop,
-                                               qTable[qTable$state == "001", ]$d_prop,
-                                               qTable[qTable$state == "010", ]$c_prop,
-                                               qTable[qTable$state == "010", ]$d_prop,
-                                               qTable[qTable$state == "011", ]$c_prop,
-                                               qTable[qTable$state == "011", ]$d_prop,
-                                               qTable[qTable$state == "100", ]$c_prop,
-                                               qTable[qTable$state == "100", ]$d_prop,
-                                               qTable[qTable$state == "101", ]$c_prop,
-                                               qTable[qTable$state == "101", ]$d_prop,
-                                               qTable[qTable$state == "110", ]$c_prop,
-                                               qTable[qTable$state == "110", ]$d_prop,
-                                               qTable[qTable$state == "111", ]$c_prop,
-                                               qTable[qTable$state == "111", ]$d_prop)
+                                               optimalExpectedUtility)
+                                  
+                                  for (i in 1:nrow(qTable)) {
+                                    details <- c(details,
+                                                 qTable[qTable$state == paste(qTable[i,]$state), ]$c_prop,
+                                                 qTable[qTable$state == paste(qTable[i,]$state), ]$d_prop)
+                                  }
                                   return(details)
                                 }
                               )

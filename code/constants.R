@@ -39,6 +39,7 @@ UTIL_NONE <<- 0
 
 # models
 COORD_X <<- 4
+CLASSIC_X <<- 3
 
 # LNIs taken from experiment 1 (Diekmann & Przepiorka, 2016, p.1321, Table 3.)
 LNIS_EXP1 <- data.frame("sym_h1" = 3.3, "sym_h2" = 8.0, "sym_h3" = 49.5, "sym_others" = 39.2,
