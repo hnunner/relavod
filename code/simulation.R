@@ -100,6 +100,10 @@ initPlayers <- function(modelType, vodType) {
     } else if (modelType == MODEL_TYPES[7]) {
       players[[currPlayer]] <- WinStayLooseShiftPlayer$new(currPlayer, currCoopCosts)
       
+      # classic Q-Learning with state = actions of all players
+    } else if (modelType == MODEL_TYPES[8]) {
+      players[[currPlayer]] <- ClassicQAllActionsPlayer$new(currPlayer, currCoopCosts, CLASSIC_X)
+      
       # unknown
     } else {
       stop(paste("Unknown model type:", modelType))

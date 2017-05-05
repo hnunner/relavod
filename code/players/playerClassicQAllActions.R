@@ -1,5 +1,5 @@
 ######################################## SOURCING MOTHER CLASS #######################################
-if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
+if(!exists("ClassicQPlayer", mode="function")) source(paste(PLAYERS_DIR, "playerClassicQ.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
 PROP_START <<- 100        # initial propensity for each strategy
 EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
@@ -9,11 +9,11 @@ ALPHA <<- 0.4             # RL learning rate, the higher the more important rece
 GAMMA <<- 0.6             # RL discount factor, the higher the more important the previous rewards;
                           # 0 <= GAMMA <= 1
 
-#####-------------------------------------- ClassicQPlayer --------------------------------------#####
-# class: ClassicQPlayer
+#####------------------------------ ClassicQAllActionsPlayer ------------------------------#####
+# class: ClassicQAllActionsPlayer
 #     Class extending the basic Player class. This class represents a player using a classical 
 #     Q-Learning approach, where action-state-pairs are being reinforced. A state is represented
-#     by actions of a single player in the previous rounds.
+#     by actions of all players in the previous rounds.
 #
 #     Free parameters:
 #       - X
@@ -26,67 +26,17 @@ GAMMA <<- 0.6             # RL discount factor, the higher the more important th
 #     ________________________________________________________________________________________
 #     "Reference Class" (RC) concept found at http://adv-r.had.co.nz/OO-essentials.html
 #----------------------------------------------------------------------------------------------------#
-ClassicQPlayer <- setRefClass("ClassicQPlayer",
+ClassicQAllActionsPlayer <- setRefClass("ClassicQAllActionsPlayer",
                               
                               #----------------------------------------------------------------------# 
                               #  class inheritance
                               #----------------------------------------------------------------------#
-                              contains = "Player",
-                              
-                              #----------------------------------------------------------------------#
-                              #   class parameters (public by default)
-                              #      param:  X
-                              #           the amount of rounds representing a state; e.g., 3 means 
-                              #           that a player looks at all actions taken by the player 
-                              #           herself in the previous 3 rounds and takes the action 
-                              #           that produced the highest utility
-                              #      param:  epsilon
-                              #           balance between exploration and exploitation
-                              #----------------------------------------------------------------------#
-                              fields = c("X", "qTable", "currState", "epsilon", 
-                                         "optimalExpectedUtility"),
+                              contains = "ClassicQPlayer",
                               
                               #----------------------------------------------------------------------#
                               #  class methods (public by defualt)
                               #----------------------------------------------------------------------#
                               methods = list(
-                                
-                                #--------------------------------------------------------------------#
-                                #   function: initialize
-                                #     Initializes the Player.
-                                #     param:  ID
-                                #           the player's ID
-                                #     param:  coopCost
-                                #           the player's cost to cooperate
-                                #      param:  X
-                                #           the amount of rounds representing a state; e.g., 3 means 
-                                #           that a player looks at all actions taken by the player 
-                                #           herself in the previous 3 rounds and takes the action 
-                                #           that produced the highest utility
-                                #--------------------------------------------------------------------#
-                                initialize = function(ID, coopCost, X) {
-                                  
-                                  X <<- X
-                                  
-                                  # initialization of the q-table
-                                  initQTable()
-                                  
-                                  # initialization of current state
-                                  currState <<- NA
-                                  
-                                  # initialization of epsilon
-                                  epsilon <<- EPSILON_START
-                                  
-                                  # initialization of the optimal utility estimate
-                                  optimalExpectedUtility <<- UTIL_NONE
-                                  
-                                  # initializations of super class
-                                  callSuper(ID, coopCost)
-                                  
-                                  if (LOG_LEVEL == "all") {
-                                    print(paste("Classic-Q Player", ID, "successfully created!"))
-                                  }
-                                },
                                 
                                 #--------------------------------------------------------------------#
                                 #   function: initQTable
@@ -104,6 +54,9 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   c_prop <- c(rep(PROP_START, length(state)))
                                   d_prop <- c(rep(PROP_START, length(state)))
                                   qTable <<- data.frame(state, c_prop, d_prop)
+                                  
+                                  
+                                  qTable <<- "WTF?!?"
                                 },
                                 
                                 #--------------------------------------------------------------------#
@@ -165,6 +118,9 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #    took in the previous rounds.
                                 #--------------------------------------------------------------------#
                                 computeAction = function() {
+                                  
+                                  
+                                  stop(paste("qTable:", qTable))
                                   
                                   action <- NA
                                   
@@ -242,6 +198,13 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #     Returns the player's columns for personal details.
                                 #--------------------------------------------------------------------#
                                 getPersonalDetailColumns = function() {
+                                  
+                                  
+                                  return(c("a", "b", "c"))
+                                  
+                                  
+                                  
+                                  
                                   columns <- c(paste("p", ID, "_epsilon", sep = ""),
                                                paste("p", ID, "_currstate", sep = ""),
                                                paste("p", ID, "_oeu", sep = ""))
@@ -258,6 +221,13 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #     Returns the player's current personal details.
                                 #--------------------------------------------------------------------#
                                 getCurrentPersonalDetails = function() {
+                                  
+                                  
+                                  return(c(1,2,3))
+                                  
+                                  
+                                  
+                                  
                                   details <- c(round(epsilon, digits = 5),
                                                currState,
                                                optimalExpectedUtility)

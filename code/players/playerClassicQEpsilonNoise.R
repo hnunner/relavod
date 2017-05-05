@@ -1,6 +1,5 @@
 ######################################## SOURCING MOTHER CLASS #######################################
-if(!exists("ClassicQPlayer", mode="function")) 
-  source(paste(PLAYERS_DIR, "playerClassicQ.R", sep = ""))
+if(!exists("ClassicQPlayer", mode="function")) source(paste(PLAYERS_DIR, "playerClassicQ.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
 PROP_START <<- 100        # initial propensity for each strategy
 EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
