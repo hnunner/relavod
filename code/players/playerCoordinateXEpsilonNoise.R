@@ -2,6 +2,15 @@
 if(!exists("CoordinateXPlayer", mode="function")) 
   source(paste(PLAYERS_DIR, "playerCoordinateX.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
+X_MAX <<- 15              # triggers a warning during initialization, when X exceeds X_MAX
+PROP_START <<- 100        # initial propensity for each strategy
+EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
+EPSILON_DECAY <<- 1       # rate at which epsilon is decreasing after each completion of a strategy
+ALPHA <<- 0.4             # RL learning rate, the higher the more important recently learned 
+                          # information; 0 < ALPHA <= 1
+GAMMA <<- 0.6             # RL discount factor, the higher the more important the future rewards;
+                          # 0 <= GAMMA <= 1
+
 
 #####------------------------------- CoordinateXEpsilonNoisePlayer ------------------------------#####
 # class: CoordinateXEpsilonNoisePlayer

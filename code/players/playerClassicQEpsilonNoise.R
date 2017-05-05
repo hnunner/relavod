@@ -2,6 +2,13 @@
 if(!exists("ClassicQPlayer", mode="function")) 
   source(paste(PLAYERS_DIR, "playerClassicQ.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
+PROP_START <<- 100        # initial propensity for each strategy
+EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
+EPSILON_DECAY <<- 1       # rate at which epsilon is decreasing after each completion of a strategy
+ALPHA <<- 0.4             # RL learning rate, the higher the more important recently learned 
+                          # information; 0 < ALPHA <= 1
+GAMMA <<- 0.6             # RL discount factor, the higher the more important the previous rewards;
+                          # 0 <= GAMMA <= 1
 
 #####-------------------------------- ClassicQEpsilonNoisePlayer --------------------------------#####
 # class: ClassicQEpsilonNoisePlayer
@@ -12,7 +19,7 @@ if(!exists("ClassicQPlayer", mode="function"))
 #     every round by using epsilon as noise factor.
 #
 #     Free parameters:
-#       - ROUNDS_PER_STATE
+#       - X
 #       - PROP_START
 #       - EPSILON_START
 #       - EPSILON_DECAY
@@ -48,7 +55,7 @@ ClassicQEpsilonNoisePlayer <- setRefClass("ClassicQEpsilonNoisePlayer",
                                   prevActions <- history[history$round >= 1, ID + 1]
                                   
                                   # if not enough actions performed yet, choose random action
-                                  if (length(prevActions) < ROUNDS_PER_STATE) {
+                                  if (length(prevActions) < X) {
                                     action <- if(runif(1) > 0.5) COOPERATE else DEVIATE
                                     
                                     # if enough actions performed, choose accordingly
@@ -56,7 +63,7 @@ ClassicQEpsilonNoisePlayer <- setRefClass("ClassicQEpsilonNoisePlayer",
                                     
                                     # get the row from the q-table that corresponds to the actions from the
                                     # previous rounds
-                                    currState <<- paste(tail(prevActions, ROUNDS_PER_STATE), collapse = "")
+                                    currState <<- paste(tail(prevActions, X), collapse = "")
                                     qRow <- qTable[qTable$state == currState, ]
                                     
                                     # add noise to state's propensities
