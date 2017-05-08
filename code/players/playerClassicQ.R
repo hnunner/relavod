@@ -1,6 +1,7 @@
 ######################################## SOURCING MOTHER CLASS #######################################
 if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
+X_MAX <<- 15              # triggers a warning during initialization, when X exceeds X_MAX
 PROP_START <<- 100        # initial propensity for each strategy
 EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
 EPSILON_DECAY <<- 0.995   # rate at which epsilon is decreasing after each completion of a strategy
@@ -17,6 +18,9 @@ GAMMA <<- 0.6             # RL discount factor, the higher the more important th
 #
 #     Free parameters:
 #       - X
+#       - PLAYERS_PER_STATE
+#       - BALANCING
+#
 #       - PROP_START
 #       - EPSILON_START
 #       - EPSILON_DECAY
@@ -37,14 +41,29 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                               #   class parameters (public by default)
                               #      param:  X
                               #           the amount of rounds representing a state; e.g., 3 means 
-                              #           that a player looks at all actions taken by the player 
-                              #           herself in the previous 3 rounds and takes the action 
-                              #           that produced the highest utility
+                              #           that a player looks at all actions in the previous 3 rounds 
+                              #      param:  PLAYERS_PER_STATE
+                              #           action of how many players define a state; e.g., 1 means
+                              #           that only the actions of the current player in the previous
+                              #           X rounds define a state, PLAYERS_CNT means that the actions
+                              #           of all players in the previous X rounds define a state
+                              #      param:  BALANCING
+                              #           how to balance between exploration and exploitation (see 
+                              #           BALANCING_TYPE in constants.R)
+                              #
+                              #      param:  qTable
+                              #           q-table holding the propensities for cooperation and 
+                              #           deviation in the according states
                               #      param:  epsilon
                               #           balance between exploration and exploitation
+                              #      param:  currState
+                              #           current state the player is in; state is defined as a
+                              #           combination if X and PLAYERS_PER_STATE
+                              #      param:  oeu
+                              #           optimal expected utility
                               #----------------------------------------------------------------------#
-                              fields = c("X", "qTable", "currState", "epsilon", 
-                                         "optimalExpectedUtility"),
+                              fields = c("X", "PLAYERS_PER_STATE", "BALANCING",
+                                         "qTable", "epsilon", "currState", "oeu"),
                               
                               #----------------------------------------------------------------------#
                               #  class methods (public by defualt)
@@ -58,15 +77,20 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #           the player's ID
                                 #     param:  coopCost
                                 #           the player's cost to cooperate
-                                #      param:  X
-                                #           the amount of rounds representing a state; e.g., 3 means 
-                                #           that a player looks at all actions taken by the player 
-                                #           herself in the previous 3 rounds and takes the action 
-                                #           that produced the highest utility
+                                #
+                                #     param:  X
+                                #           see "class parameters"
+                                #     param:  PLAYERS_PER_STATE
+                                #           see "class parameters"
+                                #     param:  BALANCING
+                                #           see "class parameters"
                                 #--------------------------------------------------------------------#
-                                initialize = function(ID, coopCost, X) {
+                                initialize = function(ID, coopCost, 
+                                                      X, PLAYERS_PER_STATE, BALANCING) {
                                   
                                   X <<- X
+                                  BALANCING <<- BALANCING
+                                  PLAYERS_PER_STATE <<- PLAYERS_PER_STATE
                                   
                                   # initialization of the q-table
                                   initQTable()
@@ -78,7 +102,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   epsilon <<- EPSILON_START
                                   
                                   # initialization of the optimal utility estimate
-                                  optimalExpectedUtility <<- UTIL_NONE
+                                  oeu <<- UTIL_NONE
                                   
                                   # initializations of super class
                                   callSuper(ID, coopCost)
@@ -88,13 +112,14 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   }
                                 },
                                 
+                                
                                 #--------------------------------------------------------------------#
                                 #   function: initQTable
                                 #     Q-Table initialization.
                                 #--------------------------------------------------------------------#
                                 initQTable = function() {
                                   library(gtools)
-                                  states <- permutations(2, X, c(0, 1), 
+                                  states <- permutations(2, X*PLAYERS_PER_STATE, c(0, 1), 
                                                          set = FALSE, repeats.allowed = TRUE)
                                   state <- c()
                                   for (i in 1:nrow(states)) {
@@ -105,6 +130,27 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   d_prop <- c(rep(PROP_START, length(state)))
                                   qTable <<- data.frame(state, c_prop, d_prop)
                                 },
+                                
+                                
+                                #-----------------------------------------------------------------#
+                                #   function: validate
+                                #     Integrity check for player: X must be numeric.
+                                #-----------------------------------------------------------------#
+                                validate = function() {
+                                  if (!is.numeric(X)) {
+                                    stop("Error during player validation: 'X' must be numeric!")
+                                  }
+                                  if (X > X_MAX) {
+                                    warning(paste("X =", X, "appears to be irrationally high!"))
+                                  }
+                                  if (!(PLAYERS_PER_STATE == 1 
+                                        || PLAYERS_PER_STATE == PLAYERS_CNT)) {
+                                    stop(paste("invalid argument for PLAYERS_PER_STATE:", 
+                                               PLAYERS_PER_STATE))
+                                  }
+                                  callSuper()
+                                },
+                                
                                 
                                 #--------------------------------------------------------------------#
                                 #   function: assessAction
@@ -139,7 +185,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   # calculate new propensity based on update function by 
                                   # Sutton & Barto (1998), p.148
                                   newProp <- oldProp + ALPHA *
-                                    (util + GAMMA * optimalExpectedUtility - oldProp)
+                                    (util + GAMMA * oeu - oldProp)
                                   
                                   if (ownAction == COOPERATE) {
                                     qTable[qTable$state == currState, ]$c_prop <<- newProp
@@ -158,6 +204,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   callSuper(round, allPlayersActions, util)
                                 },
                                 
+                                
                                 #--------------------------------------------------------------------#
                                 #  function: computeAction
                                 #    Checks the state the player is currently in and selects the
@@ -168,45 +215,124 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   
                                   action <- NA
                                   
-                                  # get all previous actions by player
-                                  prevActions <- history[history$round >= 1, ID + 1]
+                                  # get all previous actions
+                                  prevActions <- getPreviousActions()
                                   
                                   # if not enough actions performed yet, choose random action
-                                  if (length(prevActions) < X) {
+                                  if ((PLAYERS_PER_STATE == 1 && length(prevActions) < X) ||
+                                      (PLAYERS_PER_STATE == PLAYERS_CNT && nrow(prevActions) < X)) {
                                     action <- if(runif(1) > 0.5) COOPERATE else DEVIATE
                                     
-                                    # if enough actions performed, choose accordingly
+                                  # if enough actions performed, choose accordingly
                                   } else {
                                     
-                                    # get the row from the q-table that corresponds to the actions from the
-                                    # previous rounds
-                                    currState <<- paste(tail(prevActions, X), collapse = "")
+                                    #current state = actions in previous rounds
+                                    setCurrentState(prevActions)
+                                    # get q-table row corresponding to current state 
                                     qRow <- qTable[qTable$state == currState, ]
                                     
-                                    # choose random action, if none is preferred
-                                    if (qRow$c_prop == qRow$d_prop) {
-                                      action <- if(runif(1) > 0.5) COOPERATE else DEVIATE
-                                      
-                                    # else use epsilon-greedy balancing between explore and exploit
-                                    } else {
-                                      if (runif(1) <= epsilon) {     # explore (epsilon %)
-                                        if (qRow$c_prop < qRow$d_prop) {
-                                          action <- COOPERATE
-                                        } else {
-                                          action <- DEVIATE
-                                        }
-                                      } else {                       # exploit (1-epsilon %)
-                                        if (qRow$c_prop < qRow$d_prop) {
-                                          action <- DEVIATE
-                                        } else {
-                                          action <- COOPERATE
-                                        }
-                                      }
+                                    # balancing between exploration and exploitation
+                                    if (BALANCING == "greedy") {
+                                      action <- getGreedyAction(qRow)
+                                    }
+                                    else if (BALANCING == "noise") {
+                                      action <- getNoiseAction(qRow)
+                                    }
+                                    else {
+                                      stop(paste("Unknown balancing type:", BALANCING))
                                     }
                                   }
+                                  
                                   setOEU(action)
                                   return(action)
                                 },
+                                
+                                
+                                #--------------------------------------------------------------------#
+                                #   function: getPreviousActions
+                                #     Gets all previous actions (here: for current player)
+                                #--------------------------------------------------------------------#
+                                getPreviousActions = function() {
+                                  if (PLAYERS_PER_STATE == 1) {
+                                    # players own actions
+                                    return(history[history$round >= 1, ID + 1])
+                                    
+                                  } else if (PLAYERS_PER_STATE == PLAYERS_CNT) {
+                                    # all players' actions
+                                    return(history[history$round >= 1, 2:(PLAYERS_CNT+1)])
+                                    
+                                  } else {
+                                    stop(paste("invalid argument for PLAYERS_PER_STATE:", 
+                                               PLAYERS_PER_STATE))
+                                  }
+                                },
+                                
+                                
+                                #--------------------------------------------------------------------#
+                                #   function: setCurrentState
+                                #     Sets the state the player is currently in.
+                                #--------------------------------------------------------------------#
+                                setCurrentState = function(prevActions) {
+                                  if (PLAYERS_PER_STATE == 1) {
+                                    currState <<- paste(tail(prevActions, X), collapse = "")
+                                    
+                                  } else if (PLAYERS_PER_STATE == PLAYERS_CNT) {
+                                    lastActions <- tail(prevActions, X)
+                                    currState <<- paste(paste(lastActions[1,], collapse = ""), 
+                                                        paste(lastActions[2,], collapse = ""),
+                                                        paste(lastActions[3,], collapse = ""), sep = "")
+                                    
+                                  } else {
+                                    stop(paste("invalid argument for PLAYERS_PER_STATE:", 
+                                               PLAYERS_PER_STATE))
+                                  }
+                                },
+                                
+                                
+                                #--------------------------------------------------------------------#
+                                #   function: getGreedyAction
+                                #     Gets an action according to epsilon-greedy approach.
+                                #--------------------------------------------------------------------#
+                                getGreedyAction = function(qRow) {
+                                  # choose random action, if none is preferred
+                                  if (qRow$c_prop == qRow$d_prop) {
+                                    return(if(runif(1) > 0.5) COOPERATE else DEVIATE)
+                                    
+                                  # else use epsilon-greedy balancing between explore and exploit
+                                  } else {
+                                    if (runif(1) <= epsilon) {     # explore (epsilon %)
+                                      if (qRow$c_prop < qRow$d_prop) {
+                                        return(COOPERATE)
+                                      } else {
+                                        return(DEVIATE)
+                                      }
+                                    } else {                       # exploit (1-epsilon %)
+                                      if (qRow$c_prop < qRow$d_prop) {
+                                        return(DEVIATE)
+                                      } else {
+                                        return(COOPERATE)
+                                      }
+                                    }
+                                  }
+                                },
+                                
+                                
+                                #--------------------------------------------------------------------#
+                                #   function: getNoiseAction
+                                #     Gets an action according to epsilon-noise approach.
+                                #--------------------------------------------------------------------#
+                                getNoiseAction = function(qRow) {
+                                  # add noise to state's propensities
+                                  qRow$c_prop <- qRow$c_prop + (qRow$c_prop * runif(1, -epsilon, epsilon))
+                                  qRow$d_prop <- qRow$d_prop + (qRow$d_prop * runif(1, -epsilon, epsilon))
+                                  # select action 
+                                  if (qRow$c_prop > qRow$d_prop) {
+                                    return(COOPERATE)
+                                  } else if (qRow$d_prop > qRow$c_prop) {
+                                    return(DEVIATE)
+                                  }
+                                },
+                                
                                 
                                 #--------------------------------------------------------------------#
                                 #   function: setOEU
@@ -215,21 +341,25 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #--------------------------------------------------------------------#
                                 setOEU = function(action) {
                                   if (action == COOPERATE) {
-                                    optimalExpectedUtility <<- UTIL_MAX - coopCost
+                                    oeu <<- UTIL_MAX - coopCost
                                   } else if (action == DEVIATE) {
-                                    optimalExpectedUtility <<- UTIL_MAX
+                                    oeu <<- UTIL_MAX
                                   } else {
                                     stop(paste("Unknown action: ", action))
                                   }
                                 },
+                                
                                 
                                 #--------------------------------------------------------------------#
                                 #   function: getModelParameters
                                 #     Returns the player's parametrical settings.
                                 #--------------------------------------------------------------------#
                                 getModelParameters = function() {
-                                  return(c(callSuper(), 
-                                           paste("p", ID, "_X", sep = ""), X, 
+                                  return(c(callSuper(),
+                                           paste("p", ID, sep = ""), "#####",
+                                           paste("p", ID, "_X", sep = ""), X,
+                                           paste("p", ID, "_players_per_state", sep = ""), PLAYERS_PER_STATE,
+                                           paste("p", ID, "_balancing", sep = ""), BALANCING, 
                                            paste("p", ID, "_prop_start", sep = ""), PROP_START, 
                                            paste("p", ID, "_epsilon_start", sep = ""), EPSILON_START,
                                            paste("p", ID, "_epsilon_decay", sep = ""), EPSILON_DECAY,
@@ -237,12 +367,14 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                            paste("p", ID, "_gamma", sep = ""), GAMMA))
                                 },
                                 
+                                
                                 #--------------------------------------------------------------------#
                                 #   function: getPersonalDetailColumns
                                 #     Returns the player's columns for personal details.
                                 #--------------------------------------------------------------------#
                                 getPersonalDetailColumns = function() {
-                                  columns <- c(paste("p", ID, "_epsilon", sep = ""),
+                                  columns <- c(paste("p", ID, sep = ""),
+                                               paste("p", ID, "_epsilon", sep = ""),
                                                paste("p", ID, "_currstate", sep = ""),
                                                paste("p", ID, "_oeu", sep = ""))
                                   for (i in 1:nrow(qTable)) {
@@ -253,14 +385,16 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   return(columns)
                                 },
                                 
+                                
                                 #--------------------------------------------------------------------#
                                 #   function: getCurrentPersonalDetails
                                 #     Returns the player's current personal details.
                                 #--------------------------------------------------------------------#
                                 getCurrentPersonalDetails = function() {
-                                  details <- c(round(epsilon, digits = 5),
+                                  details <- c("#####",
+                                               round(epsilon, digits = 5),
                                                currState,
-                                               optimalExpectedUtility)
+                                               oeu)
                                   
                                   for (i in 1:nrow(qTable)) {
                                     details <- c(details,

@@ -1,36 +1,16 @@
 ###################################### SHARED GLOBAL PARAMETERS ###################################### 
-# file system
+
+########### FILE SYSTEM ############
 PLAYERS_DIR <<- paste(BASE_DIR, "players/", sep = "")
 SIM_DIR <<- paste(BASE_DIR, "../simulations/", sep = "")
 BASE_FILENAME <<- "sim-"
 
-# logging
+
+############# LOGGING ##############
 LOG_LEVEL <<- "debug"    # possible: "all", debug", "none"
 
-# VOD types
-# !!! ALWAYS APPEND NEW VOD TYPES !!!
-# !!! DO NOT CHANGE ORDERING !!!
-VOD_TYPES <<- c("sym", 
-                "asym1", 
-                "asym2")
 
-# model types 
-# !!! ALWAYS APPEND NEW MODEL TYPES !!!
-# !!! DO NOT CHANGE ORDERING !!!
-MODEL_TYPES <<- c("OneShot",                            # one-shot VOD mixed strategy equilibria
-                  "CoordinateX",                        # coordinate-x reinforcement strategy
-                  "ClassicQ",                           # classical Q-Learning reinforcement strategy
-                  "Random",                             # purely random action selection
-                  "CoordinateXEpsilonNoise",            # coordinate-x with epsilon as noise factor
-                  "ClassicQEpsilonNoise",               # classical Q-Learning with epsilon as noise factor
-                  "WinStayLooseShift",                  # win-stay, loose-shift strategy (Helbing, 2008)
-                  "ClassicQAllActions")                 # classical Q-Learning with epsilon as noise factor
-
-# actions
-COOPERATE <<- 1
-DEVIATE <<- 0
-
-# game design
+########### GAME DESIGN ############
 PLAYERS_CNT <<- 3
 UTIL_MAX <- 80
 COOP_COST_SYMM <<- 50
@@ -38,9 +18,37 @@ COOP_COST_ASYMM1 <<- 30
 COOP_COST_ASYMM2 <<- 10
 UTIL_NONE <<- 0
 
-# models
-COORD_X <<- 4
-CLASSIC_X <<- 3
+VOD_TYPES <<- c("sym",                    # all players have same coop costs
+                "asym1",                  # one player has slightly lower coop costs
+                "asym2")                  # one player has significantly lower coop costs
+
+# actions
+COOPERATE <<- 1
+DEVIATE <<- 0
+
+
+############## MODELS ##############
+MODEL_TYPES <<- c("Random",               # purely random action selection
+                  "ClassicQ",             # classical Q-Learning reinforcement strategy
+                  "CoordinateX")          # coordinate-x reinforcement strategy
+
+BALANCING_TYPES <<- c("greedy",           # espilon-greedy
+                     "noise")             # espilon-noise
+BALANCING_TYPE <<- BALANCING_TYPES[1]     # balancing type currently in use
+
+# Random
+RANDOM_COOP_RATIO <<- 1/3                 # ratio (cooperate:deviate) in favor of cooperation
+
+# ClassicQ
+CLASSIC_X <<- 3                           # amount of previous rounds defining a state
+CLASSIC_PLAYERS_PER_STATE <<- PLAYERS_CNT # actions of how many players defining a state 
+                                          # possible values: 
+                                          #   1 = only own actions
+                                          #   PLAYERS_CNT = all players' actions
+
+# CoordinateX
+COORD_X <<- 4                             # max. after how many rounds to cooperate
+
 
 # LNIs taken from experiment 1 (Diekmann & Przepiorka, 2016, p.1321, Table 3.)
 LNIS_EXP1 <- data.frame("sym_h1" = 3.3, "sym_h2" = 8.0, "sym_h3" = 49.5, "sym_others" = 39.2,

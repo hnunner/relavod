@@ -16,26 +16,17 @@ initSimulation <- function(modelType) {
   # source VOD class
   if (!exists("Vod", mode="function")) source(paste(BASE_DIR, "vod.R", sep = ""))
   
+  # source appropriate model class
   modelTypeFound <- FALSE
-  # if default model: cource symmetric + asymmetric players (one-shot VOD mixed strategy equilibria)
-  if (modelType == MODEL_TYPES[1]) {
-    if(!exists("SymmetricPlayer", mode="function")) source(paste(PLAYERS_DIR,
-                                                                 "playerSymmetric.R", sep = ""))
-    if(!exists("AsymmetricPlayer", mode="function")) source(paste(PLAYERS_DIR,
-                                                                  "playerAsymmetric.R", sep = ""))
-    modelTypeFound <- TRUE
-    
-    # if not: find and source required model
-  } else {
-    for (i in 2:length(MODEL_TYPES)) {
-      if (modelType == MODEL_TYPES[i]) {
-        playerType <- paste("player", MODEL_TYPES[i], sep = "")
-        playerFile <- paste(playerType, ".R", sep = "")
-        if(!exists(playerType, mode="function")) source(paste(PLAYERS_DIR, playerFile, sep = ""))
-        modelTypeFound <- TRUE
-      }
+  for (i in 1:length(MODEL_TYPES)) {
+    if (modelType == MODEL_TYPES[i]) {
+      playerType <- paste("player", MODEL_TYPES[i], sep = "")
+      playerFile <- paste(playerType, ".R", sep = "")
+      if(!exists(playerType, mode="function")) source(paste(PLAYERS_DIR, playerFile, sep = ""))
+      modelTypeFound <- TRUE
     }
   }
+  
   if (!modelTypeFound) {
     stop(paste("Unknown model type:", modelType))
   }
@@ -68,43 +59,22 @@ initPlayers <- function(modelType, vodType) {
   for (currPlayer in 1:PLAYERS_CNT) {
     currCoopCosts <- coopCosts[currPlayer]
     
-    # one-shot mixed strategy equilibria for symmetric / asymmetric VODs
+    # Random
     if (modelType == MODEL_TYPES[1]) {
-      if (vodType == VOD_TYPES[1]) {
-        players[[currPlayer]] <- SymmetricPlayer$new(currPlayer, currCoopCosts)
-      } else {
-        players[[currPlayer]] <- AsymmetricPlayer$new(currPlayer, currCoopCosts, coopCosts[-currPlayer])
-      }
+      players[[currPlayer]] <- RandomPlayer$new(currPlayer, currCoopCosts,
+                                                RANDOM_COOP_RATIO)
       
-      # coordinate-4
+    # ClassicQ
     } else if (modelType == MODEL_TYPES[2]) {
-      players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, currCoopCosts, COORD_X)
+      players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, currCoopCosts, 
+                                                  CLASSIC_X, CLASSIC_PLAYERS_PER_STATE, BALANCING_TYPE)
       
-      # classic Q-Learning
+    # CoordinateX
     } else if (modelType == MODEL_TYPES[3]) {
-      players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, currCoopCosts, CLASSIC_X)
+      players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, currCoopCosts, 
+                                                     COORD_X, BALANCING_TYPE)
       
-      # random
-    } else if (modelType == MODEL_TYPES[4]) {
-      players[[currPlayer]] <- RandomPlayer$new(currPlayer, currCoopCosts)
-      
-      # coordinate-4 with epsilon as noise factor
-    } else if (modelType == MODEL_TYPES[5]) {
-      players[[currPlayer]] <- CoordinateXEpsilonNoisePlayer$new(currPlayer, currCoopCosts, COORD_X)
-      
-      # classic Q-Learning with epsilon as noise factor
-    } else if (modelType == MODEL_TYPES[6]) {
-      players[[currPlayer]] <- ClassicQEpsilonNoisePlayer$new(currPlayer, currCoopCosts, CLASSIC_X)
-      
-      # win-stay loose-shift (Helbing, 2008)
-    } else if (modelType == MODEL_TYPES[7]) {
-      players[[currPlayer]] <- WinStayLooseShiftPlayer$new(currPlayer, currCoopCosts)
-      
-      # classic Q-Learning with state = actions of all players
-    } else if (modelType == MODEL_TYPES[8]) {
-      players[[currPlayer]] <- ClassicQAllActionsPlayer$new(currPlayer, currCoopCosts, CLASSIC_X)
-      
-      # unknown
+    # unknown
     } else {
       stop(paste("Unknown model type:", modelType))
     }
@@ -269,7 +239,7 @@ storeData <- function(data, directory, vodCount) {
 #     param:  roundsPerVod
 #         the amount of interaction rounds per VOD
 #----------------------------------------------------------------------------------------------------#
-computeSimulation <- function(modelType = MODEL_TYPES[7],
+computeSimulation <- function(modelType = MODEL_TYPES[2],
                               vodType = "all",
                               vodCount = 10,              
                               roundsPerVod = 100) {       
