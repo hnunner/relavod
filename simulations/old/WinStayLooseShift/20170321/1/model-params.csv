@@ -1,4 +1,0 @@
-"","model_type","vod_type","vod_count","rounds_per_vod","players_count","util_max","util_none","p1_coop_cost","p1_assessment_interval","p1_aspiration_level_c","p1_aspiration_level_d","p1_ql","p2_coop_cost","p2_assessment_interval","p2_aspiration_level_c","p2_aspiration_level_d","p2_ql","p3_coop_cost","p3_assessment_interval","p3_aspiration_level_c","p3_aspiration_level_d","p3_ql"
-"1","WinStayLooseShift","sym",10,100,3,80,0,"50","1","30","30","1","50","1","30","30","1","50","1","30","30","1"
-"2","WinStayLooseShift","asym1",10,100,3,80,0,"30","1","50","50","1","50","1","30","30","1","50","1","30","30","1"
-"3","WinStayLooseShift","asym2",10,100,3,80,0,"10","1","70","70","1","50","1","30","30","1","50","1","30","30","1"

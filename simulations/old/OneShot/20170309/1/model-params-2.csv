@@ -1,3 +1,0 @@
-"","model_type","vod_type","vod_count","rounds_per_vod","players_count","util_max","util_none","p1_coop_cost","p1_others_coop_cost","p2_coop_cost","p2_others_coop_cost","p3_coop_cost","p3_others_coop_cost"
-"1","OneShot","asym1",15,150,3,80,0,"30"," 50 50","50"," 30 50","50"," 30 50"
-"2","OneShot","asym2",15,150,3,80,0,"10"," 50 50","50"," 10 50","50"," 10 50"
