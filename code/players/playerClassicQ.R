@@ -132,10 +132,10 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 },
                                 
                                 
-                                #-----------------------------------------------------------------#
+                                #--------------------------------------------------------------------#
                                 #   function: validate
                                 #     Integrity check for player: X must be numeric.
-                                #-----------------------------------------------------------------#
+                                #--------------------------------------------------------------------#
                                 validate = function() {
                                   if (!is.numeric(X)) {
                                     stop("Error during player validation: 'X' must be numeric!")
