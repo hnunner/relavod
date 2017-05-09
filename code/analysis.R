@@ -418,7 +418,7 @@ exportLNIComparison <- function(directory, meanLNIs) {
 #         the type of VOD used for the simulation
 #         possible: 'all', constants.R: 'VOD_TYPES[x]'
 #----------------------------------------------------------------------------------------------------#
-analyzeData <- function(modelType = MODEL_TYPES[1],
+analyzeData <- function(modelType = "CoordinateXEpsilonNoise", #MODEL_TYPES[1],
                         date = "latest",
                         dateCount = "latest",
                         vodType = "all") {
