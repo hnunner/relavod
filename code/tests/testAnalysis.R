@@ -51,6 +51,38 @@ createLNITestSequence2 <- function() {
 }
 
 #----------------------------------------------------------------------------------------------------#
+# function: createLNITestSequence3
+#     Creates an LNI test sequence
+#----------------------------------------------------------------------------------------------------#
+createLNITestSequence3 <- function() {
+  return(c(1,2,3))
+}
+
+#----------------------------------------------------------------------------------------------------#
+# function: createLNITestSequence4
+#     Creates an LNI test sequence
+#----------------------------------------------------------------------------------------------------#
+createLNITestSequence4 <- function() {
+  return(c(1,2,1,2))
+}
+
+#----------------------------------------------------------------------------------------------------#
+# function: createLNITestSequence5
+#     Creates an LNI test sequence
+#----------------------------------------------------------------------------------------------------#
+createLNITestSequence5 <- function() {
+  return(c(1,2,1,3,1,2,1,3))
+}
+
+#----------------------------------------------------------------------------------------------------#
+# function: createLNITestSequence6
+#     Creates an LNI test sequence
+#----------------------------------------------------------------------------------------------------#
+createLNITestSequence6 <- function() {
+  return(c(-1,-1,1,1,2,1,-1,3,2,-1,1,2,1,3,2,-1,1,2,1,3,1,2,1,3,1,2,1,3,1,2,1,3))
+}
+
+#----------------------------------------------------------------------------------------------------#
 # function: testAnalysis
 #     Starting point for test analysis.
 #----------------------------------------------------------------------------------------------------#
@@ -69,7 +101,7 @@ testAnalysis <- function() {
   if (lnis$lni33 != 70) stop(paste("Error during computation of test case 1:\n",
                                    "\texpected value for lni33: 70\n",
                                    "\tcomputed value for lni33:", lnis$lni33))
-  
+
   # test case 2
   vodTestData <- createVodTestData2()
   lniSequence <- extractLNISequence(vodTestData)
@@ -86,29 +118,84 @@ testAnalysis <- function() {
   
   # test case 3
   lnis <- computeLNIs(createLNITestSequence1())
-  if (round(lnis$lni13, 3) != 73.684) stop(paste("Error during computation of test case 2:\n",
+  if (round(lnis$lni13, 3) != 73.684) stop(paste("Error during computation of test case 3:\n",
                                                  "\texpected value for lni13: 73.684\n",
                                                  "\tcomputed value for lni13:", round(lnis$lni13, 3)))
-  if (round(lnis$lni23, 3) != 15.789) stop(paste("Error during computation of test case 2:\n",
+  if (round(lnis$lni23, 3) != 15.789) stop(paste("Error during computation of test case 3:\n",
                                                  "\texpected value for lni23: 15.789\n",
                                                  "\tcomputed value for lni23:", round(lnis$lni23, 3)))
-  if (round(lnis$lni33, 3) != 21.053) stop(paste("Error during computation of test case 2:\n",
+  if (round(lnis$lni33, 3) != 21.053) stop(paste("Error during computation of test case 3:\n",
                                                  "\texpected value for lni33: 21.053\n",
                                                  "\tcomputed value for lni33:", round(lnis$lni33, 3)))
   
   # test case 4  
   lnis <- computeLNIs(createLNITestSequence2())
-  if (lnis$lni13 != 0) stop(paste("Error during computation of test case 2:\n",
+  if (lnis$lni13 != 0) stop(paste("Error during computation of test case 4:\n",
                                   "\texpected value for lni13: 0\n",
                                   "\tcomputed value for lni13:", round(lnis$lni13, 3)))
-  if (lnis$lni23 != 0) stop(paste("Error during computation of test case 2:\n",
+  if (lnis$lni23 != 0) stop(paste("Error during computation of test case 4:\n",
                                   "\texpected value for lni23: 0\n",
                                   "\tcomputed value for lni23:", round(lnis$lni23, 3)))
-  if (lnis$lni33 != 0) stop(paste("Error during computation of test case 2:\n",
+  if (lnis$lni33 != 0) stop(paste("Error during computation of test case 4:\n",
                                   "\texpected value for lni33: 0\n",
                                   "\tcomputed value for lni33:", round(lnis$lni33, 3)))
   
-  # success message at the end of the test analysis
+  # test case 5  
+  lnis <- computeLNIs(createLNITestSequence3())
+  if (lnis$lni13 != 0) stop(paste("Error during computation of test case 5:\n",
+                                  "\texpected value for lni13: 0\n",
+                                  "\tcomputed value for lni13:", round(lnis$lni13, 3)))
+  if (lnis$lni23 != 0) stop(paste("Error during computation of test case 5:\n",
+                                  "\texpected value for lni23: 0\n",
+                                  "\tcomputed value for lni23:", round(lnis$lni23, 3)))
+  if (lnis$lni33 != 100) stop(paste("Error during computation of test case 5:\n",
+                                  "\texpected value for lni33: 100\n",
+                                  "\tcomputed value for lni33:", round(lnis$lni33, 3)))
+  
+  # test case 6  
+  lnis <- computeLNIs(createLNITestSequence4())
+  if (lnis$lni13 != 0) stop(paste("Error during computation of test case 6:\n",
+                                  "\texpected value for lni13: 0\n",
+                                  "\tcomputed value for lni13:", round(lnis$lni13, 3)))
+  if (lnis$lni23 != 100) stop(paste("Error during computation of test case 6:\n",
+                                  "\texpected value for lni23: 100\n",
+                                  "\tcomputed value for lni23:", round(lnis$lni23, 3)))
+  if (lnis$lni33 != 0) stop(paste("Error during computation of test case 6:\n",
+                                    "\texpected value for lni33: 0\n",
+                                    "\tcomputed value for lni33:", round(lnis$lni33, 3)))
+  
+  # test case 7
+  lnis <- computeLNIs(createLNITestSequence5())
+  if (lnis$lni13 != 0) stop(paste("Error during computation of test case 7:\n",
+                                  "\texpected value for lni13: 0\n",
+                                  "\tcomputed value for lni13:", round(lnis$lni13, 3)))
+  if (lnis$lni23 != 112.5) stop(paste("Error during computation of test case 7:\n",
+                                    "\texpected value for lni23: 112.5\n",
+                                    "\tcomputed value for lni23:", round(lnis$lni23, 3)))
+  if (lnis$lni33 != 112.5) stop(paste("Error during computation of test case 7:\n",
+                                  "\texpected value for lni33: 112.5\n",
+                                  "\tcomputed value for lni33:", round(lnis$lni33, 3)))
+  
+  # test case 8
+  lnis <- computeLNIs(createLNITestSequence6())
+  if (lnis$lni13 != 0) stop(paste("Error during computation of test case 8:\n",
+                                  "\texpected value for lni13: 0\n",
+                                  "\tcomputed value for lni13:", round(lnis$lni13, 3)))
+  if (lnis$lni23 != 84.375) stop(paste("Error during computation of test case 8:\n",
+                                      "\texpected value for lni23: 84.375\n",
+                                      "\tcomputed value for lni23:", round(lnis$lni23, 3)))
+  if (lnis$lni33 != 78.125) stop(paste("Error during computation of test case 8:\n",
+                                      "\texpected value for lni33: 78.125\n",
+                                      "\tcomputed value for lni33:", round(lnis$lni33, 3)))
+  
+  if (lnis$lni43 != 50) stop(paste("Error during computation of test case 8:\n",
+                                       "\texpected value for lni43: 50\n",
+                                       "\tcomputed value for lni43:", round(lnis$lni43, 3)))
+  if (lnis$lnimin13 != 15.625) stop(paste("Error during computation of test case 8:\n",
+                                   "\texpected value for lnimin13: 15.625\n",
+                                   "\tcomputed value for lnimin13:", round(lnis$lnimin13, 3)))
+  
+  # finished
   print("Success: Test analysis completed.")
 }
 testAnalysis()

@@ -109,106 +109,118 @@ extractLNISequence <- function(vodData) {
 #----------------------------------------------------------------------------------------------------#
 # function: computeLNIs
 #   Computation of the Latent Norm Index (LNI) for the given LNI sequence.
-#   TODOs: 
-#       - generalize code for different sequence lengths (quite dodgy the way it is)
 #   param:  lniSequence
 #       the LNI sequence 
 #----------------------------------------------------------------------------------------------------#
 computeLNIs <- function(lniSequence) {
   
-  # 1-sequences
-  oneSequences <- c()
-  i <- 1
-  while (i < length(lniSequence)) {
-    currInteraction <- lniSequence[i]
-    
-    if (currInteraction[1] == -1) {
-      i <- i+1
-      next
-    }
-    
-    # compare current interaction with next interactions, 
-    # as long as we haven't reached the end of the sequence
-    # and as long as they are the same
-    seqLength <- 1
-    j <- i+1
-    while (j <= length(lniSequence) 
-           & currInteraction == lniSequence[j]) {
-      seqLength <- seqLength+1
-      j <- j+1
-    }
-    if (seqLength > 1) {
-      oneSequences <- c(oneSequences, seqLength)
-    }
-    i <- j
-  }
-  oneSequences <- oneSequences[oneSequences >= 3]
-  lni13 <- 100 * sum(oneSequences) / length(lniSequence)
   
+  # 1-sequences
+  lni13 <- computeLNISequence(1, lniSequence)
   # 2-sequences
-  twoSequences <- c()
+  lni23 <- computeLNISequence(2, lniSequence)
+  # 3-sequences
+  lni33 <- computeLNISequence(3, lniSequence)
+  
+  # 4-sequences
+  lni43 <- computeLNISequence(4, lniSequence, higherOrder = TRUE)
+  # 5-sequences
+  lni53 <- computeLNISequence(5, lniSequence, higherOrder = TRUE)
+  # 6-sequences
+  lni63 <- computeLNISequence(6, lniSequence, higherOrder = TRUE)
+  # 7-sequences
+  lni73 <- computeLNISequence(7, lniSequence, higherOrder = TRUE)
+  # 8-sequences
+  lni83 <- computeLNISequence(8, lniSequence, higherOrder = TRUE)
+  # 9-sequences
+  lni93 <- computeLNISequence(9, lniSequence, higherOrder = TRUE)
+  
+  # minus-1-sequences
+  elements <- table(lniSequence)
+  lnimin13 <- 0
+  if (length(elements[names(elements) == "-1"]) > 0) {
+    lnimin13 <- as.numeric(elements[names(elements) == "-1"]) / length(lniSequence) * 100
+  } 
+  
+  res <- data.frame(lni13, lni23, lni33, (100 - sum(lni13, lni23, lni33)),
+                    lni43, lni53, lni63, lni73, lni83, lni93, lnimin13)
+  
+  return(res)
+}
+
+#----------------------------------------------------------------------------------------------------#
+# function: computeLNISequence
+#   Generic computation of LNI sequences.
+#   param:  seqLength
+#       the sequence length
+#   param:  lniSequence
+#       the LNI sequence 
+#   param:  higherOrder
+#       flag denoting whether analysis is for classical analysis (h1, h2, h3) as in Diekmann and
+#       Przepiorka (2016), or for higher order (h3+) patterns
+#----------------------------------------------------------------------------------------------------#
+computeLNISequence <- function(seqLength, lniSequence, higherOrder = FALSE) {
+  
+  sequences <- c()
   i <- 1
-  while (i+1 <= length(lniSequence)) {
-    j <- i+1
-    k <- i+2
+  
+  while (i+(seqLength-1) <= length(lniSequence)) {
+    j <- i+(seqLength-1)
+    k <- i+(seqLength)
     currInteraction <- lniSequence[i:j]
-    if (currInteraction[1] == -1
-        | currInteraction[2] == -1
-        | currInteraction[1] == currInteraction[2]) {
-      i <- i+1
+    
+    skip <- FALSE
+    y <- 1    
+    while (!skip & y <= seqLength) {
+      if (currInteraction[y] == -1) {      
+        skip <- TRUE
+      }
+      y <- y+1
+    }
+    
+    if (!higherOrder) {
+      y <- 1
+      while (!skip & seqLength > 1 & y < seqLength) {
+        z <- y+1
+        while (!skip & seqLength > 1 & z <= seqLength) {
+          if (currInteraction[y] == currInteraction[z]) {
+            skip <- TRUE
+          }
+          z <- z+1
+        }
+        y <- y+1
+      }
+    }
+    
+    if (skip) {
+      i <- i+1      
       j <- j+1
       k <- k+1
       next
     }
-    seqLength <- 2
+    
+    seqLengthCopy <- seqLength
     alternatingIndex <- 0
     while (k <= length(lniSequence)
-           & lniSequence[k] == currInteraction[(alternatingIndex%%2)+1]) {
-      seqLength <- seqLength+1
+           & lniSequence[k] == currInteraction[(alternatingIndex%%seqLength)+1]) {
+      seqLengthCopy <- seqLengthCopy+1
       k <- k+1
       alternatingIndex <- alternatingIndex+1
     }
-    twoSequences <- c(twoSequences, seqLength)
-    i <- k
-  }
-  twoSequences <- twoSequences[twoSequences >= 3]
-  lni23 <- 100 * sum(twoSequences) / length(lniSequence)
-  
-  # 3-sequences
-  threeSequences <- c()
-  i <- 1
-  while (i+2 <= length(lniSequence)) {
-    j <- i+1
-    k <- i+2
-    l <- i+3
-    currInteraction <- lniSequence[i:k]
-    if (currInteraction[1] == -1
-        | currInteraction[2] == -1
-        | currInteraction[3] == -1
-        | currInteraction[1] == currInteraction[2]
-        | currInteraction[1] == currInteraction[3]
-        | currInteraction[2] == currInteraction[3]) {
+    if (!higherOrder || (higherOrder && seqLengthCopy > seqLength)) {
+      sequences <- c(sequences, seqLengthCopy)
+    }
+    
+    if ((k-1) <= i) {
       i <- i+1
-      j <- j+1
-      k <- k+1
-      l <- l+1
-      next
+    } else {
+      i <- k-1
     }
-    seqLength <- 3
-    alternatingIndex <- 0
-    while (l <= length(lniSequence)
-           & lniSequence[l] == currInteraction[(alternatingIndex%%3)+1]) {
-      seqLength <- seqLength+1
-      l <- l+1
-      alternatingIndex <- alternatingIndex+1
-    }
-    threeSequences <- c(threeSequences, seqLength)
-    i <- k
   }
-  threeSequences <- threeSequences[threeSequences >= 3]
-  lni33 <- 100 * sum(threeSequences) / length(lniSequence)
+  # end: 
   
-  return(data.frame(lni13, lni23, lni33, (100 - sum(lni13, lni23, lni33))))
+  sequences <- sequences[sequences >= 3]
+  return(100 * sum(sequences) / length(lniSequence))
 }
 
 
@@ -422,6 +434,7 @@ analyzeData <- function(modelType = MODEL_TYPES[1],
   LNIs <- data.frame()
   
   # looping over the VOD types to be analyzed (e.g.: sym -> asym1 -> asym2)
+  comparableKeeps <- c()
   for (i in 1:length(vodType)) {
     currVodType <- vodType[i]
     
@@ -441,7 +454,20 @@ analyzeData <- function(modelType = MODEL_TYPES[1],
     colnames(vodTypeLNIs) <- c((paste(currVodType, "_h1", sep = "")),
                                (paste(currVodType, "_h2", sep = "")),
                                (paste(currVodType, "_h3", sep = "")),
-                               (paste(currVodType, "_others", sep = "")))
+                               (paste(currVodType, "_others", sep = "")),
+                               (paste(currVodType, "_h4", sep = "")),
+                               (paste(currVodType, "_h5", sep = "")),
+                               (paste(currVodType, "_h6", sep = "")),
+                               (paste(currVodType, "_h7", sep = "")),
+                               (paste(currVodType, "_h8", sep = "")),
+                               (paste(currVodType, "_h9", sep = "")),
+                               (paste(currVodType, "_h_minus1", sep = "")))
+    
+    comparableKeeps <- c(comparableKeeps,
+                         (paste(currVodType, "_h1", sep = "")),
+                         (paste(currVodType, "_h2", sep = "")),
+                         (paste(currVodType, "_h3", sep = "")),
+                         (paste(currVodType, "_others", sep = "")))
     
     # column binding of LNIs for all different VOD types
     if (nrow(LNIs) == 0) {
@@ -453,12 +479,12 @@ analyzeData <- function(modelType = MODEL_TYPES[1],
   
   # computation of mean LNIs
   meanLNIs <- apply(LNIs, 2, median)
-  
-  # exporting Goodness of Fit
-  exportGOF(exportDir, meanLNIs)
+
+    # exporting Goodness of Fit
+  exportGOF(exportDir, meanLNIs[comparableKeeps])
   
   # exporting LNI comparison data (model vs. experiment)
-  exportLNIComparison(exportDir, meanLNIs)
+  exportLNIComparison(exportDir, meanLNIs[comparableKeeps])
   
 }
 
