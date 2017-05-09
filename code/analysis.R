@@ -441,10 +441,10 @@ analyzeData <- function(modelType = "CoordinateXEpsilonNoise", #MODEL_TYPES[1],
     # importing the required simulated data
     vodSimData <- importVodSimData(modelType = modelType, date = date, 
                                    dateCount = dateCount, vodType = currVodType)
-    
+
     # exporting interaction patterns
     exportInteractionPatterns(exportDir, currVodType, vodSimData)
-        
+    
     # computation of LNIs per VOD type (e.g., sym, asym1, asym2)
     vodTypeLNIs <- data.frame()
     for (i in 1:length(vodSimData)) {
@@ -486,6 +486,14 @@ analyzeData <- function(modelType = "CoordinateXEpsilonNoise", #MODEL_TYPES[1],
   # exporting LNI comparison data (model vs. experiment)
   exportLNIComparison(exportDir, meanLNIs[comparableKeeps])
   
+}
+
+
+
+h4Pattern <- function() {
+  vodSimData <- get(load("/Users/hendrik/git/uu/mscp-model/simulations/CoordinateXEpsilonNoise/20170316/1/sym/sim-8.Rdata"))
+  lniSequence <- extractLNISequence(vodSimData)
+  lnis <- computeLNIs(lniSequence)
 }
 
 
