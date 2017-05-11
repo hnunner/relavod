@@ -157,7 +157,7 @@ computeLNIs <- function(lniSequence) {
 #       the LNI sequence 
 #   param:  higherOrder
 #       flag denoting whether analysis is for classical analysis (h1, h2, h3) as in Diekmann and
-#       Przepiorka (2016), or for higher order (h3+) patterns
+#       Przepiorka (2016), or for higher order (h3+) patterns in which numbers can reoccur
 #----------------------------------------------------------------------------------------------------#
 computeLNISequence <- function(seqLength, lniSequence, higherOrder = FALSE) {
   
@@ -217,7 +217,6 @@ computeLNISequence <- function(seqLength, lniSequence, higherOrder = FALSE) {
       i <- k-1
     }
   }
-  # end: 
   
   sequences <- sequences[sequences >= 3]
   return(100 * sum(sequences) / length(lniSequence))
@@ -226,8 +225,105 @@ computeLNISequence <- function(seqLength, lniSequence, higherOrder = FALSE) {
 
 ########################################## PLOTS / EXPORTS ###########################################
 #----------------------------------------------------------------------------------------------------#
+# function: plotConvergencePattern
+#   Plots the pattern for the given convergence data.
+#   param:  convergenceData
+#       the convergence data to plot
+#----------------------------------------------------------------------------------------------------#
+plotConvergencePattern <- function(convergenceData, currentPlot = 1, overallPlots = 1) {
+  
+  #rownames(convergenceData) <- seq(length=nrow(convergenceData))
+  
+  h1Patterns <- data.frame("which" = numeric(1), "h1" = numeric(1))
+  if (length(which(convergenceData[,1] == 0)) < length(convergenceData$h1)) {
+    h1Patterns <- data.frame(which(convergenceData[,1] == 1), 1)
+  }
+  h2Patterns <- data.frame("which" = numeric(1), "h2" = numeric(1))
+  if (length(which(convergenceData[,2] == 0)) < length(convergenceData$h2)) {
+    h2Patterns <- data.frame(which(convergenceData[,2] == 1), 2)
+  }
+  h3Patterns <- data.frame("which" = numeric(1), "h3" = numeric(1))
+  if (length(which(convergenceData[,3] == 0)) < length(convergenceData$h3)) {
+    h3Patterns <- data.frame(which(convergenceData[,3] == 1), 3)
+  }
+  h4Patterns <- data.frame("which" = numeric(1), "h4" = numeric(1))
+  if (length(which(convergenceData[,4] == 0)) < length(convergenceData$h4)) {
+    h4Patterns <- data.frame(which(convergenceData[,4] == 1), 4)
+  }
+  h5Patterns <- data.frame("which" = numeric(1), "h5" = numeric(1))
+  if (length(which(convergenceData[,5] == 0)) < length(convergenceData$h5)) {
+    h5Patterns <- data.frame(which(convergenceData[,5] == 1), 5)
+  }
+  h6Patterns <- data.frame("which" = numeric(1), "h6" = numeric(1))
+  if (length(which(convergenceData[,6] == 0)) < length(convergenceData$h6)) {
+    h6Patterns <- data.frame(which(convergenceData[,6] == 1), 6)
+  }
+  h7Patterns <- data.frame("which" = numeric(1), "h7" = numeric(1))
+  if (length(which(convergenceData[,7] == 0)) < length(convergenceData$h7)) {
+    h7Patterns <- data.frame(which(convergenceData[,7] == 1), 7)
+  }
+  h8Patterns <- data.frame("which" = numeric(1), "h8" = numeric(1))
+  if (length(which(convergenceData[,8] == 0)) < length(convergenceData$h8)) {
+    h8Patterns <- data.frame(which(convergenceData[,8] == 1), 8)
+  }
+  h9Patterns <- data.frame("which" = numeric(1), "h9" = numeric(1))
+  if (length(which(convergenceData[,9] == 0)) < length(convergenceData$h9)) {
+    h9Patterns <- data.frame(which(convergenceData[,9] == 1), 9)
+  }
+  hmin1Patterns <- data.frame("which" = numeric(1), "h-1" = numeric(1))
+  if (length(which(convergenceData[,10] == 0)) < length(convergenceData$hmin1)) {
+    hmin1Patterns <- data.frame(which(convergenceData[,10] == 1), 10)
+  }
+  othersPatterns <- data.frame("which" = numeric(1), "others" = numeric(1))
+  if (length(which(convergenceData[,11] == 0)) < length(convergenceData$others)) {
+    othersPatterns <- data.frame(which(convergenceData[,11] == 1), 11)
+  }
+  
+  
+  # basic plot - including cooperation data for player 1
+  plot(h1Patterns, ann=FALSE, xaxt = "n", yaxt = "n", 
+       type = 'p', pch = '.',
+       xlim = range(1:nrow(convergenceData)), ylim = range(0.5:(ncol(convergenceData)+0.5)))
+  # y-axis per plot
+  #axis(side=2,at=seq(0,3,1),labels=seq(0,3,1), cex.axis = 0.7)
+  
+  # adding other convergence patterns
+  points(h2Patterns, type = 'p', pch = '.')
+  points(h3Patterns, type = 'p', pch = '.')
+  points(h4Patterns, type = 'p', pch = '.')
+  points(h5Patterns, type = 'p', pch = '.')
+  points(h6Patterns, type = 'p', pch = '.')
+  points(h7Patterns, type = 'p', pch = '.')
+  points(h8Patterns, type = 'p', pch = '.')
+  points(h9Patterns, type = 'p', pch = '.')
+  points(hmin1Patterns, type = 'p', pch = '.')
+  points(othersPatterns, type = 'p', pch = '.')
+  
+  # adding horizontal lines
+  #segments(x0 = 0, x1 = nrow(convergenceData), y0 = c(1,2,3), col = "gray60")
+  
+  if (currentPlot == overallPlots) {
+    # overall x-axis
+    mtext(side=1,"Period",line=2.5)       
+    axis(side=1,
+         at=seq(0,nrow(convergenceData), by=(nrow(convergenceData)/10)),
+         labels=seq(0,nrow(convergenceData), by=(nrow(convergenceData)/10)), 
+         cex.axis = 0.7)
+    # overall y-axis label
+    mtext('LNI-order of prevalent behavioral pattern', side = 2, 
+          outer = TRUE, line = -1.8)
+  }
+}
+
+
+
+
+
+
+
+#----------------------------------------------------------------------------------------------------#
 # function: plotInteractionPatterns
-#   Plots the interaction patterns for the given VOD data.
+#   Orchestrates plotting of multiple interaction patterns into one plot
 #   param:  vodData
 #       the VOD data to plot
 #----------------------------------------------------------------------------------------------------#
@@ -239,45 +335,54 @@ plotInteractionPatterns <- function(vodData) {
   
   # looping over the available VODs
   for (i in 1:length(vodData)) {
-    
     singleVodData <- vodData[[i]]
-    singleVodData <- singleVodData[2:length(singleVodData$round),2:4]
-    rownames(singleVodData) <- seq(length=nrow(singleVodData))
-    
-    p1Cooperations <- data.frame("which" = numeric(1), "X1" = numeric(1))
-    if (length(which(singleVodData[,1] == 0)) < length(singleVodData$player1)) {
-      p1Cooperations <- data.frame(which(singleVodData[,1] == 1), 1)
-    }
-    p2Cooperations <- data.frame("which" = numeric(1), "X2" = numeric(1))
-    if (length(which(singleVodData[,2] == 0)) < length(singleVodData$player2)) {
-      p2Cooperations <- data.frame(which(singleVodData[,2] == 1), 2)
-    }
-    p3Cooperations <- data.frame("which" = numeric(1), "X3" = numeric(1))
-    if (length(which(singleVodData[,3] == 0)) < length(singleVodData$player3)) {
-      p3Cooperations <- data.frame(which(singleVodData[,3] == 1), 3)
-    }
-    
-    # basic plot - including cooperation data for player 1
-    plot(p1Cooperations, ann=FALSE, xaxt = "n", yaxt = "n", 
-         type = 'p', pch = 'x',
-         xlim = range(1:nrow(singleVodData)), ylim = range(0.5:3.5))
-    # y-axis per plot
-    axis(side=2,at=seq(0,3,1),labels=seq(0,3,1), cex.axis = 0.7)
-    # adding cooperation data for players 2 and 3
-    points(p2Cooperations, type = 'p', pch = 'x')
-    points(p3Cooperations, type = 'p', pch = 'x')
-    # adding horizontal lines
-    segments(x0 = 0, x1 = nrow(singleVodData), y0 = c(1,2,3), col = "gray60")
-    
-    if (i == length(vodData)) {
-      # overall x-axis
-      mtext(side=1,"Period",line=2.5)       
-      axis(side=1,at=seq(0,nrow(singleVodData),1),labels=seq(0,nrow(singleVodData),1), 
-           cex.axis = 0.7)
-      # overall y-axis label
-      mtext('Group members\' decision across sessions (x = \'cooperation\')', side = 2, 
-            outer = TRUE, line = -1.8)
-    }
+    plotInteractionPattern(singleVodData, i, length(vodData))
+  }
+}
+
+#----------------------------------------------------------------------------------------------------#
+# function: plotInteractionPattern
+#   Plots the interaction pattern for the given VOD data.
+#   param:  vodData
+#       the VOD data to plot
+#----------------------------------------------------------------------------------------------------#
+plotInteractionPattern <- function(vodData, currentPlot = 1, overallPlots = 1) {
+  vodData <- vodData[2:length(vodData$round),2:4]
+  rownames(vodData) <- seq(length=nrow(vodData))
+  
+  p1Cooperations <- data.frame("which" = numeric(1), "X1" = numeric(1))
+  if (length(which(vodData[,1] == 0)) < length(vodData$player1)) {
+    p1Cooperations <- data.frame(which(vodData[,1] == 1), 1)
+  }
+  p2Cooperations <- data.frame("which" = numeric(1), "X2" = numeric(1))
+  if (length(which(vodData[,2] == 0)) < length(vodData$player2)) {
+    p2Cooperations <- data.frame(which(vodData[,2] == 1), 2)
+  }
+  p3Cooperations <- data.frame("which" = numeric(1), "X3" = numeric(1))
+  if (length(which(vodData[,3] == 0)) < length(vodData$player3)) {
+    p3Cooperations <- data.frame(which(vodData[,3] == 1), 3)
+  }
+  
+  # basic plot - including cooperation data for player 1
+  plot(p1Cooperations, ann=FALSE, xaxt = "n", yaxt = "n", 
+       type = 'p', pch = 'x',
+       xlim = range(1:nrow(vodData)), ylim = range(0.5:3.5))
+  # y-axis per plot
+  axis(side=2,at=seq(0,3,1),labels=seq(0,3,1), cex.axis = 0.7)
+  # adding cooperation data for players 2 and 3
+  points(p2Cooperations, type = 'p', pch = 'x')
+  points(p3Cooperations, type = 'p', pch = 'x')
+  # adding horizontal lines
+  segments(x0 = 0, x1 = nrow(vodData), y0 = c(1,2,3), col = "gray60")
+  
+  if (currentPlot == overallPlots) {
+    # overall x-axis
+    mtext(side=1,"Period",line=2.5)       
+    axis(side=1,at=seq(0,nrow(vodData),1),labels=seq(0,nrow(vodData),1), 
+         cex.axis = 0.7)
+    # overall y-axis label
+    mtext('Group members\' decision across sessions (x = \'cooperation\')', side = 2, 
+          outer = TRUE, line = -1.8)
   }
 }
 
@@ -494,6 +599,28 @@ h4Pattern <- function() {
   vodSimData <- get(load("/Users/hendrik/git/uu/mscp-model/simulations/CoordinateXEpsilonNoise/20170316/1/sym/sim-8.Rdata"))
   lniSequence <- extractLNISequence(vodSimData)
   lnis <- computeLNIs(lniSequence)
+  
+  quartz()
+  plotInteractionPattern(vodSimData)
+  
+  
+  h1 <- sample(c(0,1), 150000, replace = TRUE)
+  h2 <- sample(c(0,1), 150000, replace = TRUE)
+  h3 <- sample(c(0,1), 150000, replace = TRUE)
+  h4 <- sample(c(0,1), 150000, replace = TRUE)
+  h5 <- sample(c(0,1), 150000, replace = TRUE)
+  h6 <- sample(c(0,1), 150000, replace = TRUE)
+  h7 <- sample(c(0,1), 150000, replace = TRUE)
+  h8 <- sample(c(0,1), 150000, replace = TRUE)
+  h9 <- sample(c(0,1), 150000, replace = TRUE)
+  hmin1 <- sample(c(0,1), 150000, replace = TRUE)
+  others <- sample(c(0,1), 150000, replace = TRUE)
+  
+  convergenceData <- data.frame(h1, h2, h3, h4, h5, h6, h7, h8, h9, hmin1, others)
+  
+  quartz()  
+  plotConvergencePattern(convergenceData)
+  
 }
 
 
