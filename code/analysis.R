@@ -112,6 +112,223 @@ extractLNISequence <- function(vodData) {
 #   param:  lniSequence
 #       the LNI sequence 
 #----------------------------------------------------------------------------------------------------#
+computeConvergencePatterns <- function(lniSequence) {
+
+  
+  
+  vodSimData <- get(load("/Users/hendrik/git/uu/mscp-model/simulations/CoordinateXEpsilonNoise/20170316/1/sym/sim-8.Rdata"))
+  lniSequence <- extractLNISequence(vodSimData)
+  
+  
+  lniSequence <- c(2,2,-1,-1,-1,1,2,-1,2,1,3,3,2,1,-1,1,-1,2,2,2,3,3,3,3,1,2,1,2,1,2,3,1,2,3,1,2,3,1,2,1,3,1,2,1,3,1,2,1,3)
+  
+
+      
+  # -1's
+  min1s <- as.numeric(lniSequence == "-1")
+  
+  # classical patterns
+  h1 <- computeConvergencePattern(1, lniSequence)
+  h2 <- computeConvergencePattern(2, lniSequence)
+  h3 <- computeConvergencePattern(3, lniSequence)
+  
+  # hgher order patterns
+  h4 <- computeConvergencePattern(4, lniSequence, higherOrder = TRUE)
+  h5 <- computeConvergencePattern(5, lniSequence, higherOrder = TRUE)
+  h6 <- computeConvergencePattern(6, lniSequence, higherOrder = TRUE)
+  h7 <- computeConvergencePattern(7, lniSequence, higherOrder = TRUE)
+  h8 <- computeConvergencePattern(8, lniSequence, higherOrder = TRUE)
+  h9 <- computeConvergencePattern(9, lniSequence, higherOrder = TRUE)
+  
+  # everything that's not falling under any of the categories above
+  others <- as.numeric(!(min1s|h1|h2|h3|h4|h5|h6|h7|h8|h9))
+  
+  res <- data.frame(min1s, h1, h2, h3, h4, h5, h6, h7, h8, h9, others)
+  return(res)
+}
+
+
+
+
+#----------------------------------------------------------------------------------------------------#
+# function: computeConvergencePattern
+#   Generic computation of convergence patterns per sequence length.
+#   param:  seqLength
+#       the sequence length
+#   param:  lniSequence
+#       the LNI sequence 
+#   param:  higherOrder
+#       flag denoting whether analysis is for classical analysis (h1, h2, h3) as in Diekmann and
+#       Przepiorka (2016), or for higher order (h3+) patterns in which numbers can reoccur
+#----------------------------------------------------------------------------------------------------#
+computeConvergencePattern <- function(seqLength, lniSequence) {
+  
+  if (seqLength == 1) {
+    ones <- compressConvergencePattern(as.numeric(lniSequence == "1"))
+    twos <- compressConvergencePattern(as.numeric(lniSequence == "2"))
+    threes <- compressConvergencePattern(as.numeric(lniSequence == "3"))
+    return(as.numeric(ones|twos|threes))
+  }
+  
+  
+  ### mock data ###
+  seqLength <- 4
+  lniSequence <- c(2,1,2,-1,1,2,-1,2,1,3,3,2,1,-1,1,-1,2,2,2,3,3,3,3,1,2,1,2,1,2,3,1,2,3,1,2,3,1,2,1,3,1,2,1,3,1,2,1,3)
+  ### mock data ###
+  
+
+  # permutations for seqLength > 4 must be a combination of %%3
+  # e.g. seqLength = 5 --> permutations of length 3 in combination with permutations of length 2 !!!without repeats!!!
+  library(gtools)
+  pattern <- rep(0, length(lniSequence))
+  values <- c(1,2,3)
+  states <- list()
+  if (seqLength <= 3) {
+    perms <- permutations(length(values), seqLength, values, 
+                          set = FALSE, repeats.allowed = FALSE)
+    for (i in 1:nrow(perms)) {
+      states[[i]] <- perms[i,]
+    }
+  } else {
+    seqLengthCopy <- seqLength
+    while (seqLengthCopy > 0) {
+      
+      permLength <- 0
+      if (seqLengthCopy > 3) {
+        permLength <- 3
+      } else {
+        permLength <- seqLengthCopy
+      }
+      
+      perms <- permutations(length(values), permLength, values, 
+                            set = FALSE, repeats.allowed = FALSE)
+      
+      if (length(states) <= 0) {
+        for (i in 1:nrow(perms)) {
+          states[[i]] <- perms[i,]
+        }
+      } else {
+        preStates <- list()
+        for (i in 1:nrow(perms)) {
+          preStates[[i]] <- perms[i,]
+        }
+        stateIndex <- 1
+        newStates <- list()
+        for (i in 1:(length(states))) {
+          for (j in 1:(length(preStates))) {
+            newStates[[stateIndex]] <- c(states[[i]], preStates[[j]])
+            stateIndex <- stateIndex+1
+          }
+        }
+        states <- newStates
+      }
+      seqLengthCopy <- seqLengthCopy-3
+    }
+  }
+  
+  # looping over all possible states
+  for (stIndex in 1:length(states)) {
+    currState <- states[[stIndex]]
+    
+    
+    
+    
+    
+    currState <- states[[7]]
+    
+    
+    # TODO FIX IT!!!
+    # correct list of states is provided
+    # not giving the correct pattern
+    
+    
+    # looping over every number in the lni-sequence
+    seqIndex <- 1
+    while (seqIndex <= length(lniSequence)) {
+      currIndex <- seqIndex
+      currPattern <- rep(0, length(lniSequence))
+      while (currIndex <= length(lniSequence) &&
+        lniSequence[currIndex] == currState[((currIndex+(seqLength-1)) %% seqLength) + 1]) {
+        currPattern[currIndex] <- 1
+        currIndex <- currIndex+1
+      }
+      
+      if (seqLength > 3) {
+        currPattern <- compressConvergencePattern(currPattern, seqLength)
+      } else {
+        currPattern <- compressConvergencePattern(currPattern, 3)
+      }
+      
+      pattern <- pattern|currPattern
+      seqIndex <- seqIndex+1
+    }
+    
+    stIndex <- stIndex+1
+  }
+  
+
+  length(lniSequence)
+  length(pattern)
+  
+  rbind(lniSequence, pattern)
+  
+
+}
+
+#----------------------------------------------------------------------------------------------------#
+# function: compressConvergencePattern
+#   Makes sure that a convergence pattern constitutes of at least three actions. Everything else
+#   will be erased, resulting in a compressed pattern.
+#   param:  pattern
+#       the pattern to compress
+#   param:  minLength
+#       the minimum length of actions
+#----------------------------------------------------------------------------------------------------#
+compressConvergencePattern <- function(pattern, minLength) {
+  res <- c()
+  i <- 1
+  
+  # loop over whole pattern
+  while (i <= length(pattern)) {
+    
+    # 0 = no pattern at all
+    if (pattern[i] == 0) {
+      res[i] <- 0
+      i <- i+1
+      
+    } else {
+      # 1. count the occurrence
+      cnt <- 1
+      j <- i+1
+      while (j <= length(pattern) && pattern[j] == 1) {
+        cnt <- cnt+1
+        j <- j+1
+      }
+      
+      # 2. add only, if at least three actions in a single pattern
+      if (cnt >= minLength) {
+        res[i:(i+(cnt-1))] <- 1
+      } else {
+        res[i:(i+(cnt-1))] <- 0
+      }
+      i <- i+cnt
+    }
+  }
+  return(res)
+}
+
+
+
+
+
+
+#----------------------------------------------------------------------------------------------------#
+# function: computeConvergencePatterns
+#   Computation of predominant behavioral patterns (h1-h3 as in Diekmann and Przepiorka, and 
+#   more complex, additonal patterns)
+#   param:  lniSequence
+#       the LNI sequence 
+#----------------------------------------------------------------------------------------------------#
 computeLNIs <- function(lniSequence) {
   
   
@@ -227,6 +444,8 @@ computeLNISequence <- function(seqLength, lniSequence, higherOrder = FALSE) {
 #----------------------------------------------------------------------------------------------------#
 # function: plotConvergencePattern
 #   Plots the pattern for the given convergence data.
+#   TODOs:
+#       - generalize code (this is ugly as fuck)
 #   param:  convergenceData
 #       the convergence data to plot
 #----------------------------------------------------------------------------------------------------#
@@ -280,14 +499,18 @@ plotConvergencePattern <- function(convergenceData, currentPlot = 1, overallPlot
   }
   
   
-  # basic plot - including cooperation data for player 1
-  plot(h1Patterns, ann=FALSE, xaxt = "n", yaxt = "n", 
+  # basic plot - showing -1 pattern
+  plot(hmin1Patterns, ann=FALSE, xaxt = "n", yaxt = "n", 
        type = 'p', pch = '.',
        xlim = range(1:nrow(convergenceData)), ylim = range(0.5:(ncol(convergenceData)+0.5)))
   # y-axis per plot
-  #axis(side=2,at=seq(0,3,1),labels=seq(0,3,1), cex.axis = 0.7)
+  axis(side=2,
+       at=seq(1,ncol(convergenceData),1),
+       labels=c("-1","h1","h2","h3","h4","h5","h6","h7","h8","h9","others"), 
+       cex.axis = 0.7)
   
   # adding other convergence patterns
+  points(h1Patterns, type = 'p', pch = '.')
   points(h2Patterns, type = 'p', pch = '.')
   points(h3Patterns, type = 'p', pch = '.')
   points(h4Patterns, type = 'p', pch = '.')
@@ -296,11 +519,7 @@ plotConvergencePattern <- function(convergenceData, currentPlot = 1, overallPlot
   points(h7Patterns, type = 'p', pch = '.')
   points(h8Patterns, type = 'p', pch = '.')
   points(h9Patterns, type = 'p', pch = '.')
-  points(hmin1Patterns, type = 'p', pch = '.')
   points(othersPatterns, type = 'p', pch = '.')
-  
-  # adding horizontal lines
-  #segments(x0 = 0, x1 = nrow(convergenceData), y0 = c(1,2,3), col = "gray60")
   
   if (currentPlot == overallPlots) {
     # overall x-axis
@@ -343,6 +562,8 @@ plotInteractionPatterns <- function(vodData) {
 #----------------------------------------------------------------------------------------------------#
 # function: plotInteractionPattern
 #   Plots the interaction pattern for the given VOD data.
+#   TODOs:
+#       - generalize code (this is ugly as fuck)
 #   param:  vodData
 #       the VOD data to plot
 #----------------------------------------------------------------------------------------------------#
@@ -603,23 +824,12 @@ h4Pattern <- function() {
   quartz()
   plotInteractionPattern(vodSimData)
   
+
   
-  h1 <- sample(c(0,1), 150000, replace = TRUE)
-  h2 <- sample(c(0,1), 150000, replace = TRUE)
-  h3 <- sample(c(0,1), 150000, replace = TRUE)
-  h4 <- sample(c(0,1), 150000, replace = TRUE)
-  h5 <- sample(c(0,1), 150000, replace = TRUE)
-  h6 <- sample(c(0,1), 150000, replace = TRUE)
-  h7 <- sample(c(0,1), 150000, replace = TRUE)
-  h8 <- sample(c(0,1), 150000, replace = TRUE)
-  h9 <- sample(c(0,1), 150000, replace = TRUE)
-  hmin1 <- sample(c(0,1), 150000, replace = TRUE)
-  others <- sample(c(0,1), 150000, replace = TRUE)
-  
-  convergenceData <- data.frame(h1, h2, h3, h4, h5, h6, h7, h8, h9, hmin1, others)
+  convergencePatterns <- computeConvergencePatterns(lniSequence)
   
   quartz()  
-  plotConvergencePattern(convergenceData)
+  plotConvergencePattern(convergencePatterns)
   
 }
 
