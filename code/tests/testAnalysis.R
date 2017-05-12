@@ -188,8 +188,8 @@ testAnalysis <- function() {
                                       "\texpected value for lni33: 78.125\n",
                                       "\tcomputed value for lni33:", round(lnis$lni33, 3)))
   
-  if (lnis$lni43 != 50) stop(paste("Error during computation of test case 8:\n",
-                                       "\texpected value for lni43: 50\n",
+  if (lnis$lni43 != 59.375) stop(paste("Error during computation of test case 8:\n",
+                                       "\texpected value for lni43: 59.375\n",
                                        "\tcomputed value for lni43:", round(lnis$lni43, 3)))
   if (lnis$lnimin13 != 15.625) stop(paste("Error during computation of test case 8:\n",
                                    "\texpected value for lnimin13: 15.625\n",

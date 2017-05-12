@@ -163,116 +163,90 @@ computeConvergencePatterns <- function(lniSequence) {
 #----------------------------------------------------------------------------------------------------#
 computeConvergencePattern <- function(seqLength, lniSequence) {
   
-  if (seqLength == 1) {
-    ones <- compressConvergencePattern(as.numeric(lniSequence == "1"))
-    twos <- compressConvergencePattern(as.numeric(lniSequence == "2"))
-    threes <- compressConvergencePattern(as.numeric(lniSequence == "3"))
-    return(as.numeric(ones|twos|threes))
-  }
   
   
-  ### mock data ###
+  
   seqLength <- 4
-  lniSequence <- c(2,1,2,-1,1,2,-1,2,1,3,3,2,1,-1,1,-1,2,2,2,3,3,3,3,1,2,1,2,1,2,3,1,2,3,1,2,3,1,2,1,3,1,2,1,3,1,2,1,3)
-  ### mock data ###
+  lniSequence <- c(-1,-1,1,1,2,1,-1,3,2,-1,1,2,1,3,2,-1,1,2,1,3,1,2,1,3,1,2,1,3,1,2,1,3)
   
-
-  # permutations for seqLength > 4 must be a combination of %%3
-  # e.g. seqLength = 5 --> permutations of length 3 in combination with permutations of length 2 !!!without repeats!!!
-  library(gtools)
+  
+  
+  
+  
+  
   pattern <- rep(0, length(lniSequence))
-  values <- c(1,2,3)
-  states <- list()
-  if (seqLength <= 3) {
-    perms <- permutations(length(values), seqLength, values, 
-                          set = FALSE, repeats.allowed = FALSE)
-    for (i in 1:nrow(perms)) {
-      states[[i]] <- perms[i,]
+  i <- 1
+  
+  while (i+(seqLength-1) <= length(lniSequence)) {
+    j <- i+(seqLength-1)
+    k <- i+(seqLength)
+    currInteraction <- lniSequence[i:j]
+    
+    # skip if there is a "-1" in the current interaction
+    skip <- any(currInteraction == -1)
+
+    # skip if there are duplicates in any triplet
+    # e.g. current interaction of 8 actions = 2 2/3 triplets: "123|231|21"
+    # this is to make sure that for higher order interactions (h3+) lower order 
+    # instances (e.g., 111|111|11) are not considered as high order instance
+    currInteractionCopy <- currInteraction
+    while (!skip && length(currInteractionCopy) > 0) {
+      lowerBound <- 1
+      upperBound <- 2
+      
+      # compare each element of current triplet for equality
+      while (!skip && lowerBound < 3 && lowerBound < length(currInteractionCopy)) {
+        while (!skip && upperBound < 4 && upperBound <= length(currInteractionCopy)) {
+          
+          if (currInteractionCopy[lowerBound] == currInteractionCopy[upperBound]) {
+            skip <- TRUE
+          } 
+          upperBound <- upperBound+1
+        }
+        lowerBound <- lowerBound+1
+        upperBound <- lowerBound+1
+      }
+      
+      # switch to next triplet
+      if (length(currInteractionCopy) > 3) {
+        currInteractionCopy <- tail(currInteractionCopy, length(currInteractionCopy)-3)
+      } else {
+        currInteractionCopy <- c()
+      }
     }
-  } else {
-    seqLengthCopy <- seqLength
-    while (seqLengthCopy > 0) {
-      
-      permLength <- 0
-      if (seqLengthCopy > 3) {
-        permLength <- 3
-      } else {
-        permLength <- seqLengthCopy
-      }
-      
-      perms <- permutations(length(values), permLength, values, 
-                            set = FALSE, repeats.allowed = FALSE)
-      
-      if (length(states) <= 0) {
-        for (i in 1:nrow(perms)) {
-          states[[i]] <- perms[i,]
-        }
-      } else {
-        preStates <- list()
-        for (i in 1:nrow(perms)) {
-          preStates[[i]] <- perms[i,]
-        }
-        stateIndex <- 1
-        newStates <- list()
-        for (i in 1:(length(states))) {
-          for (j in 1:(length(preStates))) {
-            newStates[[stateIndex]] <- c(states[[i]], preStates[[j]])
-            stateIndex <- stateIndex+1
-          }
-        }
-        states <- newStates
-      }
-      seqLengthCopy <- seqLengthCopy-3
+    
+    if (skip) {
+      i <- i+1      
+      j <- j+1
+      k <- k+1
+      next
+    }
+    
+    tmpPattern <- rep(0, length(lniSequence))
+    tmpPattern[i:(k-1)] <- 1
+    
+    alternatingIndex <- 0
+    while (k <= length(lniSequence)
+           & lniSequence[k] == currInteraction[(alternatingIndex%%seqLength)+1]) {
+      tmpPattern[k] <- 1
+      k <- k+1
+      alternatingIndex <- alternatingIndex+1
+    }
+    if (seqLength > 3) {
+      tmpPattern <- compressConvergencePattern(tmpPattern, seqLength)
+    } else {
+      tmpPattern <- compressConvergencePattern(tmpPattern, 3)
+    }
+    pattern <- as.numeric(pattern|tmpPattern)
+    
+    if ((k-1) <= i) {
+      i <- i+1
+    } else {
+      i <- k-1
     }
   }
   
-  # looping over all possible states
-  for (stIndex in 1:length(states)) {
-    currState <- states[[stIndex]]
-    
-    
-    
-    
-    
-    currState <- states[[7]]
-    
-    
-    # TODO FIX IT!!!
-    # correct list of states is provided
-    # not giving the correct pattern
-    
-    
-    # looping over every number in the lni-sequence
-    seqIndex <- 1
-    while (seqIndex <= length(lniSequence)) {
-      currIndex <- seqIndex
-      currPattern <- rep(0, length(lniSequence))
-      while (currIndex <= length(lniSequence) &&
-        lniSequence[currIndex] == currState[((currIndex+(seqLength-1)) %% seqLength) + 1]) {
-        currPattern[currIndex] <- 1
-        currIndex <- currIndex+1
-      }
-      
-      if (seqLength > 3) {
-        currPattern <- compressConvergencePattern(currPattern, seqLength)
-      } else {
-        currPattern <- compressConvergencePattern(currPattern, 3)
-      }
-      
-      pattern <- pattern|currPattern
-      seqIndex <- seqIndex+1
-    }
-    
-    stIndex <- stIndex+1
-  }
-  
-
-  length(lniSequence)
-  length(pattern)
-  
-  rbind(lniSequence, pattern)
-  
-
+  return(pattern)
 }
 
 #----------------------------------------------------------------------------------------------------#
@@ -340,17 +314,17 @@ computeLNIs <- function(lniSequence) {
   lni33 <- computeLNISequence(3, lniSequence)
   
   # 4-sequences
-  lni43 <- computeLNISequence(4, lniSequence, higherOrder = TRUE)
+  lni43 <- computeLNISequence(4, lniSequence)
   # 5-sequences
-  lni53 <- computeLNISequence(5, lniSequence, higherOrder = TRUE)
+  lni53 <- computeLNISequence(5, lniSequence)
   # 6-sequences
-  lni63 <- computeLNISequence(6, lniSequence, higherOrder = TRUE)
+  lni63 <- computeLNISequence(6, lniSequence)
   # 7-sequences
-  lni73 <- computeLNISequence(7, lniSequence, higherOrder = TRUE)
+  lni73 <- computeLNISequence(7, lniSequence)
   # 8-sequences
-  lni83 <- computeLNISequence(8, lniSequence, higherOrder = TRUE)
+  lni83 <- computeLNISequence(8, lniSequence)
   # 9-sequences
-  lni93 <- computeLNISequence(9, lniSequence, higherOrder = TRUE)
+  lni93 <- computeLNISequence(9, lniSequence)
   
   # minus-1-sequences
   elements <- table(lniSequence)
@@ -377,7 +351,7 @@ computeLNIs <- function(lniSequence) {
 #       Przepiorka (2016), or for higher order (h3+) patterns in which numbers can reoccur
 #----------------------------------------------------------------------------------------------------#
 computeLNISequence <- function(seqLength, lniSequence, higherOrder = FALSE) {
-  
+
   sequences <- c()
   i <- 1
   
@@ -386,26 +360,36 @@ computeLNISequence <- function(seqLength, lniSequence, higherOrder = FALSE) {
     k <- i+(seqLength)
     currInteraction <- lniSequence[i:j]
     
-    skip <- FALSE
-    y <- 1    
-    while (!skip & y <= seqLength) {
-      if (currInteraction[y] == -1) {      
-        skip <- TRUE
-      }
-      y <- y+1
-    }
+    # skip if there is a "-1" in the current interaction
+    skip <- any(currInteraction == -1)
     
-    if (!higherOrder) {
-      y <- 1
-      while (!skip & seqLength > 1 & y < seqLength) {
-        z <- y+1
-        while (!skip & seqLength > 1 & z <= seqLength) {
-          if (currInteraction[y] == currInteraction[z]) {
+    # skip if there are duplicates in any triplet
+    # e.g. current interaction of 8 actions = 2 2/3 triplets: "123|231|21"
+    # this is to make sure that for higher order interactions (h3+) lower order 
+    # instances (e.g., 111|111|11) are not considered as high order instance
+    currInteractionCopy <- currInteraction
+    while (!skip && length(currInteractionCopy) > 0) {
+      lowerBound <- 1
+      upperBound <- 2
+      
+      # compare each element of current triplet for equality
+      while (!skip && lowerBound < 3 && lowerBound < length(currInteractionCopy)) {
+        while (!skip && upperBound < 4 && upperBound <= length(currInteractionCopy)) {
+          
+          if (currInteractionCopy[lowerBound] == currInteractionCopy[upperBound]) {
             skip <- TRUE
-          }
-          z <- z+1
+          } 
+          upperBound <- upperBound+1
         }
-        y <- y+1
+        lowerBound <- lowerBound+1
+        upperBound <- lowerBound+1
+      }
+      
+      # switch to next triplet
+      if (length(currInteractionCopy) > 3) {
+        currInteractionCopy <- tail(currInteractionCopy, length(currInteractionCopy)-3)
+      } else {
+        currInteractionCopy <- c()
       }
     }
     
@@ -434,7 +418,7 @@ computeLNISequence <- function(seqLength, lniSequence, higherOrder = FALSE) {
       i <- k-1
     }
   }
-  
+
   sequences <- sequences[sequences >= 3]
   return(100 * sum(sequences) / length(lniSequence))
 }
