@@ -114,16 +114,6 @@ extractLNISequence <- function(vodData) {
 #----------------------------------------------------------------------------------------------------#
 computeConvergencePatterns <- function(lniSequence) {
 
-  
-  
-  vodSimData <- get(load("/Users/hendrik/git/uu/mscp-model/simulations/CoordinateXEpsilonNoise/20170316/1/sym/sim-8.Rdata"))
-  lniSequence <- extractLNISequence(vodSimData)
-  
-  
-  lniSequence <- c(2,2,-1,-1,-1,1,2,-1,2,1,3,3,2,1,-1,1,-1,2,2,2,3,3,3,3,1,2,1,2,1,2,3,1,2,3,1,2,3,1,2,1,3,1,2,1,3,1,2,1,3)
-  
-
-      
   # -1's
   min1s <- as.numeric(lniSequence == "-1")
   
@@ -133,12 +123,12 @@ computeConvergencePatterns <- function(lniSequence) {
   h3 <- computeConvergencePattern(3, lniSequence)
   
   # hgher order patterns
-  h4 <- computeConvergencePattern(4, lniSequence, higherOrder = TRUE)
-  h5 <- computeConvergencePattern(5, lniSequence, higherOrder = TRUE)
-  h6 <- computeConvergencePattern(6, lniSequence, higherOrder = TRUE)
-  h7 <- computeConvergencePattern(7, lniSequence, higherOrder = TRUE)
-  h8 <- computeConvergencePattern(8, lniSequence, higherOrder = TRUE)
-  h9 <- computeConvergencePattern(9, lniSequence, higherOrder = TRUE)
+  h4 <- computeConvergencePattern(4, lniSequence)
+  h5 <- computeConvergencePattern(5, lniSequence)
+  h6 <- computeConvergencePattern(6, lniSequence)
+  h7 <- computeConvergencePattern(7, lniSequence)
+  h8 <- computeConvergencePattern(8, lniSequence)
+  h9 <- computeConvergencePattern(9, lniSequence)
   
   # everything that's not falling under any of the categories above
   others <- as.numeric(!(min1s|h1|h2|h3|h4|h5|h6|h7|h8|h9))
@@ -162,17 +152,6 @@ computeConvergencePatterns <- function(lniSequence) {
 #       Przepiorka (2016), or for higher order (h3+) patterns in which numbers can reoccur
 #----------------------------------------------------------------------------------------------------#
 computeConvergencePattern <- function(seqLength, lniSequence) {
-  
-  
-  
-  
-  seqLength <- 4
-  lniSequence <- c(-1,-1,1,1,2,1,-1,3,2,-1,1,2,1,3,2,-1,1,2,1,3,1,2,1,3,1,2,1,3,1,2,1,3)
-  
-  
-  
-  
-  
   
   pattern <- rep(0, length(lniSequence))
   i <- 1
@@ -485,7 +464,7 @@ plotConvergencePattern <- function(convergenceData, currentPlot = 1, overallPlot
   
   # basic plot - showing -1 pattern
   plot(hmin1Patterns, ann=FALSE, xaxt = "n", yaxt = "n", 
-       type = 'p', pch = '.',
+       type = 'p', pch = 20,
        xlim = range(1:nrow(convergenceData)), ylim = range(0.5:(ncol(convergenceData)+0.5)))
   # y-axis per plot
   axis(side=2,
@@ -494,16 +473,16 @@ plotConvergencePattern <- function(convergenceData, currentPlot = 1, overallPlot
        cex.axis = 0.7)
   
   # adding other convergence patterns
-  points(h1Patterns, type = 'p', pch = '.')
-  points(h2Patterns, type = 'p', pch = '.')
-  points(h3Patterns, type = 'p', pch = '.')
-  points(h4Patterns, type = 'p', pch = '.')
-  points(h5Patterns, type = 'p', pch = '.')
-  points(h6Patterns, type = 'p', pch = '.')
-  points(h7Patterns, type = 'p', pch = '.')
-  points(h8Patterns, type = 'p', pch = '.')
-  points(h9Patterns, type = 'p', pch = '.')
-  points(othersPatterns, type = 'p', pch = '.')
+  points(h1Patterns, type = 'p', pch = 20)
+  points(h2Patterns, type = 'p', pch = 20)
+  points(h3Patterns, type = 'p', pch = 20)
+  points(h4Patterns, type = 'p', pch = 20)
+  points(h5Patterns, type = 'p', pch = 20)
+  points(h6Patterns, type = 'p', pch = 20)
+  points(h7Patterns, type = 'p', pch = 20)
+  points(h8Patterns, type = 'p', pch = 20)
+  points(h9Patterns, type = 'p', pch = 20)
+  points(othersPatterns, type = 'p', pch = 20)
   
   if (currentPlot == overallPlots) {
     # overall x-axis
@@ -799,19 +778,31 @@ analyzeData <- function(modelType = "CoordinateXEpsilonNoise", #MODEL_TYPES[1],
 }
 
 
-
-h4Pattern <- function() {
-  vodSimData <- get(load("/Users/hendrik/git/uu/mscp-model/simulations/CoordinateXEpsilonNoise/20170316/1/sym/sim-8.Rdata"))
-  lniSequence <- extractLNISequence(vodSimData)
-  lnis <- computeLNIs(lniSequence)
+############################################### TESTS ################################################
+#----------------------------------------------------------------------------------------------------#
+# function: testPlots
+#     Test for plotting behavioral and convergence patterns.
+#----------------------------------------------------------------------------------------------------#
+testPlots <- function() {
+  
+  modelType <- "CoordinateXEpsilonNoise"
+  date <- "20170316"
+  simCnt <- "1"
+  vodType <- "sym"
+  fileNumber <- 10
+  file <- paste("sim-", fileNumber, ".Rdata", sep = "")
+  filePath <- paste(SIM_DIR, "/", modelType, "/", date, "/", simCnt, "/", vodType,
+                    "/", file, sep = "")
+  
+  vodSimData <- get(load(filePath))
   
   quartz()
   plotInteractionPattern(vodSimData)
   
-
-  
+  lniSequence <- extractLNISequence(vodSimData)
+  lnis <- computeLNIs(lniSequence)
   convergencePatterns <- computeConvergencePatterns(lniSequence)
-  
+
   quartz()  
   plotConvergencePattern(convergencePatterns)
   
