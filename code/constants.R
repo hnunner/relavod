@@ -41,7 +41,7 @@ RANDOM_COOP_RATIO <<- 1/3                 # ratio (cooperate:deviate) in favor o
 
 # ClassicQ
 CLASSIC_X <<- 3                           # amount of previous rounds defining a state
-CLASSIC_PLAYERS_PER_STATE <<- PLAYERS_CNT # actions of how many players defining a state 
+CLASSIC_PLAYERS_PER_STATE <<- 1           # actions of how many players defining a state 
                                           # possible values: 
                                           #   1 = only own actions
                                           #   PLAYERS_CNT = all players' actions
@@ -55,6 +55,14 @@ LNIS_EXP1 <- data.frame("sym_h1" = 3.3, "sym_h2" = 8.0, "sym_h3" = 49.5, "sym_ot
                         "asym1_h1" = 34.9, "asym1_h2" = 8.2, "asym1_h3" = 13.4, "asym1_others" = 43.5,
                         "asym2_h1" = 61.7, "asym2_h2" = 1.5, "asym2_h3" = 6.7, "asym2_others" = 30.1)
 
+
+############## PLOTS ##############
+PLOT_MAX_ROUNDS <<- 150
+PRE_GAP_LENGTH <<- 30                     # rounds before gap for plots > 150 rounds
+POST_GAP_LENGTH <<- 110                   # rounds after gap for plots > 150 rounds
+GAP_LENGTH <<- PLOT_MAX_ROUNDS -          # gap rounds for plots > 150 rounds
+  (PRE_GAP_LENGTH + POST_GAP_LENGTH)
+LABEL_STEP_SIZE <<- 5                     # display a label every x steps
 
 ###################################### EVENTUAL INTEGRITY CHECKS #####################################
 source(paste(BASE_DIR, "/tests/testConstants.R", sep = ""))

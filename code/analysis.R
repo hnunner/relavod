@@ -529,9 +529,32 @@ plotInteractionPatterns <- function(vodData) {
 #       - generalize code (this is ugly as fuck)
 #   param:  vodData
 #       the VOD data to plot
+#   param:  cut
+#       flag denoting whether plots need to be cut (max. 150 rounds)
 #----------------------------------------------------------------------------------------------------#
 plotInteractionPattern <- function(vodData, currentPlot = 1, overallPlots = 1) {
+  
+  # only columns of players' actions
   vodData <- vodData[2:length(vodData$round),2:4]
+  
+  xAtSeq <- seq(0,nrow(vodData),1)
+  xLabels <- seq(0,nrow(vodData),1)
+  
+  # only 150 (35 first + 5 gap + 110 last) rounds in total
+  if (nrow(vodData) > PLOT_MAX_ROUNDS) {
+    rounds <- nrow(vodData)
+    
+    gapRows <- PRE_GAP_LENGTH:(PRE_GAP_LENGTH + GAP_LENGTH)
+    vodData[gapRows,] <- 0
+    
+    cutRows <- (PRE_GAP_LENGTH + GAP_LENGTH + 1):(rounds - (POST_GAP_LENGTH + 1))
+    vodData <- vodData[-cutRows,]
+    
+    xAtSeq <- seq(0, nrow(vodData), LABEL_STEP_SIZE)
+    xLabels <- c(seq(0, PRE_GAP_LENGTH, by = LABEL_STEP_SIZE), 
+                 "...", seq(rounds-POST_GAP_LENGTH, rounds, by = 5))
+  }
+  
   rownames(vodData) <- seq(length=nrow(vodData))
   
   p1Cooperations <- data.frame("which" = numeric(1), "X1" = numeric(1))
@@ -561,9 +584,8 @@ plotInteractionPattern <- function(vodData, currentPlot = 1, overallPlots = 1) {
   
   if (currentPlot == overallPlots) {
     # overall x-axis
-    mtext(side=1,"Period",line=2.5)       
-    axis(side=1,at=seq(0,nrow(vodData),1),labels=seq(0,nrow(vodData),1), 
-         cex.axis = 0.7)
+    mtext(side=1,"Period",line=2.5)
+    axis(side=1, at=xAtSeq, labels=xLabels, cex.axis = 0.7)  
     # overall y-axis label
     mtext('Group members\' decision across sessions (x = \'cooperation\')', side = 2, 
           outer = TRUE, line = -1.8)
@@ -800,13 +822,12 @@ testPlots <- function() {
   ################################
   ######## mock VOD data #########
   ################################
-  round <- 0:10000
-  player1 <- sample(c(0,1), 10001, replace = TRUE)
-  player2 <- sample(c(0,1), 10001, replace = TRUE)
-  player3 <- sample(c(0,1), 10001, replace = TRUE)
+  round <- 0:150000
+  player1 <- sample(c(0,1), 150001, replace = TRUE)
+  player2 <- sample(c(0,1), 150001, replace = TRUE)
+  player3 <- sample(c(0,1), 150001, replace = TRUE)
   vodMockData <- data.frame(round, player1, player2, player3)
   ################################
-  
   
   ####################################### PLOTS #######################################
   ##### behavioral patterns ######
