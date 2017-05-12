@@ -785,6 +785,9 @@ analyzeData <- function(modelType = "CoordinateXEpsilonNoise", #MODEL_TYPES[1],
 #----------------------------------------------------------------------------------------------------#
 testPlots <- function() {
   
+  ####################################### DATA #######################################
+  ### data from simulated VODs ###
+  ################################
   modelType <- "CoordinateXEpsilonNoise"
   date <- "20170316"
   simCnt <- "1"
@@ -793,16 +796,29 @@ testPlots <- function() {
   file <- paste("sim-", fileNumber, ".Rdata", sep = "")
   filePath <- paste(SIM_DIR, "/", modelType, "/", date, "/", simCnt, "/", vodType,
                     "/", file, sep = "")
-  
   vodSimData <- get(load(filePath))
+  ################################
+  ######## mock VOD data #########
+  ################################
+  round <- 0:10000
+  player1 <- sample(c(0,1), 10001, replace = TRUE)
+  player2 <- sample(c(0,1), 10001, replace = TRUE)
+  player3 <- sample(c(0,1), 10001, replace = TRUE)
+  vodMockData <- data.frame(round, player1, player2, player3)
+  ################################
   
+  
+  ####################################### PLOTS #######################################
+  ##### behavioral patterns ######
+  ################################
   quartz()
-  plotInteractionPattern(vodSimData)
-  
+  plotInteractionPattern(vodMockData)
+  ################################
+  ##### behavioral patterns ######
+  ################################
   lniSequence <- extractLNISequence(vodSimData)
   lnis <- computeLNIs(lniSequence)
   convergencePatterns <- computeConvergencePatterns(lniSequence)
-
   quartz()  
   plotConvergencePattern(convergencePatterns)
   
