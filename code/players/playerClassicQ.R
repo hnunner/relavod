@@ -417,7 +417,8 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                            paste("p", ID, "_epsilon_start", sep = ""), EPSILON_START,
                                            paste("p", ID, "_epsilon_decay", sep = ""), EPSILON_DECAY,
                                            paste("p", ID, "_alpha", sep = ""), ALPHA, 
-                                           paste("p", ID, "_gamma", sep = ""), GAMMA))
+                                           paste("p", ID, "_gamma", sep = ""), GAMMA,
+                                           paste("p", ID, "_social_behavior", sep = ""), SOCIAL_BEHAVIOR))
                                 },
                                 
                                 
