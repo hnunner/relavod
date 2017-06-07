@@ -1,0 +1,4 @@
+;model_type;vod_type;vod_count;rounds_per_vod;players_count;util_max;util_none;p1_coop_cost;p1;p1_X;p1_players_per_state;p1_balancing;p1_prop_start;p1_epsilon_start;p1_epsilon_decay;p1_alpha;p1_gamma;p2_coop_cost;p2;p2_X;p2_players_per_state;p2_balancing;p2_prop_start;p2_epsilon_start;p2_epsilon_decay;p2_alpha;p2_gamma;p3_coop_cost;p3;p3_X;p3_players_per_state;p3_balancing;p3_prop_start;p3_epsilon_start;p3_epsilon_decay;p3_alpha;p3_gamma
+1;ClassicQ;sym;10;10000;3;80;0;50;#####;3;3;greedy;100;0.1;0.995;0.4;0.6;50;#####;3;3;greedy;100;0.1;0.995;0.4;0.6;50;#####;3;3;greedy;100;0.1;0.995;0.4;0.6
+2;ClassicQ;asym1;10;10000;3;80;0;30;#####;3;3;greedy;100;0.1;0.995;0.4;0.6;50;#####;3;3;greedy;100;0.1;0.995;0.4;0.6;50;#####;3;3;greedy;100;0.1;0.995;0.4;0.6
+3;ClassicQ;asym2;5;10000;3;80;0;10;#####;3;3;greedy;100;0.1;0.995;0.4;0.6;50;#####;3;3;greedy;100;0.1;0.995;0.4;0.6;50;#####;3;3;greedy;100;0.1;0.995;0.4;0.6

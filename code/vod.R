@@ -93,7 +93,7 @@ Vod <- setRefClass("Vod",
                            utils <- c(utils, UTIL_NONE)
                          } else {
                            if (allPlayersActions[i] == COOPERATE) {
-                             utils <- c(utils, UTIL_MAX - players[[i]]$coopCost)
+                             utils <- c(utils, UTIL_MAX - players[[i]]$ownCoopCosts)
                            } 
                            if (allPlayersActions[i] == DEVIATE) {
                              utils <- c(utils, UTIL_MAX)
@@ -106,7 +106,7 @@ Vod <- setRefClass("Vod",
                        
                        # assessing the player's action
                        for (i in 1:length(players)) {
-                         action <- players[[i]]$assessAction(roundsPlayed, allPlayersActions, utils[i])
+                         action <- players[[i]]$assessAction(roundsPlayed, allPlayersActions, utils)
                        }
                        
                        # updating the VOD's game history, including player's personal details, if available

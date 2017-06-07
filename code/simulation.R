@@ -57,22 +57,24 @@ initPlayers <- function(modelType, vodType) {
   # initialization of players
   players <- list()
   for (currPlayer in 1:PLAYERS_CNT) {
-    currCoopCosts <- coopCosts[currPlayer]
     
     # Random
     if (modelType == MODEL_TYPES[1]) {
-      players[[currPlayer]] <- RandomPlayer$new(currPlayer, currCoopCosts,
+      players[[currPlayer]] <- RandomPlayer$new(currPlayer, coopCosts,
                                                 RANDOM_COOP_RATIO)
       
     # ClassicQ
     } else if (modelType == MODEL_TYPES[2]) {
-      players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, currCoopCosts, 
-                                                  CLASSIC_X, CLASSIC_PLAYERS_PER_STATE, BALANCING_TYPE)
-      
+      players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, coopCosts, 
+                                                  CLASSIC_X, CLASSIC_PLAYERS_PER_STATE, BALANCING_TYPE,
+                                                  PROP_START, EPSILON_START, EPSILON_DECAY, ALPHA, 
+                                                  GAMMA, SOCIAL_BEHAVIOR)
+
     # CoordinateX
     } else if (modelType == MODEL_TYPES[3]) {
-      players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, currCoopCosts, 
-                                                     COORD_X, BALANCING_TYPE)
+      players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, coopCosts, 
+                                                     COORD_X, BALANCING_TYPE,PROP_START, EPSILON_START, 
+                                                     EPSILON_DECAY, ALPHA, GAMMA, SOCIAL_BEHAVIOR)
       
     # unknown
     } else {

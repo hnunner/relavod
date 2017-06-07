@@ -2,13 +2,11 @@
 if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
 X_MAX <<- 15              # triggers a warning during initialization, when X exceeds X_MAX
-PROP_START <<- 100        # initial propensity for each strategy
-EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
-EPSILON_DECAY <<- 0.995   # rate at which epsilon is decreasing after each completion of a strategy
-ALPHA <<- 0.4             # RL learning rate, the higher the more important recently learned 
-                          # information; 0 < ALPHA <= 1
-GAMMA <<- 0.6             # RL discount factor, the higher the more important the previous rewards;
-                          # 0 <= GAMMA <= 1
+# PROP_START <<- 50
+# EPSILON_START <<- 0.1
+# EPSILON_DECAY <<- 0.995
+# ALPHA <<- 0.4
+# GAMMA <<- 0.6
 
 #####-------------------------------------- ClassicQPlayer --------------------------------------#####
 # class: ClassicQPlayer
@@ -17,15 +15,20 @@ GAMMA <<- 0.6             # RL discount factor, the higher the more important th
 #     by actions of a single player in the previous rounds.
 #
 #     Free parameters:
-#       - X
-#       - PLAYERS_PER_STATE
-#       - BALANCING
 #
-#       - PROP_START
-#       - EPSILON_START
-#       - EPSILON_DECAY
-#       - ALPHA
-#       - GAMMA
+#       X                     how many past actions define a state
+#       PLAYERS_PER_STATE     actions of how many players define a state
+#       BALANCING             either greedy or noise
+#
+#       PROP_START            initial propensity for each strategy
+#       EPSILON_START         initial balance between exploration (epsilon) and exploration (1-epsilon)
+#       EPSILON_DECAY         rate at which epsilon is decreasing after each completion of a strategy
+#       ALPHA                 RL learning rate, the higher the more important recently learned 
+#                             information; 0 < ALPHA <= 1
+#       GAMMA                 RL discount factor, the higher the more important the previous rewards;
+#                             0 <= GAMMA <= 1
+#
+#       SOCIAL_BEHAVIOR       either selfish or altruistic
 #
 #     ________________________________________________________________________________________
 #     "Reference Class" (RC) concept found at http://adv-r.had.co.nz/OO-essentials.html
@@ -50,7 +53,23 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                               #      param:  BALANCING
                               #           how to balance between exploration and exploitation (see 
                               #           BALANCING_TYPE in constants.R)
-                              #
+                              #      param:  PROP_START
+                              #           initial propensity for each strategy
+                              #      param:  EPSILON_START
+                              #           initial balance between exploration (epsilon) and 
+                              #           exploration (1-epsilon)
+                              #      param:  EPSILON_DECAY
+                              #           rate at which epsilon is decreasing after each completion 
+                              #           of a strategy
+                              #      param:  ALPHA
+                              #           RL learning rate, the higher the more important recently 
+                              #           learned information; 0 < ALPHA <= 1
+                              #      param:  GAMMA
+                              #           RL discount factor, the higher the more important the 
+                              #           previous rewards; 0 <= GAMMA <= 1
+                              #      param:  SOCIAL_BEHAVIOR
+                              #           either selfish (max. own rewards) or 
+                              #           altruistic (max. mutual rewards)
                               #      param:  qTable
                               #           q-table holding the propensities for cooperation and 
                               #           deviation in the according states
@@ -62,8 +81,9 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                               #      param:  oeu
                               #           optimal expected utility
                               #----------------------------------------------------------------------#
-                              fields = c("X", "PLAYERS_PER_STATE", "BALANCING",
-                                         "qTable", "epsilon", "currState", "oeu"),
+                              fields = c("X", "PLAYERS_PER_STATE", "BALANCING", "PROP_START", 
+                                         "EPSILON_START", "EPSILON_DECAY", "ALPHA", "GAMMA",
+                                         "SOCIAL_BEHAVIOR", "qTable", "epsilon", "currState", "oeu"),
                               
                               #----------------------------------------------------------------------#
                               #  class methods (public by defualt)
@@ -75,8 +95,8 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #     Initializes the Player.
                                 #     param:  ID
                                 #           the player's ID
-                                #     param:  coopCost
-                                #           the player's cost to cooperate
+                                #     param:  coopCosts
+                                #           all players' cost to cooperate
                                 #
                                 #     param:  X
                                 #           see "class parameters"
@@ -84,13 +104,31 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #           see "class parameters"
                                 #     param:  BALANCING
                                 #           see "class parameters"
+                                #     param:  PROP_START
+                                #           see "class parameters"
+                                #     param:  EPSILON_START
+                                #           see "class parameters"
+                                #     param:  EPSILON_DECAY
+                                #           see "class parameters"
+                                #     param:  ALPHA
+                                #           see "class parameters"
+                                #     param:  GAMMA
+                                #           see "class parameters"
                                 #--------------------------------------------------------------------#
-                                initialize = function(ID, coopCost, 
-                                                      X, PLAYERS_PER_STATE, BALANCING) {
+                                initialize = function(ID, coopCosts, 
+                                                      X, PLAYERS_PER_STATE, BALANCING, PROP_START, 
+                                                      EPSILON_START, EPSILON_DECAY, ALPHA, GAMMA, 
+                                                      SOCIAL_BEHAVIOR) {
                                   
                                   X <<- X
                                   BALANCING <<- BALANCING
                                   PLAYERS_PER_STATE <<- PLAYERS_PER_STATE
+                                  PROP_START <<- PROP_START
+                                  EPSILON_START <<- EPSILON_START
+                                  EPSILON_DECAY <<- EPSILON_DECAY
+                                  ALPHA <<- ALPHA
+                                  GAMMA <<- GAMMA
+                                  SOCIAL_BEHAVIOR <<- SOCIAL_BEHAVIOR
                                   
                                   # initialization of the q-table
                                   initQTable()
@@ -105,7 +143,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   oeu <<- UTIL_NONE
                                   
                                   # initializations of super class
-                                  callSuper(ID, coopCost)
+                                  callSuper(ID, coopCosts)
                                   
                                   if (LOG_LEVEL == "all") {
                                     print(paste("Classic-Q Player", ID, "successfully created!"))
@@ -159,14 +197,14 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #          the round
                                 #     param:  allPlayersActions
                                 #          actions played in the corresponding round by all players
-                                #     param:  util
-                                #          utility earned in the corresponding round, based on the 
-                                #          action taken
+                                #     param:  allPlayersUtils
+                                #          utilities earned in the corresponding round for all 
+                                #          players, based on the action taken
                                 #--------------------------------------------------------------------#
-                                assessAction = function(round, allPlayersActions, util) {
+                                assessAction = function(round, allPlayersActions, allPlayersUtils) {
                                   
                                   if (is.na(currState)) {
-                                    callSuper(round, allPlayersActions, util)
+                                    callSuper(round, allPlayersActions, allPlayersUtils)
                                     return()
                                   }
                                   
@@ -180,6 +218,15 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                     oldProp <- qRow$d_prop
                                   } else {
                                     stop(paste("Unknown action: ", ownAction))
+                                  }
+                                  
+                                  util <- NA
+                                  if (SOCIAL_BEHAVIOR == "selfish") {
+                                    util <- allPlayersUtils[ID]
+                                  } else if (SOCIAL_BEHAVIOR == "altruistic") {
+                                    util <- sum(allPlayersUtils)
+                                  } else {
+                                    stop(paste("Unknown social behavior: ", SOCIAL_BEHAVIOR))
                                   }
                                   
                                   # calculate new propensity based on update function by 
@@ -201,7 +248,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   # amount of strategies.
                                   epsilon <<- epsilon * EPSILON_DECAY
                                   
-                                  callSuper(round, allPlayersActions, util)
+                                  callSuper(round, allPlayersActions, allPlayersUtils)
                                 },
                                 
                                 
@@ -221,7 +268,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   # if not enough actions performed yet, choose random action
                                   if ((PLAYERS_PER_STATE == 1 && length(prevActions) < X) ||
                                       (PLAYERS_PER_STATE == PLAYERS_CNT && nrow(prevActions) < X)) {
-                                    action <- if(runif(1) > 0.5) COOPERATE else DEVIATE
+                                    action <- if(runif(1) <= 0.33) COOPERATE else DEVIATE
                                     
                                   # if enough actions performed, choose accordingly
                                   } else {
@@ -296,7 +343,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 getGreedyAction = function(qRow) {
                                   # choose random action, if none is preferred
                                   if (qRow$c_prop == qRow$d_prop) {
-                                    return(if(runif(1) > 0.5) COOPERATE else DEVIATE)
+                                    return(if(runif(1) <= 0.5) COOPERATE else DEVIATE)
                                     
                                   # else use epsilon-greedy balancing between explore and exploit
                                   } else {
@@ -340,12 +387,18 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #     action.
                                 #--------------------------------------------------------------------#
                                 setOEU = function(action) {
-                                  if (action == COOPERATE) {
-                                    oeu <<- UTIL_MAX - coopCost
-                                  } else if (action == DEVIATE) {
-                                    oeu <<- UTIL_MAX
+                                  if (SOCIAL_BEHAVIOR == "selfish") {
+                                    if (action == COOPERATE) {
+                                      oeu <<- UTIL_MAX - ownCoopCosts
+                                    } else if (action == DEVIATE) {
+                                      oeu <<- UTIL_MAX
+                                    } else {
+                                      stop(paste("Unknown action: ", action))
+                                    }
+                                  } else if (SOCIAL_BEHAVIOR == "altruistic") {
+                                    oeu <<- UTIL_MAX + UTIL_MAX + (UTIL_MAX - lowestCoopCosts)
                                   } else {
-                                    stop(paste("Unknown action: ", action))
+                                    stop(paste("Unknown social behavior: ", SOCIAL_BEHAVIOR))
                                   }
                                 },
                                 

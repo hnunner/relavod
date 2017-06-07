@@ -34,7 +34,11 @@ MODEL_TYPES <<- c("Random",               # purely random action selection
 
 BALANCING_TYPES <<- c("greedy",           # espilon-greedy
                      "noise")             # espilon-noise
-BALANCING_TYPE <<- BALANCING_TYPES[1]     # balancing type currently in use
+BALANCING_TYPE <<- BALANCING_TYPES[2]     # balancing type currently in use
+
+SOCIAL_BEHAVIORS <<- c("selfish",         # maximization of own rewards
+                       "altruistic")      # maximization of mutual rewards
+SOCIAL_BEHAVIOR <<- SOCIAL_BEHAVIORS[2]   # social behavior currently in use
 
 # Random
 RANDOM_COOP_RATIO <<- 1/3                 # ratio (cooperate:deviate) in favor of cooperation
@@ -49,12 +53,23 @@ CLASSIC_PLAYERS_PER_STATE <<- 1           # actions of how many players defining
 # CoordinateX
 COORD_X <<- 4                             # max. after how many rounds to cooperate
 
+# Reinforcement Learning 
+# (ClassicQ & CoordinateX)
+PROP_START <<- 250                        # initial propensity for each strategy
+EPSILON_START <<- 0.1                     # initial balance between exploration (epsilon) 
+                                          # and exploration (1-epsilon)
+EPSILON_DECAY <<- 0.995                       # rate at which epsilon is decreasing after 
+                                          # each completion of a strategy
+ALPHA <<- 0.4                             # RL learning rate, the higher the more important
+                                          # recently learned information; 0 < ALPHA <= 1
+GAMMA <<- 0.6                             # RL discount factor, the higher the more important
+                                          # the previous rewards; 0 <= GAMMA <= 1
 
+############# REF DATA ############
 # LNIs taken from experiment 1 (Diekmann & Przepiorka, 2016, p.1321, Table 3.)
 LNIS_EXP1 <- data.frame("sym_h1" = 3.3, "sym_h2" = 8.0, "sym_h3" = 49.5, "sym_others" = 39.2,
                         "asym1_h1" = 34.9, "asym1_h2" = 8.2, "asym1_h3" = 13.4, "asym1_others" = 43.5,
                         "asym2_h1" = 61.7, "asym2_h2" = 1.5, "asym2_h3" = 6.7, "asym2_others" = 30.1)
-
 
 ############## PLOTS ##############
 PLOT_MAX_ROUNDS <<- 150

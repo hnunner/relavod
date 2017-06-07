@@ -2,13 +2,11 @@
 if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
 X_MAX <<- 15              # triggers a warning during initialization, when X exceeds X_MAX
-PROP_START <<- 100        # initial propensity for each strategy
-EPSILON_START <<- 0.1     # initial balance between exploration (epsilon) and exploration (1-epsilon)
-EPSILON_DECAY <<- 0.995   # rate at which epsilon is decreasing after each completion of a strategy
-ALPHA <<- 0.4             # RL learning rate, the higher the more important recently learned 
-                          # information; 0 < ALPHA <= 1
-GAMMA <<- 0.6             # RL discount factor, the higher the more important the future rewards;
-                          # 0 <= GAMMA <= 1
+# PROP_START <<- 100
+# EPSILON_START <<- 0.1
+# EPSILON_DECAY <<- 1
+# ALPHA <<- 0.4
+# GAMMA <<- 0.6
 
 #####------------------------------------ CoordinateXPlayer -------------------------------------#####
 # class: CoordinateXPlayer
@@ -19,14 +17,19 @@ GAMMA <<- 0.6             # RL discount factor, the higher the more important th
 #     exploration and exploitation.
 #
 #     Free parameters:
-#       - X
-#       - BALANCING
-
-#       - PROP_START
-#       - EPSILON_START
-#       - EPSILON_DECAY
-#       - ALPHA
-#       - GAMMA
+#
+#       X
+#       BALANCING             either greedy or noise
+#
+#       PROP_START            initial propensity for each strategy
+#       EPSILON_START         initial balance between exploration (epsilon) and exploration (1-epsilon)
+#       EPSILON_DECAY         rate at which epsilon is decreasing after each completion of a strategy
+#       ALPHA                 RL learning rate, the higher the more important recently learned 
+#                             information; 0 < ALPHA <= 1
+#       GAMMA                 RL discount factor, the higher the more important the previous rewards;
+#                             0 <= GAMMA <= 1
+#
+#       SOCIAL_BEHAVIOR       either selfish (max. own rewards) or altruistic (max. mutual rewards)
 #
 #     ________________________________________________________________________________________
 #     "Reference Class" (RC) concept found at http://adv-r.had.co.nz/OO-essentials.html
@@ -46,7 +49,23 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                  #      param:  BALANCING
                                  #           how to balance between exploration and exploitation (see 
                                  #           BALANCING_TYPE in constants.R)
-                                 #
+                                 #      param:  PROP_START
+                                 #           initial propensity for each strategy
+                                 #      param:  EPSILON_START
+                                 #           initial balance between exploration (epsilon) and 
+                                 #           exploration (1-epsilon)
+                                 #      param:  EPSILON_DECAY
+                                 #           rate at which epsilon is decreasing after each completion 
+                                 #           of a strategy
+                                 #      param:  ALPHA
+                                 #           RL learning rate, the higher the more important recently 
+                                 #           learned information; 0 < ALPHA <= 1
+                                 #      param:  GAMMA
+                                 #           RL discount factor, the higher the more important the 
+                                 #           previous rewards; 0 <= GAMMA <= 1
+                                 #      param:  SOCIAL_BEHAVIOR
+                                 #           either selfish (max. own rewards) or 
+                                 #           altruistic (max. mutual rewards)
                                  #      param:  strategies
                                  #          the player's strategies (see "initialize")
                                  #      param:  currStrat
@@ -58,7 +77,8 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                  #      param:  oeu
                                  #          the optimal expected utility
                                  #-------------------------------------------------------------------#
-                                 fields = c("X", "BALANCING",
+                                 fields = c("X", "BALANCING", "PROP_START", "EPSILON_START", 
+                                            "EPSILON_DECAY", "ALPHA", "GAMMA", "SOCIAL_BEHAVIOR", 
                                             "strategies", "currStrat", "actions", 
                                             "epsilon", "oeu"),
                                  
@@ -72,19 +92,36 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #     Initializes the Player.
                                    #     param:  ID
                                    #         the player's ID
-                                   #     param:  coopCost
-                                   #         the player's cost to cooperate
+                                   #     param:  coopCosts
+                                   #         all players' cost to cooperate
                                    #
                                    #     param:  X
                                    #         see "class parameters"
                                    #     param:  BALANCING
                                    #         see "class parameters"
+                                   #     param:  PROP_START
+                                   #           see "class parameters"
+                                   #     param:  EPSILON_START
+                                   #           see "class parameters"
+                                   #     param:  EPSILON_DECAY
+                                   #           see "class parameters"
+                                   #     param:  ALPHA
+                                   #           see "class parameters"
+                                   #     param:  GAMMA
+                                   #           see "class parameters"
                                    #-----------------------------------------------------------------#
-                                   initialize = function(ID, coopCost, 
-                                                         X, BALANCING) {
+                                   initialize = function(ID, coopCosts, 
+                                                         X, BALANCING, PROP_START, EPSILON_START, 
+                                                         EPSILON_DECAY, ALPHA, GAMMA, SOCIAL_BEHAVIOR) {
                                      
                                      X <<- X
                                      BALANCING <<- BALANCING
+                                     PROP_START <<- PROP_START
+                                     EPSILON_START <<- EPSILON_START
+                                     EPSILON_DECAY <<- EPSILON_DECAY
+                                     ALPHA <<- ALPHA
+                                     GAMMA <<- GAMMA
+                                     SOCIAL_BEHAVIOR <<- SOCIAL_BEHAVIOR
                                      
                                      # initialization of strategies
                                      #    a single strategy is a tuple of:
@@ -105,7 +142,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      oeu <<- UTIL_NONE
                                      
                                      # initializations of super class
-                                     callSuper(ID, coopCost)
+                                     callSuper(ID, coopCosts)
                                      
                                      if (LOG_LEVEL == "all") {
                                        print(paste("Coordinate-X Player", ID, "whith X =", X,
@@ -136,11 +173,20 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #          the round
                                    #     param:  allPlayersActions
                                    #          actions played in the corresponding round by all players
-                                   #     param:  util
-                                   #          utility earned in the corresponding round, based on the 
-                                   #          action taken
+                                   #     param:  allPlayersUtils
+                                   #          utilities earned in the corresponding round for all 
+                                   #          players, based on the action taken
                                    #-----------------------------------------------------------------#
-                                   assessAction = function(round, allPlayersActions, util) {
+                                   assessAction = function(round, allPlayersActions, allPlayersUtils) {
+                                     
+                                     util <- NA
+                                     if (SOCIAL_BEHAVIOR == "selfish") {
+                                       util <- allPlayersUtils[ID]
+                                     } else if (SOCIAL_BEHAVIOR == "altruistic") {
+                                       util <- sum(allPlayersUtils)
+                                     } else {
+                                       stop(paste("Unknown social behavior: ", SOCIAL_BEHAVIOR))
+                                     }
                                      
                                      # if all actions have been performed, calculate new propensity 
                                      # based on update function by Sutton & Barto (1998), p.148
@@ -161,7 +207,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                        }
                                      }
                                      
-                                     callSuper(round, allPlayersActions, util)
+                                     callSuper(round, allPlayersActions, allPlayersUtils)
                                    },
                                    
                                    
@@ -254,9 +300,13 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      # choose action sequence and corresponding optimal expected 
                                      # utility based on strategy
                                      oeu <<- UTIL_NONE
+                                     
+                                     # strategy = deviate once
                                      if (currStrat == 0) {
                                        actions <<- c(DEVIATE)
                                        oeu <<- UTIL_MAX
+                                       
+                                     # strategy = cooperate at position i
                                      } else {
                                        actions <<- c()
                                        i <- 1
@@ -268,11 +318,19 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                        }
                                        actions <<- c(actions, COOPERATE)
                                        oeu <<- 
-                                         oeu + (UTIL_MAX - coopCost)
-                                       
+                                         oeu + (UTIL_MAX - ownCoopCosts)
                                        oeu <<- 
                                          oeu / length(actions)
                                      }
+                                     
+                                     if (SOCIAL_BEHAVIOR == "selfish") {
+                                       # leave previous calculation
+                                     } else if (SOCIAL_BEHAVIOR == "altruistic") {
+                                       oeu <<- UTIL_MAX + UTIL_MAX + (UTIL_MAX - lowestCoopCosts)
+                                     } else {
+                                       stop(paste("Unknown social behavior:", SOCIAL_BEHAVIOR))
+                                     }
+                                     
                                    },
                                    
                                    

@@ -33,7 +33,7 @@ getVodBaseDir <- function(modelType, date = "latest", dateCount = "latest") {
   if (dateCount == "latest") {
     dateCountDirs <- list.dirs(dateDir, recursive = FALSE)
     dateCounts <- gsub(paste(dateDir, "/", sep = ""), "", dateCountDirs, fixed = TRUE)
-    dateCount <- max(dateCounts)
+    dateCount <- max(as.numeric(dateCounts))
   }
   baseDir <- paste(dateDir, "/", dateCount, sep = "")
   
@@ -729,7 +729,7 @@ exportLNIComparison <- function(directory, meanLNIs) {
 #         the type of VOD used for the simulation
 #         possible: 'all', constants.R: 'VOD_TYPES[x]'
 #----------------------------------------------------------------------------------------------------#
-analyzeData <- function(modelType = "CoordinateXEpsilonNoise", #MODEL_TYPES[1],
+analyzeData <- function(modelType = MODEL_TYPES[2],
                         date = "latest",
                         dateCount = "latest",
                         vodType = "all") {
@@ -814,7 +814,7 @@ testPlots <- function() {
   date <- "20170316"
   simCnt <- "1"
   vodType <- "sym"
-  fileNumber <- 10
+  fileNumber <- 6
   file <- paste("sim-", fileNumber, ".Rdata", sep = "")
   filePath <- paste(SIM_DIR, "/", modelType, "/", date, "/", simCnt, "/", vodType,
                     "/", file, sep = "")
@@ -833,7 +833,7 @@ testPlots <- function() {
   ##### behavioral patterns ######
   ################################
   quartz()
-  plotInteractionPattern(vodMockData)
+  plotInteractionPattern(vodSimData)
   ################################
   ##### behavioral patterns ######
   ################################

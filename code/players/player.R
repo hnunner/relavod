@@ -13,13 +13,17 @@ Player <- setRefClass("Player",
                       #   class parameters (public by default)
                       #     param:  ID 
                       #         the player's identifier
-                      #     param:  coopCost
-                      #         the player's cost to cooperate
+                      #     param:  coopCosts
+                      #         all players' cost to cooperate
+                      #     param:  ownCoopCosts
+                      #         player's own cost to cooperate
+                      #     param:  lowestCoopCosts
+                      #         lowest cost to cooperate
                       #     param:  history
                       #         the player's game history, consisting of round, all player actions,
                       #         player's own utility
                       #------------------------------------------------------------------------------#
-                      fields = c("ID", "coopCost", "history"),
+                      fields = c("ID", "coopCosts", "ownCoopCosts", "lowestCoopCosts", "history"),
                       
                       #------------------------------------------------------------------------------# 
                       #   class methods (public by defualt)
@@ -32,15 +36,29 @@ Player <- setRefClass("Player",
                         #     data frame and player is validated
                         #     param:  ID
                         #         the player's ID
-                        #     param:  coopCost
-                        #         the player's cost to cooperate
+                        #     param:  coopCosts
+                        #         all players' cost to cooperate
                         #----------------------------------------------------------------------------#
-                        initialize = function(ID, coopCost) {
+                        initialize = function(ID, coopCosts) {
                           ID <<- ID
-                          coopCost <<- coopCost
-                          history <<- data.frame("round" = numeric(1), "player1" = character(1), 
-                                                 "player2" = character(1), "player3" = character(1),
-                                                 "util" = numeric(1), stringsAsFactors=FALSE)
+                          coopCosts <<- coopCosts
+                          ownCoopCosts <<- coopCosts[ID]
+                         
+                          lowestCoopCosts <<- COOP_COST_SYMM
+                          for (coopCost in coopCosts) {
+                            if (coopCost < lowestCoopCosts) {
+                              lowestCoopCosts <<- coopCost
+                            }
+                          }
+                          
+                          history <<- data.frame("round" = numeric(1), 
+                                                 "player1" = character(1), 
+                                                 "player2" = character(1), 
+                                                 "player3" = character(1),
+                                                 "util_player1" = numeric(1), 
+                                                 "util_player2" = numeric(1), 
+                                                 "util_player3" = numeric(1), 
+                                                 stringsAsFactors=FALSE)
                           validate()
                           if (LOG_LEVEL == "all") {
                             print(paste("Player", ID, "successfully created!"))
@@ -55,8 +73,10 @@ Player <- setRefClass("Player",
                           if (!is.numeric(ID)) {
                             stop("Error during player validation: 'ID' must be numeric!")
                           }
-                          if (!is.numeric(coopCost)) {
-                            stop("Error during player validation: 'coopCost' must be numeric!")
+                          for (coopCost in coopCosts) {
+                            if (!is.numeric(coopCost)) {
+                              stop("Error during player validation: 'coopCost' must be numeric!")
+                            }
                           }
                         },
                         
@@ -67,11 +87,12 @@ Player <- setRefClass("Player",
                         #         the round
                         #     param:  allPlayersActions
                         #         actions played in the corresponding round by all players
-                        #     param:  util
-                        #         utility earned in the corresponding round, based on the action taken
+                        #     param:  allPlayersUtils
+                        #         utilities earned in the corresponding round for all players, 
+                        #         based on the action taken
                         #----------------------------------------------------------------------------#
-                        assessAction = function(round, allPlayersActions, util) {
-                          history <<- rbind(history, c(round, allPlayersActions, util))
+                        assessAction = function(round, allPlayersActions, allPlayersUtils) {
+                          history <<- rbind(history, c(round, allPlayersActions, allPlayersUtils))
                         },
                         
                         #----------------------------------------------------------------------------# 
@@ -89,7 +110,9 @@ Player <- setRefClass("Player",
                         #     Returns the player's parametrical settings.
                         #----------------------------------------------------------------------------#
                         getModelParameters = function() {
-                          return(c(paste("p", ID, "_coop_cost", sep = ""), coopCost))
+                          return(c(paste("p1_coop_cost", sep = ""), coopCosts[1],
+                                   paste("p2_coop_cost", sep = ""), coopCosts[2],
+                                   paste("p3_coop_cost", sep = ""), coopCosts[3]))
                         },
                         
                         #----------------------------------------------------------------------------# 

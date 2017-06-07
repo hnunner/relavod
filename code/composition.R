@@ -19,8 +19,8 @@ initComposition()
 #----------------------------------------------------------------------------------------------------#
 simulateAndAnalyze <- function(modelType = MODEL_TYPES[2],
                                vodType = "all",
-                               vodCount = 10,
-                               roundsPerVod = 10000,
+                               vodCount = 5,
+                               roundsPerVod = 150,
                                date = "latest",
                                dateCount = "latest") {
   

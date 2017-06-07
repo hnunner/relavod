@@ -36,17 +36,17 @@ RandomPlayer <- setRefClass("RandomPlayer",
                               #     Initializes the Player.
                               #     param:  ID
                               #         the player's ID
-                              #     param:  coopCost
-                              #         the player's cost to cooperate
+                              #     param:  coopCosts
+                              #         all players' cost to cooperate
                               #
                               #     param:  COOP_RATIO
                               #         see "class parameters"
                               #----------------------------------------------------------------------#
-                              initialize = function(ID, coopCost, 
+                              initialize = function(ID, coopCosts, 
                                                     COOP_RATIO) {
                                 
                                 COOP_RATIO <<- COOP_RATIO
-                                callSuper(ID, coopCost)
+                                callSuper(ID, coopCosts)
 
                                 if (LOG_LEVEL == "all") {
                                   print(paste("Random Player", ID, "whith COOP_RATIO =", 
