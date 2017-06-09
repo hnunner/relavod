@@ -324,6 +324,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                     currState <<- paste(tail(prevActions, X), collapse = "")
                                     
                                   } else if (PLAYERS_PER_STATE == PLAYERS_CNT) {
+                                    lastActions <- tail(prevActions, X)
                                     currState <<- paste(paste(lastActions[,1], collapse = ""), 
                                                         paste(lastActions[,2], collapse = ""),
                                                         paste(lastActions[,3], collapse = ""), sep = "")
