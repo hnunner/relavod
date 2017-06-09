@@ -110,7 +110,8 @@ fitParameters <- function() {
                                       length(epsilonDecays) *
                                       length(epsilonStarts) *
                                       length(propStarts) *
-                                      length(SOCIAL_BEHAVIORS), ":\n",
+                                      length(SOCIAL_BEHAVIORS) *
+                                      length(BALANCING_TYPES), ":\n",
                                     "\tmodel type:", modelType, "\n",
                                     "\tbalancing type:", balancingType, "\n",
                                     "\tsocial behavior:", socialBehavior, "\n",
@@ -158,7 +159,8 @@ fitParameters <- function() {
                                     length(epsilonDecays) *
                                     length(epsilonStarts) *
                                     length(propStarts) *
-                                    length(SOCIAL_BEHAVIORS), ":\n",
+                                    length(SOCIAL_BEHAVIORS) *
+                                    length(BALANCING_TYPES), ":\n",
                                   "\tmodel type:", modelType, "\n",
                                   "\tbalancing type:", balancingType, "\n",
                                   "\tsocial behavior:", socialBehavior, "\n",
