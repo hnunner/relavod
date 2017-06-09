@@ -324,11 +324,9 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                     currState <<- paste(tail(prevActions, X), collapse = "")
                                     
                                   } else if (PLAYERS_PER_STATE == PLAYERS_CNT) {
-                                    lastActions <- tail(prevActions, X)
-                                    currState <<- paste(paste(lastActions[1,], collapse = ""), 
-                                                        paste(lastActions[2,], collapse = ""),
-                                                        paste(lastActions[3,], collapse = ""), sep = "")
-                                    
+                                    currState <<- paste(paste(lastActions[,1], collapse = ""), 
+                                                        paste(lastActions[,2], collapse = ""),
+                                                        paste(lastActions[,3], collapse = ""), sep = "")
                                   } else {
                                     stop(paste("invalid argument for PLAYERS_PER_STATE:", 
                                                PLAYERS_PER_STATE))
@@ -409,7 +407,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #--------------------------------------------------------------------#
                                 getModelParameters = function() {
                                   return(c(callSuper(),
-                                           paste("p", ID, sep = ""), "#####",
+                                           paste("p", ID,  "_params", sep = ""), "#####",
                                            paste("p", ID, "_X", sep = ""), X,
                                            paste("p", ID, "_players_per_state", sep = ""), PLAYERS_PER_STATE,
                                            paste("p", ID, "_balancing", sep = ""), BALANCING, 

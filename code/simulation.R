@@ -114,18 +114,12 @@ createSimulationsBaseDirectory <- function(modelType) {
     dir.create(modelTypeDir)
   }
   
-  # creation of base directory for the date
-  dateDir <- paste(modelTypeDir, gsub("-", "", Sys.Date(), fixed = TRUE), "/", sep = "")
-  if (!file.exists(dateDir)) {
-    dir.create(dateDir)
-  }
-  
   # creation of base directory for the simulations
   simDir <- NA
   dirCnt <- 0
   while (is.na(simDir) || file.exists(simDir)) {
     dirCnt <- dirCnt+1
-    simDir <- paste(dateDir, dirCnt, "/", sep = "")
+    simDir <- paste(modelTypeDir, dirCnt, "/", sep = "")
   }
   dir.create(simDir)
   

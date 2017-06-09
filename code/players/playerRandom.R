@@ -90,7 +90,7 @@ RandomPlayer <- setRefClass("RandomPlayer",
                               #----------------------------------------------------------------------#
                               getModelParameters = function() {
                                 return(c(callSuper(),
-                                         paste("p", ID, sep = ""), "#####",
+                                         paste("p", ID, "_params", sep = ""), "#####",
                                          paste("p", ID, "_coop_ratio", sep = ""), COOP_RATIO))
                               }
                             )

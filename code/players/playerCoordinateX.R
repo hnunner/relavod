@@ -340,7 +340,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #-----------------------------------------------------------------#
                                    getModelParameters = function() {
                                      return(c(callSuper(), 
-                                              paste("p", ID, sep = ""), "#####",
+                                              paste("p", ID,  "_params", sep = ""), "#####",
                                               paste("p", ID, "_X", sep = ""), X, 
                                               paste("p", ID, "_balancing", sep = ""), BALANCING, 
                                               paste("p", ID, "_prop_start", sep = ""), PROP_START, 

@@ -4,38 +4,38 @@ if (!exists("MODEL_TYPES")) source(paste(BASE_DIR, "constants.R", sep = ""))
 
 
 ######################################## FILE SYSTEM / IMPORTS #######################################
+getSimCount <- function(modelDir, simCount = "latest") {
+  if (simCount == "latest") {
+    simDirs <- list.dirs(modelDir, recursive = FALSE)
+    simCounts <- gsub(paste(modelDir, "/", sep = ""), "", simDirs, fixed = TRUE)
+    simCount <- max(as.numeric(simCounts))
+  }
+  return(simCount)
+}
+
+getLatestSimCount <- function(modelType) {
+  modelDir <- paste(SIM_DIR, modelType, sep = "")
+  return(getSimCount(modelDir))
+}
+
+
 #----------------------------------------------------------------------------------------------------#
 # function: getVodBaseDir
 #     Returns the base directory of a model.
-#     Data is stored as: "SIM_DIR/modelType/Date/dateCount/vodType/sim-X.Rdata"
-#     Base directory corresponds to: "SIM_DIR/modelType/Date/dateCount/."
+#     Data is stored as: "SIM_DIR/modelType/simCount/vodType/sim-X.Rdata"
+#     Base directory corresponds to: "SIM_DIR/modelType/simCount/."
 #     For available for modelTypes, see constants.R - 'MODEL_TYPES'
-#     Date format: yyyymmdd
 #     param:  modelType
 #         the model type used by the simulation
-#     param:  date
-#         the date of the simulation 
-#         (if undefined: latest available date)
-#     param:  dateCount
-#         defines the round of simulation of the given date
+#     param:  simCount
+#         defines the round of simulation
 #         (if undefined: latest available round of simulations)
 #----------------------------------------------------------------------------------------------------#
-getVodBaseDir <- function(modelType, date = "latest", dateCount = "latest") {
+getVodBaseDir <- function(modelType, simCount = "latest") {
   modelDir <- paste(SIM_DIR, modelType, sep = "")
-  
-  if (date == "latest") {
-    dateDirs <- list.dirs(modelDir, recursive = FALSE)
-    dates <- gsub(paste(modelDir, "/", sep = ""), "", dateDirs, fixed = TRUE)
-    date <- max(dates)
-  }
-  dateDir <- paste(modelDir, "/", date, sep = "")
-  
-  if (dateCount == "latest") {
-    dateCountDirs <- list.dirs(dateDir, recursive = FALSE)
-    dateCounts <- gsub(paste(dateDir, "/", sep = ""), "", dateCountDirs, fixed = TRUE)
-    dateCount <- max(as.numeric(dateCounts))
-  }
-  baseDir <- paste(dateDir, "/", dateCount, sep = "")
+  baseDir <- paste(modelDir, "/", 
+                   getSimCount(modelDir, simCount), 
+                   sep = "")
   
   return(baseDir)
 }
@@ -43,27 +43,22 @@ getVodBaseDir <- function(modelType, date = "latest", dateCount = "latest") {
 #----------------------------------------------------------------------------------------------------#
 # function: importVodSimData
 #     Imports VOD simulation data. 
-#     Data is stored as: "SIM_DIR/modelType/Date/dateCount/vodType/sim-X.Rdata"
+#     Data is stored as: "SIM_DIR/modelType/simCount/vodType/sim-X.Rdata"
 #     For available for modelTypes, see constants.R - 'MODEL_TYPES'
-#     Date format: yyyymmdd
 #     param:  modelType
 #         the model type used by the simulation
-#     param:  date
-#         the date of the simulation 
-#         (if undefined: latest available date)
-#     param:  dateCount
-#         defines the round of simulation of the given date
+#     param:  simCount
+#         defines the round of simulation
 #         (if undefined: latest available round of simulations)
 #     param:  vodType
 #         the type of VOD used for the simulation
 #         possible: "sym", "asym1", "asym2"
 #----------------------------------------------------------------------------------------------------#
 importVodSimData <- function(modelType = MODEL_TYPES[7],
-                             date = "latest",
-                             dateCount = "latest", 
+                             simCount = "latest", 
                              vodType = "sym") {
   
-  vodBaseDir <- getVodBaseDir(modelType, date, dateCount)
+  vodBaseDir <- getVodBaseDir(modelType, simCount)
   vodTypeDir <- paste(vodBaseDir, "/", vodType, sep = "")
   
   vodSimData = list()
@@ -675,6 +670,8 @@ plotGOF <- function(meanLNIs) {
               R^2, " = ", .(round(RSQ, digits = 2)), ")", sep = "")), 
         outer=TRUE)
   mtext('average LNI', side = 2, outer = TRUE, line = 1.5, cex = 0.7)
+
+  # return(data.frame(RMSE, NRMSE, RSQ))
 }
 
 #----------------------------------------------------------------------------------------------------#
@@ -692,7 +689,7 @@ exportGOF <- function(directory, meanLNIs) {
       height = 700, 
       units = "px", 
       res = 196)
-  plotGOF(meanLNIs)
+  gofs <- plotGOF(meanLNIs)
   dev.off()  
 }
 
@@ -719,25 +716,22 @@ exportLNIComparison <- function(directory, meanLNIs) {
 #     param:  modelType
 #         the model type used by the simulation
 #         For available for modelTypes, see constants.R - 'MODEL_TYPES'
-#     param:  date
-#         the date of the simulation, format: 'yyyymmdd'
-#         (if undefined: latest available date)
-#     param:  dateCount
-#         defines the number of the performed simulation of the given date
+#     param:  simCount
+#         defines the number of the performed simulation
 #         (if undefined: latest available simulation)
 #     param:  vodType
 #         the type of VOD used for the simulation
 #         possible: 'all', constants.R: 'VOD_TYPES[x]'
 #----------------------------------------------------------------------------------------------------#
 analyzeData <- function(modelType = MODEL_TYPES[2],
-                        date = "latest",
-                        dateCount = "latest",
-                        vodType = "all") {
+                        simCount = "latest",
+                        vodType = "all",
+                        fit = FALSE, 
+                        fitCSV = NA) {
   
   # initializations
   exportDir <- paste(getVodBaseDir(modelType = modelType, 
-                                   date = date, 
-                                   dateCount = dateCount),
+                                   simCount = simCount),
                      "/", sep = "")
   if (vodType == "all") {
     vodType <- VOD_TYPES
@@ -750,8 +744,9 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
     currVodType <- vodType[i]
     
     # importing the required simulated data
-    vodSimData <- importVodSimData(modelType = modelType, date = date, 
-                                   dateCount = dateCount, vodType = currVodType)
+    vodSimData <- importVodSimData(modelType = modelType,
+                                   simCount = simCount, 
+                                   vodType = currVodType)
 
     # exporting interaction patterns
     exportInteractionPatterns(exportDir, currVodType, vodSimData)
@@ -780,7 +775,6 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
                          (paste(currVodType, "_h3", sep = "")),
                          (paste(currVodType, "_others", sep = "")))
     
-    # column binding of LNIs for all different VOD types
     if (nrow(LNIs) == 0) {
       LNIs <- vodTypeLNIs
     } else {
@@ -791,11 +785,69 @@ analyzeData <- function(modelType = MODEL_TYPES[2],
   # computation of mean LNIs
   meanLNIs <- apply(LNIs, 2, median)
 
-    # exporting Goodness of Fit
+  # exporting Goodness of Fit
   exportGOF(exportDir, meanLNIs[comparableKeeps])
   
   # exporting LNI comparison data (model vs. experiment)
   exportLNIComparison(exportDir, meanLNIs[comparableKeeps])
+
+  
+  if (fit) {
+    
+    # read model params
+    vodBaseDir <- getVodBaseDir(modelType, simCount)
+    
+    modelParams <- read.csv(paste(vodBaseDir, "/model-params.csv", sep = ""), header = T, sep = ",")
+    
+    library(hydroGOF)
+
+    symRMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]))
+    symNRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]))
+    symRSQ <- summary(lm(as.numeric(LNIS_EXP1[1:4]) ~ as.numeric(meanLNIs[comparableKeeps][1:4])))$r.squared
+    
+    asym1RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]))
+    asym1NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]))
+    asym1RSQ <- summary(lm(as.numeric(LNIS_EXP1[5:8]) ~ as.numeric(meanLNIs[comparableKeeps][5:8])))$r.squared
+    
+    asym2RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]))
+    asym2NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]))
+    asym2RSQ <- summary(lm(as.numeric(LNIS_EXP1[9:12]) ~ as.numeric(meanLNIs[comparableKeeps][9:12])))$r.squared
+    
+    RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1))
+    NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1))
+    RSQ <- summary(lm(as.numeric(LNIS_EXP1) ~ as.numeric(meanLNIs[comparableKeeps])))$r.squared
+    
+    GOF_per_vod_type <- c("###", "###", "###")
+    RMSE_per_vod_type <- c(symRMSE, asym1RMSE, asym2RMSE)
+    NRMSE_per_vod_type <- c(symNRMSE, asym1NRMSE, asym2NRMSE)
+    RSQ_per_vod_type <- c(symRSQ, asym1RSQ, asym2RSQ)
+    GOF_combined <- c("#", "#", "#")
+    RMSE_combined <- c(RMSE, RMSE, RMSE)
+    NRMSE_combined <- c(NRMSE, NRMSE, NRMSE)
+    RSQ_combined <- c(RSQ, RSQ, RSQ)
+    vod_params <- c("###", "###", "###")
+    gofs <- data.frame(GOF_per_vod_type, RMSE_per_vod_type, NRMSE_per_vod_type, RSQ_per_vod_type, 
+                       GOF_combined, RMSE_combined, NRMSE_combined, RSQ_combined, vod_params)
+    
+    library(dplyr)
+    fitInfo <- cbind(gofs, modelParams[2:ncol(modelParams)]) %>% select(model_type, vod_type, everything())
+    
+    # adding simulation count (folder) and timestamp
+    simCount <- getLatestSimCount(modelType)
+    simCount <- c(simCount, simCount, simCount)
+    timestamp <- as.character(Sys.time())
+    timestamp <- c(timestamp, timestamp, timestamp)
+    fitInfo <- cbind(simCount, timestamp, fitInfo)
+    
+    if (!file.exists(fitCSV)) {
+      write.csv(fitInfo, file = fitCSV)
+    } else {
+      ff <- file(fitCSV, open="at")
+      write.table(fitInfo, file=ff, sep = ",", col.names = F)
+      close(ff)
+    }
+      
+  }
   
 }
 
