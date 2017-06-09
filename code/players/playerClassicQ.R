@@ -367,14 +367,18 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                 #     Gets an action according to epsilon-noise approach.
                                 #--------------------------------------------------------------------#
                                 getNoiseAction = function(qRow) {
+                                  
                                   # add noise to state's propensities
-                                  qRow$c_prop <- qRow$c_prop + (qRow$c_prop * runif(1, -epsilon, epsilon))
-                                  qRow$d_prop <- qRow$d_prop + (qRow$d_prop * runif(1, -epsilon, epsilon))
+                                  c_prop <- qRow$c_prop + (qRow$c_prop * runif(1, -epsilon, epsilon))
+                                  d_prop <- qRow$d_prop + (qRow$d_prop * runif(1, -epsilon, epsilon))
+                                  
                                   # select action 
-                                  if (qRow$c_prop > qRow$d_prop) {
+                                  if (c_prop > d_prop) {
                                     return(COOPERATE)
-                                  } else if (qRow$d_prop > qRow$c_prop) {
+                                  } else if (d_prop > c_prop) {
                                     return(DEVIATE)
+                                  } else {
+                                    return(if(runif(1) <= 0.5) COOPERATE else DEVIATE)
                                   }
                                 },
                                 
