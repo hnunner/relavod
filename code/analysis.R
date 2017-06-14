@@ -898,5 +898,17 @@ testPlots <- function() {
 }
 
 
+importFitData <- function() {
+  
+  data <- rbind(read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170609-classicQ-fit.csv"),
+                read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170610-classicQ-fit.csv"),
+                read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170611-classicQ-fit.csv"))
+  
+  symData <- data[data$vod_type == "sym", ]  
+  mean(symData$RMSE_per_vod_type)
+  
+}
+
+
 ###################################### EVENTUAL INTEGRITY CHECKS #####################################
 source(paste(BASE_DIR, "/tests/testAnalysis.R", sep = ""))
