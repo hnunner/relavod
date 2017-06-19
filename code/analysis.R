@@ -900,11 +900,17 @@ testPlots <- function() {
 
 importFitData <- function() {
   
-  data <- rbind(read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170609-classicQ-fit.csv"),
-                read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170610-classicQ-fit.csv"),
-                read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170611-classicQ-fit.csv"))
+  randomData <- read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170609-random-fit.csv")
   
-  symData <- data[data$vod_type == "sym", ]  
+  coordinateXData <- read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170611-coordinateX-fit.csv")
+  
+  classicQData <- rbind(read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170609-classicQ-fit.csv"),
+                        read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170610-classicQ-fit.csv"),
+                        read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170611-classicQ-fit.csv"))
+  
+  
+  
+  symData <- classicQData[data$vod_type == "sym", ]  
   mean(symData$RMSE_per_vod_type)
   
 }

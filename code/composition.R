@@ -44,7 +44,7 @@ simulateAndAnalyze <- function(modelType = MODEL_TYPES[3],
 #----------------------------------------------------------------------------------------------------#
 fitParameters <- function() {
   
-  vodCount <- 10
+  vodCount <- 4
   roundsPerVod <- 5000
   
   for (modelType in MODEL_TYPES[2]) {
@@ -72,7 +72,7 @@ fitParameters <- function() {
     } else {
       i <- 1
       
-      bTypes <- BALANCING_TYPES[1]
+      bTypes <- BALANCING_TYPES
       sBehavs <- SOCIAL_BEHAVIORS[1]
       for (balancingType in bTypes) {
         for (socialBehavior in sBehavs) {
@@ -83,7 +83,7 @@ fitParameters <- function() {
             epsilonStarts <- c(0.1)
             for (epsilonStart in epsilonStarts) {
               
-              epsilonDecays <- c(0.999)
+              epsilonDecays <- c(0.99954, 1)
               for (epsilonDecay in epsilonDecays) {
 
                 alphas <- c(0.25)
