@@ -399,6 +399,39 @@ computeLNISequence <- function(seqLength, lniSequence, higherOrder = FALSE) {
 
 
 ########################################## PLOTS / EXPORTS ###########################################
+plotConvergencePatterns <- function(convergencePatterns) {
+  
+  # setting up multiple plots
+  plotsPerImage <- 10
+  par(mfrow=c(plotsPerImage,1),oma=c(3,0,0,0), mai = c(0.1, 0.6, 0.1, 0.2))
+  
+  # looping over the available VODs
+  for (i in 1:length(convergencePatterns)) {
+    convergencePattern <- convergencePatterns[[i]]
+    plotConvergencePattern(convergencePattern, i, length(convergencePatterns))
+  }
+}
+
+exportConvergencePatterns <- function(directory, vodType, convergencePatterns) {
+  fileNumber <- 1
+  while (length(convergencePatterns) > 0) {
+    maxLength <- if(length(convergencePatterns) > 10) 10 else length(convergencePatterns)
+    filename <- paste(directory, vodType, "-convergence-patterns-", fileNumber, ".png", sep = "") 
+    
+    png(filename,
+        width = 1900, 
+        height = 2000, 
+        units = "px", 
+        res = 196)
+    plotConvergencePatterns(convergencePatterns[1:maxLength])
+    dev.off() 
+    
+    convergencePatterns[1:maxLength] <- NULL
+    fileNumber <- fileNumber+1
+  }
+}
+
+
 #----------------------------------------------------------------------------------------------------#
 # function: plotConvergencePattern
 #   Plots the pattern for the given convergence data.
@@ -409,86 +442,110 @@ computeLNISequence <- function(seqLength, lniSequence, higherOrder = FALSE) {
 #----------------------------------------------------------------------------------------------------#
 plotConvergencePattern <- function(convergenceData, currentPlot = 1, overallPlots = 1) {
   
-  #rownames(convergenceData) <- seq(length=nrow(convergenceData))
-  
+  hmin1Patterns <- data.frame("which" = numeric(1), "h-1" = numeric(1))
+  if (length(which(convergenceData[,1] == 0)) < length(convergenceData$min1s)) {
+    hmin1Patterns <- data.frame(which(convergenceData[,1] == 1), 5)
+  }
   h1Patterns <- data.frame("which" = numeric(1), "h1" = numeric(1))
-  if (length(which(convergenceData[,1] == 0)) < length(convergenceData$h1)) {
-    h1Patterns <- data.frame(which(convergenceData[,1] == 1), 1)
+  if (length(which(convergenceData[,2] == 0)) < length(convergenceData$h1)) {
+    h1Patterns <- data.frame(which(convergenceData[,2] == 1), 1)
   }
   h2Patterns <- data.frame("which" = numeric(1), "h2" = numeric(1))
-  if (length(which(convergenceData[,2] == 0)) < length(convergenceData$h2)) {
-    h2Patterns <- data.frame(which(convergenceData[,2] == 1), 2)
+  if (length(which(convergenceData[,3] == 0)) < length(convergenceData$h2)) {
+    h2Patterns <- data.frame(which(convergenceData[,3] == 1), 2)
   }
   h3Patterns <- data.frame("which" = numeric(1), "h3" = numeric(1))
-  if (length(which(convergenceData[,3] == 0)) < length(convergenceData$h3)) {
-    h3Patterns <- data.frame(which(convergenceData[,3] == 1), 3)
+  if (length(which(convergenceData[,4] == 0)) < length(convergenceData$h3)) {
+    h3Patterns <- data.frame(which(convergenceData[,4] == 1), 3)
   }
-  h4Patterns <- data.frame("which" = numeric(1), "h4" = numeric(1))
-  if (length(which(convergenceData[,4] == 0)) < length(convergenceData$h4)) {
-    h4Patterns <- data.frame(which(convergenceData[,4] == 1), 4)
-  }
-  h5Patterns <- data.frame("which" = numeric(1), "h5" = numeric(1))
-  if (length(which(convergenceData[,5] == 0)) < length(convergenceData$h5)) {
-    h5Patterns <- data.frame(which(convergenceData[,5] == 1), 5)
-  }
-  h6Patterns <- data.frame("which" = numeric(1), "h6" = numeric(1))
-  if (length(which(convergenceData[,6] == 0)) < length(convergenceData$h6)) {
-    h6Patterns <- data.frame(which(convergenceData[,6] == 1), 6)
-  }
-  h7Patterns <- data.frame("which" = numeric(1), "h7" = numeric(1))
-  if (length(which(convergenceData[,7] == 0)) < length(convergenceData$h7)) {
-    h7Patterns <- data.frame(which(convergenceData[,7] == 1), 7)
-  }
-  h8Patterns <- data.frame("which" = numeric(1), "h8" = numeric(1))
-  if (length(which(convergenceData[,8] == 0)) < length(convergenceData$h8)) {
-    h8Patterns <- data.frame(which(convergenceData[,8] == 1), 8)
-  }
-  h9Patterns <- data.frame("which" = numeric(1), "h9" = numeric(1))
-  if (length(which(convergenceData[,9] == 0)) < length(convergenceData$h9)) {
-    h9Patterns <- data.frame(which(convergenceData[,9] == 1), 9)
-  }
-  hmin1Patterns <- data.frame("which" = numeric(1), "h-1" = numeric(1))
-  if (length(which(convergenceData[,10] == 0)) < length(convergenceData$hmin1)) {
-    hmin1Patterns <- data.frame(which(convergenceData[,10] == 1), 10)
-  }
+  # h4Patterns <- data.frame("which" = numeric(1), "h4" = numeric(1))
+  # if (length(which(convergenceData[,5] == 0)) < length(convergenceData$h4)) {
+  #   h4Patterns <- data.frame(which(convergenceData[,5] == 1), 5)
+  # }
+  # h5Patterns <- data.frame("which" = numeric(1), "h5" = numeric(1))
+  # if (length(which(convergenceData[,6] == 0)) < length(convergenceData$h5)) {
+  #   h5Patterns <- data.frame(which(convergenceData[,6] == 1), 6)
+  # }
+  # h6Patterns <- data.frame("which" = numeric(1), "h6" = numeric(1))
+  # if (length(which(convergenceData[,7] == 0)) < length(convergenceData$h6)) {
+  #   h6Patterns <- data.frame(which(convergenceData[,7] == 1), 7)
+  # }
+  # h7Patterns <- data.frame("which" = numeric(1), "h7" = numeric(1))
+  # if (length(which(convergenceData[,8] == 0)) < length(convergenceData$h7)) {
+  #   h7Patterns <- data.frame(which(convergenceData[,8] == 1), 8)
+  # }
+  # h8Patterns <- data.frame("which" = numeric(1), "h8" = numeric(1))
+  # if (length(which(convergenceData[,9] == 0)) < length(convergenceData$h8)) {
+  #   h8Patterns <- data.frame(which(convergenceData[,9] == 1), 9)
+  # }
+  # h9Patterns <- data.frame("which" = numeric(1), "h9" = numeric(1))
+  # if (length(which(convergenceData[,10] == 0)) < length(convergenceData$h9)) {
+  #   h9Patterns <- data.frame(which(convergenceData[,10] == 1), 10)
+  # }
+  # othersPatterns <- data.frame("which" = numeric(1), "others" = numeric(1))
+  # if (length(which(convergenceData[,11] == 0)) < length(convergenceData$others)) {
+  #   othersPatterns <- data.frame(which(convergenceData[,11] == 1), 11)
+  # }
+  
   othersPatterns <- data.frame("which" = numeric(1), "others" = numeric(1))
   if (length(which(convergenceData[,11] == 0)) < length(convergenceData$others)) {
-    othersPatterns <- data.frame(which(convergenceData[,11] == 1), 11)
+    othersPatterns <- data.frame(which(convergenceData[,11] == 1), 4)
   }
   
   
   # basic plot - showing -1 pattern
-  plot(hmin1Patterns, ann=FALSE, xaxt = "n", yaxt = "n", 
+  plot(hmin1Patterns, ann=FALSE, 
+       xaxt = "n", 
+       yaxt = "n", 
        type = 'p', pch = 20,
-       xlim = range(1:nrow(convergenceData)), ylim = range(0.5:(ncol(convergenceData)+0.5)))
+       xlim = range(1:nrow(convergenceData)), ylim = range(0.5:
+                                                             (5+0.5)))
+                                                             #(ncol(convergenceData)+0.5)))
+  
+  # x-axis
+  axis(side=1, at=seq(0,nrow(convergenceData),by=5), cex.axis = 0.6, las = 2)
+  mtext('Round', side = 1, outer = TRUE, line = 1.6, cex = 0.8)
+  
   # y-axis per plot
   axis(side=2,
-       at=seq(1,ncol(convergenceData),1),
-       labels=c("-1","h1","h2","h3","h4","h5","h6","h7","h8","h9","others"), 
-       cex.axis = 0.7)
+       at=seq(1,
+              5,1),
+              #ncol(convergenceData),1),
+       #labels=c("-1","h1","h2","h3","h4","h5","h6","h7","h8","h9","others"), 
+       labels=c("solitary volunteer.","turn-taking (2)","turn-taking (3)","other optimum", "sub-optimal"), 
+       cex.axis = 0.6, las = 1)
+  
   
   # adding other convergence patterns
   points(h1Patterns, type = 'p', pch = 20)
   points(h2Patterns, type = 'p', pch = 20)
   points(h3Patterns, type = 'p', pch = 20)
-  points(h4Patterns, type = 'p', pch = 20)
-  points(h5Patterns, type = 'p', pch = 20)
-  points(h6Patterns, type = 'p', pch = 20)
-  points(h7Patterns, type = 'p', pch = 20)
-  points(h8Patterns, type = 'p', pch = 20)
-  points(h9Patterns, type = 'p', pch = 20)
+  # points(h4Patterns, type = 'p', pch = 20)
+  # points(h5Patterns, type = 'p', pch = 20)
+  # points(h6Patterns, type = 'p', pch = 20)
+  # points(h7Patterns, type = 'p', pch = 20)
+  # points(h8Patterns, type = 'p', pch = 20)
+  # points(h9Patterns, type = 'p', pch = 20)
   points(othersPatterns, type = 'p', pch = 20)
+  
+  # lines 
+  segments(x0 = 0, x1 = 150, y0 = c(1,2,3,4,5), col = "gray60")
   
   if (currentPlot == overallPlots) {
     # overall x-axis
-    mtext(side=1,"Period",line=2.5)       
-    axis(side=1,
-         at=seq(0,nrow(convergenceData), by=(nrow(convergenceData)/10)),
-         labels=seq(0,nrow(convergenceData), by=(nrow(convergenceData)/10)), 
-         cex.axis = 0.7)
+    #mtext(side=1,"Period",line=2.5)       
+    # axis(side=1,
+    #      at=seq(0,nrow(convergenceData), 
+    #             by=5),
+    #             #by=(nrow(convergenceData)/10)),
+    #      labels="",
+    #        #seq(0,nrow(convergenceData),by=5),
+    #                 #by=(nrow(convergenceData)/10)), 
+    #      cex.axis = 0.7)
+    # 
     # overall y-axis label
-    mtext('LNI-order of prevalent behavioral pattern', side = 2, 
-          outer = TRUE, line = -1.8)
+    #mtext('LNI-order of prevalent behavioral pattern', side = 2, 
+    #      outer = TRUE, line = -1.8)
   }
 }
 
@@ -528,6 +585,8 @@ plotInteractionPatterns <- function(vodData) {
 #       flag denoting whether plots need to be cut (max. 150 rounds)
 #----------------------------------------------------------------------------------------------------#
 plotInteractionPattern <- function(vodData, currentPlot = 1, overallPlots = 1) {
+  
+  vodData <- currVodSimData
   
   # only columns of players' actions
   vodData <- vodData[2:length(vodData$round),2:4]
@@ -570,7 +629,7 @@ plotInteractionPattern <- function(vodData, currentPlot = 1, overallPlots = 1) {
        type = 'p', pch = 'x',
        xlim = range(1:nrow(vodData)), ylim = range(0.5:3.5))
   # y-axis per plot
-  axis(side=2,at=seq(0,3,1),labels=seq(0,3,1), cex.axis = 0.7)
+  axis(side=2,at=seq(1,3,1),labels=c("coop. player 1", "coop. player 2", "coop. player 3"), cex.axis = 0.6, las = 1)
   # adding cooperation data for players 2 and 3
   points(p2Cooperations, type = 'p', pch = 'x')
   points(p3Cooperations, type = 'p', pch = 'x')
@@ -723,8 +782,8 @@ exportLNIComparison <- function(directory, meanLNIs) {
 #         the type of VOD used for the simulation
 #         possible: 'all', constants.R: 'VOD_TYPES[x]'
 #----------------------------------------------------------------------------------------------------#
-analyzeData <- function(modelType = MODEL_TYPES[2],
-                        simCount = "latest",
+analyzeData <- function(modelType = MODEL_TYPES[3],
+                        simCount = 1961,
                         vodType = "all",
                         fit = FALSE, 
                         fitCSV = NA) {
@@ -870,6 +929,11 @@ testPlots <- function() {
   file <- paste("sim-", fileNumber, ".Rdata", sep = "")
   filePath <- paste(SIM_DIR, "/", modelType, "/", date, "/", simCnt, "/", vodType,
                     "/", file, sep = "")
+  
+  
+  filePath <- "/Users/hendrik/Desktop/thesis-patterns/CoordinateX/1983/asym2/sim-6.Rdata"
+  
+  
   vodSimData <- get(load(filePath))
   ################################
   ######## mock VOD data #########
@@ -886,15 +950,30 @@ testPlots <- function() {
   ################################
   quartz()
   plotInteractionPattern(vodSimData)
-  ################################
-  ##### behavioral patterns ######
-  ################################
-  lniSequence <- extractLNISequence(vodSimData)
-  lnis <- computeLNIs(lniSequence)
-  convergencePatterns <- computeConvergencePatterns(lniSequence)
-  quartz()  
-  plotConvergencePattern(convergencePatterns)
   
+  
+  ################################
+  ##### convergence patterns #####
+  ################################
+  
+  importDir <- "/Users/hendrik/Desktop/thesis-patterns/CoordinateX/2807/asym2/"
+  exportDir <- "/Users/hendrik/Desktop/thesis-patterns/CoordinateX/2807/"
+  simCountFiles <- list.files(importDir, recursive = FALSE)
+  
+  vodSimData <- list()
+  for (i in 1:(length(simCountFiles))) {
+    filename <- paste(importDir, "/", BASE_FILENAME, i, ".Rdata", sep = "")
+    vodSimData[[i]] <- get(load(filename))
+  }  
+  
+  convergencePatterns <- list()
+  for (i in 1:(length(vodSimData))) {
+    lniSequence <- extractLNISequence(vodSimData[[i]])
+    lnis <- computeLNIs(lniSequence)
+    convergencePatterns[[i]] <- computeConvergencePatterns(lniSequence)
+  }
+  
+  exportConvergencePatterns(exportDir, "asym2", convergencePatterns)
 }
 
 
@@ -908,12 +987,960 @@ importFitData <- function() {
                         read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170610-classicQ-fit.csv"),
                         read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170611-classicQ-fit.csv"))
   
-  
-  
   symData <- classicQData[data$vod_type == "sym", ]  
   mean(symData$RMSE_per_vod_type)
   
 }
+
+
+############################################ FIT ANALYIS #############################################
+getMedians <- function(data, type) {
+  
+  symData <- data[data$vod_type == "sym", ]
+  asym1Data <- data[data$vod_type == "asym1", ]
+  asym2Data <- data[data$vod_type == "asym2", ]
+  
+  # symmetric
+  print(paste("Symmetric - RMSE:",
+              median(symData$RMSE_per_vod_type),
+              "| NRMSE:",
+              median(symData$NRMSE_per_vod_type),
+              "| R2:",
+              median(symData$RSQ_per_vod_type)))
+  
+  # asymmetric 1
+  print(paste("Asymmetric 1 - RMSE:",
+              median(asym1Data$RMSE_per_vod_type),
+              "| NRMSE:",
+              median(asym1Data$NRMSE_per_vod_type),
+              "| R2:",
+              median(asym1Data$RSQ_per_vod_type)))
+  
+  # asymmetric 2
+  print(paste("Asymmetric 2 - RMSE:",
+              median(asym2Data$RMSE_per_vod_type),
+              "| NRMSE:",
+              median(asym2Data$NRMSE_per_vod_type),
+              "| R2:",
+              median(asym2Data$RSQ_per_vod_type)))
+  
+  # combined
+  print(paste("Combined - RMSE:",
+              median(data$RMSE_combined),
+              "| NRMSE:",
+              median(data$NRMSE_combined),
+              "| R2:",
+              median(data$RSQ_combined)))
+  
+  print(
+    cat(
+      "\n\\parbox[c][0.65cm]{2.5cm}{",
+      type,
+      "} & \\parbox[c][0.65cm]{1.45cm}{\\centering $", 
+      round(median(symData$RMSE_per_vod_type), digits = 2),
+      "$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $",
+      round(median(symData$NRMSE_per_vod_type), digits = 2),
+      "$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $",
+      round(median(symData$RSQ_per_vod_type), digits = 2),
+      "$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $",
+      round(median(asym1Data$RMSE_per_vod_type), digits = 2),
+      "$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $",
+      round(median(asym1Data$NRMSE_per_vod_type), digits = 2),
+      "$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $",
+      round(median(asym1Data$RSQ_per_vod_type), digits = 2),
+      "$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $",
+      round(median(asym2Data$RMSE_per_vod_type), digits = 2),
+      "$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $",
+      round(median(asym2Data$NRMSE_per_vod_type), digits = 2),
+      "$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $",
+      round(median(asym2Data$RSQ_per_vod_type), digits = 2),
+      "$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $\\mathbf{",
+      round(median(data$RMSE_combined), digits = 2),
+      "}$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $\\mathbf{",
+      round(median(data$NRMSE_combined), digits = 2),
+      "}$} & \\parbox[c][0.65cm]{1.45cm}{\\centering $\\mathbf{",
+      round(median(data$RSQ_combined), digits = 2),
+      "}$} \\\\ ", sep = ""
+    )
+  )
+}
+
+
+analyzeRandomFits <- function() {
+  rData <- read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170609-random-fit.csv")
+  getMedians(rData[rData$simCount == 2,], "Random")   # cooperation ratio = 1/3
+}
+
+analyzeClassicQFits <- function() {
+  
+  # all data
+  cQData <- rbind(read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170609-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170610-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170611-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170615-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170616-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170617-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170618-classicQ-fit.csv"))
+  
+  # overall results
+  # best fit
+  getMedians(cQData[cQData$RMSE_combined == min(cQData$RMSE_combined),], "Best Fit")
+  # average fit
+  getMedians(cQData, "$\\varnothing$ Fit")
+  
+  # balancing
+  getMedians(cQData[cQData$p1_balancing == "greedy" & cQData$p1_epsilon_decay == 1, ], "$\\varnothing$ $\\epsilon$-greedy")
+  getMedians(cQData[cQData$p1_balancing == "greedy" & cQData$p1_epsilon_decay < 1, ], "$\\varnothing$ $\\epsilon$-decreasing")
+  getMedians(cQData[cQData$p1_balancing == "noise" & cQData$p1_epsilon_decay == 1, ], "$\\varnothing$ $\\epsilon$-noise")
+  getMedians(cQData[cQData$p1_balancing == "noise" & cQData$p1_epsilon_decay < 1, ], "$\\varnothing$ $\\epsilon$-noise-decreasing")
+  
+  # social preferences
+  getMedians(cQData[cQData$p1_social_behavior == "selfish", ], "$\\varnothing$ Selfish")
+  getMedians(cQData[cQData$p1_social_behavior == "altruistic", ], "$\\varnothing$ Altruistic")
+  
+  # initial props
+  getMedians(cQData[cQData$p1_prop_start >= 100, ], "$\\varnothing$ Optimistic")
+  getMedians(cQData[cQData$p1_prop_start < 100, ], "$\\varnothing$ Pessimistic")
+  
+  # learning rate
+  getMedians(cQData[cQData$p1_alpha <= 0.3, ], "$\\varnothing$ Slow")
+  getMedians(cQData[cQData$p1_alpha > 0.3, ], "$\\varnothing$ Fast")
+  
+  # discount rate
+  getMedians(cQData[cQData$p1_gamma > 0.75, ], "$\\varnothing$ Slow")
+  getMedians(cQData[cQData$p1_gamma <= 0.75, ], "$\\varnothing$ Fast")
+  
+  # exploration rate
+  getMedians(cQData[cQData$p1_epsilon_start <= 0.1, ], "$\\varnothing$ Exploitative")
+  getMedians(cQData[cQData$p1_epsilon_start > 0.1, ], "$\\varnothing$ Exploratory")
+  
+  # exploration decrease
+  getMedians(cQData[cQData$p1_epsilon_decay == 0.995, ], "$\\varnothing$ Slow")
+  getMedians(cQData[cQData$p1_epsilon_decay == 0.98, ], "$\\varnothing$ Fast")
+  
+  # actions per state
+  getMedians(cQData[cQData$p1_X == 2, ], "$\\varnothing$ 2")
+  getMedians(cQData[cQData$p1_X == 3, ], "$\\varnothing$ 3")
+  
+  # players per state
+  getMedians(cQData[cQData$p1_players_per_state == 1, ], "$\\varnothing$ 1")
+  getMedians(cQData[cQData$p1_players_per_state == 3, ], "$\\varnothing$ 3")
+  
+  # selfish, optimistic
+  getMedians(cQData[cQData$p1_social_behavior == "selfish" & cQData$p1_prop_start >= 100, ], "$\\varnothing$")
+  
+  # altruistic, pessimistic
+  getMedians(cQData[cQData$p1_social_behavior == "altruistic" & cQData$p1_prop_start < 100, ], "$\\varnothing$")
+  
+  
+  # CQ.362
+  getMedians(cQData[cQData$simCount == 362,], "NA")
+  
+  # CQ.402
+  getMedians(cQData[cQData$simCount == 402,], "NA")
+  
+  # CQ.1442
+  getMedians(cQData[cQData$simCount == 1442,], "NA")
+  
+  # CQ.1947
+  getMedians(cQData[cQData$simCount == 1947,], "NA")
+  
+}
+
+analyzeCoordinateXFits <- function() {
+  
+  cXData <- read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170611-coordinateX-fit.csv")
+  
+  # overall results
+  # best fit
+  getMedians(cXData[cXData$RMSE_combined == min(cXData$RMSE_combined),], "Best Fit")
+  # average
+  getMedians(cXData, "$\\varnothing$ Fit")
+  
+  # balancing
+  getMedians(cXData[cXData$p1_balancing == "greedy" & cXData$p1_epsilon_decay == 1, ], "$\\varnothing$ $\\epsilon$-greedy")
+  getMedians(cXData[cXData$p1_balancing == "greedy" & cXData$p1_epsilon_decay < 1, ], "$\\varnothing$ $\\epsilon$-decreasing")
+  getMedians(cXData[cXData$p1_balancing == "noise" & cXData$p1_epsilon_decay == 1, ], "$\\varnothing$ $\\epsilon$-noise")
+  getMedians(cXData[cXData$p1_balancing == "noise" & cXData$p1_epsilon_decay < 1, ], "$\\varnothing$ $\\epsilon$-noise-decreasing")
+  
+  # social preferences
+  getMedians(cXData[cXData$p1_social_behavior == "selfish", ], "$\\varnothing$ Selfish")
+  getMedians(cXData[cXData$p1_social_behavior == "altruistic", ], "$\\varnothing$ Altruistic")
+  
+  # initial props
+  getMedians(cXData[cXData$p1_prop_start >= 100, ], "$\\varnothing$ Optimistic")
+  getMedians(cXData[cXData$p1_prop_start < 100, ], "$\\varnothing$ Pessimistic")
+  
+  # learning rate
+  getMedians(cXData[cXData$p1_alpha <= 0.3, ], "$\\varnothing$ Slow")
+  getMedians(cXData[cXData$p1_alpha > 0.3, ], "$\\varnothing$ Fast")
+  
+  # discount rate
+  getMedians(cXData[cXData$p1_gamma > 0.75, ], "$\\varnothing$ Slow")
+  getMedians(cXData[cXData$p1_gamma <= 0.75, ], "$\\varnothing$ Fast")
+  
+  # exploration rate
+  getMedians(cXData[cXData$p1_epsilon_start <= 0.1, ], "$\\varnothing$ Exploitative")
+  getMedians(cXData[cXData$p1_epsilon_start > 0.1, ], "$\\varnothing$ Exploratory")
+  
+  # exploration decrease
+  getMedians(cXData[cXData$p1_epsilon_decay == 0.995, ], "$\\varnothing$ Slow")
+  getMedians(cXData[cXData$p1_epsilon_decay == 0.98, ], "$\\varnothing$ Fast")
+  
+  # Max. coord. pos.
+  getMedians(cXData[cXData$p1_X == 2, ], "$\\varnothing$ 2")
+  getMedians(cXData[cXData$p1_X == 3, ], "$\\varnothing$ 3")
+  getMedians(cXData[cXData$p1_X == 4, ], "$\\varnothing$ 4")
+  
+  # selfish, optimistic
+  getMedians(cXData[cXData$p1_social_behavior == "selfish" 
+                    & cXData$p1_prop_start >= 100, ], "$\\varnothing$")
+  
+  # altruistic, pessimistic
+  getMedians(cXData[cXData$p1_social_behavior == "altruistic" 
+                    & cXData$p1_prop_start < 100, ], "$\\varnothing$")
+  
+  
+  # CX.200
+  getMedians(cXData[cXData$simCount == 200,], "NA")
+  
+  # CX.1983
+  getMedians(cXData[cXData$simCount == 1983,], "NA")
+  
+  # CX.2648
+  getMedians(cXData[cXData$simCount == 2648,], "NA")
+  
+  # CX.2807
+  getMedians(cXData[cXData$simCount == 2807,], "NA")
+}
+
+#
+fitPlotWidth <- 1100
+fitPlotHeight <- 850
+
+exportFitComparisons <- function() {
+  
+  plotBestComparisons()
+  plotAverageComparisons()
+  plotSelfishComparisons()
+  plotAltruisticComparisons()
+  plotOptimisticComparisons()
+  plotPessimisticComparisons()
+  plotSelfishOptimisticComparisons()
+  plotAltruisticPessimisticComparisons()
+}
+  
+plotBestComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+             34.41, 9.76, 4.7, 20.83,
+             5.79, 9.44, 4.57, 6.92)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  best <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "a-best-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  plotParameterComparisons(best, "a. Best Fit")
+  dev.off() 
+  
+  
+}  
+
+plotAverageComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            37.92, 31.68, 44.54, 37.89,
+            35.07, 25.55, 34.61, 30.33)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  average <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "b-average-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  plotParameterComparisons(average, "b. Average Fit", "bottomLeft")
+  dev.off()
+}  
+
+plotSelfishComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            37.09, 26.41, 18.34, 28.89,
+            33.64, 24.21, 26.71, 28.84)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  selfish <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "c-selfish-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  plotParameterComparisons(selfish, "c. Selfish Fit", "bottomLeft")
+  dev.off()
+}
+
+plotAltruisticComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            38.71, 33.3, 46.37, 39.25,
+            39.44, 34.12, 46.74, 40.43)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  altruistic <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "d-altruistic-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  plotParameterComparisons(altruistic, "d. Altruistic Fit", "bottomLeft")
+  dev.off()
+}
+
+plotOptimisticComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            37.38, 29.41, 30.44, 31.63,
+            34.01, 24.05, 23.91, 28.36)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  optimistic <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "e-optimistic-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  plotParameterComparisons(optimistic, "e. Optimistic Fit", "bottomLeft")
+  dev.off()
+}  
+
+plotPessimisticComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            38.64, 32.43, 45.17, 38.32,
+            38.67, 33.71, 46.37, 39.05)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  pessimistic <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "f-pessimistic-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  plotParameterComparisons(pessimistic, "f. Pessimistic Fit", "bottomLeft")
+  dev.off()
+}    
+
+plotSelfishOptimisticComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            36.14, 20.89, 14.28, 25.48,
+            33.29, 23.42, 21.13, 27.71)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  pessimistic <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "g-selfish-optimistic-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  plotParameterComparisons(pessimistic, "g. Selfish Optimistic Fit", "bottomLeft")
+  dev.off()
+}  
+
+plotAltruisticPessimisticComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            39.03, 33.71, 46.37, 39.35,
+            39.44, 34.12, 46.74, 40.43)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  pessimistic <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "h-altruistic-pessimistic-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  plotParameterComparisons(pessimistic, "h. Altruistic Pessimistic Fit", "bottomLeft")
+  dev.off()
+}  
+
+  
+plotParameterComparisons <- function(data, title, legendPos = "topLeft") {
+  
+  # Create Line Chart
+  # convert factor to numeric for convenience 
+  data$Model <- as.numeric(data$Model)
+  nmodels <- max(data$Model)
+  data$VOD <- as.numeric(data$VOD)
+  
+  # get the range for the x and y axis 
+  xrange <- range(data$VOD) 
+  yrange <- range(data$RMSE) 
+  
+  # set up the plot 
+  plot(xrange, c(0,50), type="n", xlab="VOD types",
+       ylab="RSME", xaxt = "n")
+  axis(1, labels = c("Symmetric", "Asymmetric 1", "Asymmetric 2", "combined"), at = c(1,2,3,4))
+  colors <- c("gray", "#D55E00", "#56B4E9")
+  linetype <- c(1:nmodels) 
+  plotchar <- seq(18,18+nmodels,1)
+  
+  # add lines 
+  for (i in 1:nmodels) { 
+    sub <- subset(data, Model==i) 
+    lines(sub$VOD, sub$RMSE, type="b", lwd=1.5,
+          lty=linetype[i], col=colors[i], pch=plotchar[i]) 
+  } 
+  
+  # add a title and subtitle 
+  title(title)
+  
+  # add a legend 
+  
+  if (legendPos == "topLeft") {
+    legend(1.2, 50, c("Random", "ClassicQ", "CoordinateX"), cex=0.8, col=colors,
+           pch=plotchar, lty=linetype, title="Model Class")
+  } else {
+    legend(1.2, 18, c("Random", "ClassicQ", "CoordinateX"), cex=0.8, col=colors,
+           pch=plotchar, lty=linetype, title="Model Class")
+  }
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+exportCombinedGof <- function() {
+  plotWidth <- 2000
+  plotHeight <- 1000
+  
+  png(paste("/Users/hendrik/Desktop/", "combined-gof.png", sep = ""), 
+      width = plotWidth, 
+      height = plotHeight, 
+      units = "px", 
+      res = 196)
+  plotCombinedGof()
+  dev.off()
+}
+
+plotCombinedGof <- function() {
+  
+  bestLnisClassQ <- data.frame("sym_h1" = 10.33, "sym_h2" = 4, "sym_h3" = 0, "sym_others" = 86.33,
+                               "asym1_h1" = 44.33, "asym1_h2" = 2.33, "asym1_h3" = 0, "asym1_others" = 52.33,
+                               "asym2_h1" = 61.33, "asym2_h2" = 1, "asym2_h3" = 0, "asym2_others" = 36.67)
+  bestLnisCoordX <- data.frame("sym_h1" = 0, "sym_h2" = 2, "sym_h3" = 40.33, "sym_others" = 41,
+                               "asym1_h1" = 23, "asym1_h2" = 0, "asym1_h3" = 2, "asym1_others" = 47.67,
+                               "asym2_h1" = 67, "asym2_h2" = 0, "asym2_h3" = 0, "asym2_others" = 33)
+  
+  # binding of simulation and experimental data
+  LNIs <- rbind(LNIS_EXP1, bestLnisClassQ, bestLnisCoordX)
+  
+  
+  titleBig <- 1.5
+  titleSmall <- 1.2
+  legendSize <- 1.1
+  ySize <- 0.9
+  
+  
+  # three diagrams - one per VOD type (sym, asym1, asym2)
+  par(mfrow=c(1,3), oma = c(0, 4, 3, 0), mar = c(5, 2, 1, 1))
+  cols <- c("black", "#D55E00", "#56B4E9")
+  
+  # compare model and experimental data: Symmetric
+  plotDataSym1 <- data.frame(h1 = LNIs$sym_h1,
+                             h2 = LNIs$sym_h2,
+                             h3 = LNIs$sym_h3,
+                             others = LNIs$sym_others)
+  barplot(as.matrix(plotDataSym1), xlab = "Symmetric", cex.axis = titleSmall, cex.names = titleSmall, cex.lab = titleSmall,
+          beside = TRUE, col = cols, ylim = range(0:100))
+  
+  # compare model and experimental data: Asymmetric 1
+  plotDataAsym1 <- data.frame(h1 = LNIs$asym1_h1,
+                              h2 = LNIs$asym1_h2,
+                              h3 = LNIs$asym1_h3,
+                              others = LNIs$asym1_others)
+  barplot(as.matrix(plotDataAsym1), yaxt = "n", xlab = "Asymmetric 1", cex.axis = titleSmall, cex.names = titleSmall,  cex.lab = titleSmall,
+          beside = TRUE, col = cols, ylim = range(0:100))
+  
+  # compare model and experimental data: Asymmetric 2
+  plotDataAsym2 <- data.frame(h1 = LNIs$asym2_h1,
+                              h2 = LNIs$asym2_h2,
+                              h3 = LNIs$asym2_h3,
+                              others = LNIs$asym2_others)
+  barplot(as.matrix(plotDataAsym2), yaxt = "n", xlab = "Asymmetric 2", cex.axis = titleSmall, cex.names = titleSmall, cex.lab = titleSmall,
+          beside = TRUE, col = cols, ylim = range(0:100))
+  
+  
+  # legend and title
+  legend(x = "topright", y = 5, c("Diekmann & Przepiorka (2016)", "ClassicQ", "CoordinateX"), cex=legendSize, fill=cols)
+  title("Model Data vs. Experimental Data", outer=TRUE, cex.main = titleBig)
+  mtext('average LNI', side = 2, outer = TRUE, line = 1.5, cex = ySize)
+   
+}
+
+
+
+
+exportSingleGofs <- function() {
+  
+  plotWidth <- 1600
+  plotHeight <- 1200
+  
+  png(paste("/Users/hendrik/Desktop/", "classq-gof.png", sep = ""), 
+      width = plotWidth, 
+      height = plotHeight, 
+      units = "px", 
+      res = 196)
+  plotClassicQGof()
+  dev.off()
+  
+  png(paste("/Users/hendrik/Desktop/", "coordx-gof.png", sep = ""), 
+      width = plotWidth, 
+      height = plotHeight, 
+      units = "px", 
+      res = 196)
+  plotCoordinateXGof()
+  dev.off()  
+}
+
+
+plotClassicQGof <- function() {
+  
+  bestLnisClassQ <- data.frame("sym_h1" = 10.33, "sym_h2" = 4, "sym_h3" = 0, "sym_others" = 86.33,
+                               "asym1_h1" = 44.33, "asym1_h2" = 2.33, "asym1_h3" = 0, "asym1_others" = 52.33,
+                               "asym2_h1" = 61.33, "asym2_h2" = 1, "asym2_h3" = 0, "asym2_others" = 36.67)
+  
+  # binding of simulation and experimental data
+  LNIs <- rbind(LNIS_EXP1, bestLnisClassQ)
+  
+  
+  titleBig <- 2.5
+  titleSmall <- 2.1
+  xLegendSize <- 1.7
+  legendSize <- 1.65
+  xSize <- 1.4
+  ySize <- 1.4
+  yAxisSize <- 2.0
+  
+  
+  # three diagrams - one per VOD type (sym, asym1, asym2)
+  par(mfrow=c(1,3), oma = c(0, 4, 3, 0), mar = c(10, 2, 1, 4))
+  cols <- c("black", "#D55E00")
+  
+  # compare model and experimental data: Symmetric
+  plotDataSym1 <- data.frame(h1 = LNIs$sym_h1,
+                             h2 = LNIs$sym_h2,
+                             h3 = LNIs$sym_h3,
+                             others = LNIs$sym_others)
+  barplot(as.matrix(plotDataSym1), yaxt = "n", xlab = "", cex.axis = xLegendSize, cex.names = xLegendSize, cex.lab = xLegendSize, las = 2,
+          beside = TRUE, col = cols, ylim = range(0:100))
+  axis(side=2, at=seq(0, 100, by = 10), cex.axis = yAxisSize, las = 1) 
+  mtext('                  average LNI', side = 2, outer = TRUE, line = 2.4, cex = ySize)
+  mtext('Symmetric      ', side = 1, line = 4, cex = xSize)
+  
+  # compare model and experimental data: Asymmetric 1
+  plotDataAsym1 <- data.frame(h1 = LNIs$asym1_h1,
+                              h2 = LNIs$asym1_h2,
+                              h3 = LNIs$asym1_h3,
+                              others = LNIs$asym1_others)
+  barplot(as.matrix(plotDataAsym1), yaxt = "n", xlab = "", cex.axis = xLegendSize, cex.names = xLegendSize,  cex.lab = xLegendSize, las = 2,
+          beside = TRUE, col = cols, ylim = range(0:100))
+  mtext('Asymmetric 1         ', side = 1, line = 4, cex = xSize)
+  
+  # compare model and experimental data: Asymmetric 2
+  plotDataAsym2 <- data.frame(h1 = LNIs$asym2_h1,
+                              h2 = LNIs$asym2_h2,
+                              h3 = LNIs$asym2_h3,
+                              others = LNIs$asym2_others)
+  barplot(as.matrix(plotDataAsym2), yaxt = "n", xlab = "", cex.axis = xLegendSize, cex.names = xLegendSize, cex.lab = xLegendSize, las = 2,
+          beside = TRUE, col = cols, ylim = range(0:100))
+  mtext('Asymmetric 2         ', side = 1, line = 4, cex = xSize)
+  
+  
+  # legend and title
+  legend(x = "topright", y = 10, c("Experiment", "ClassicQ"), cex=legendSize, fill=cols, title = "Data Source")
+  title("a. Experimental Data vs. ClassicQ Predictions", outer=TRUE, cex.main = titleBig)
+  mtext('VOD type                                                                              ', side = 1, line = 8, cex = xSize)
+  
+}
+
+
+
+plotCoordinateXGof <- function() {
+  
+  bestLnisCoordX <- data.frame("sym_h1" = 0, "sym_h2" = 2, "sym_h3" = 40.33, "sym_others" = 41,
+                               "asym1_h1" = 23, "asym1_h2" = 0, "asym1_h3" = 2, "asym1_others" = 47.67,
+                               "asym2_h1" = 67, "asym2_h2" = 0, "asym2_h3" = 0, "asym2_others" = 33)
+  
+  # binding of simulation and experimental data
+  LNIs <- rbind(LNIS_EXP1, bestLnisCoordX)
+  
+  
+  titleBig <- 2.5
+  titleSmall <- 2.1
+  xLegendSize <- 1.7
+  legendSize <- 1.65
+  xSize <- 1.4
+  ySize <- 1.4
+  yAxisSize <- 2.0
+  
+  
+  # three diagrams - one per VOD type (sym, asym1, asym2)
+  par(mfrow=c(1,3), oma = c(0, 4, 3, 0), mar = c(10, 2, 1, 4))
+  cols <- c("black", "#56B4E9")
+  
+  # compare model and experimental data: Symmetric
+  plotDataSym1 <- data.frame(h1 = LNIs$sym_h1,
+                             h2 = LNIs$sym_h2,
+                             h3 = LNIs$sym_h3,
+                             others = LNIs$sym_others)
+  barplot(as.matrix(plotDataSym1), yaxt = "n", xlab = "", cex.axis = xLegendSize, cex.names = xLegendSize, cex.lab = xLegendSize, las = 2,
+          beside = TRUE, col = cols, ylim = range(0:100))
+  axis(side=2, at=seq(0, 100, by = 10), cex.axis = yAxisSize, las = 1) 
+  mtext('                  average LNI', side = 2, outer = TRUE, line = 2.4, cex = ySize)
+  mtext('Symmetric      ', side = 1, line = 4, cex = xSize)
+  
+  # compare model and experimental data: Asymmetric 1
+  plotDataAsym1 <- data.frame(h1 = LNIs$asym1_h1,
+                              h2 = LNIs$asym1_h2,
+                              h3 = LNIs$asym1_h3,
+                              others = LNIs$asym1_others)
+  barplot(as.matrix(plotDataAsym1), yaxt = "n", xlab = "", cex.axis = xLegendSize, cex.names = xLegendSize,  cex.lab = xLegendSize, las = 2,
+          beside = TRUE, col = cols, ylim = range(0:100))
+  mtext('Asymmetric 1         ', side = 1, line = 4, cex = ySize)
+  
+  # compare model and experimental data: Asymmetric 2
+  plotDataAsym2 <- data.frame(h1 = LNIs$asym2_h1,
+                              h2 = LNIs$asym2_h2,
+                              h3 = LNIs$asym2_h3,
+                              others = LNIs$asym2_others)
+  barplot(as.matrix(plotDataAsym2), yaxt = "n", xlab = "", cex.axis = xLegendSize, cex.names = xLegendSize, cex.lab = xLegendSize, las = 2,
+          beside = TRUE, col = cols, ylim = range(0:100))
+  mtext('Asymmetric 2         ', side = 1, line = 4, cex = ySize)
+  
+  
+  # legend and title
+  legend(x = "topright", y = 5, c("Experiment", "CoordinateX"), cex=legendSize, fill=cols, title = "Data Source")
+  title("b. Experimental Data vs. CoordinateX Predictions", outer=TRUE, cex.main = titleBig)
+  mtext('VOD type                                                                              ', side = 1, line = 8, cex = xSize)
+}
+
+
+
+
+
+
+exportAllGofs <- function() {
+  
+  lnis <- list(LNIS_CQ362, "CQ.362",
+               LNIS_CQ402, "CQ.402",
+               LNIS_CQ1442, "CQ.1442",
+               LNIS_CQ1947, "CQ.1947",
+            
+               LNIS_CX200, "CX.200",
+               LNIS_CX1983, "CX.1983",
+               LNIS_CX2648, "CX.2648",
+               LNIS_CX2807, "CX.2807")
+  
+  lni <- 1
+  lowerLet <- 1
+  stepWidth <- length(lnis) / 2
+  
+  while (lni < length(lnis)) {
+    lets <- letters[seq(from = lowerLet, 
+                        to = lowerLet + 2*stepWidth, 
+                        by = stepWidth)]
+    exportSingleGofs(lnis[[lni]], lnis[[lni+1]], lets)
+    lni <- lni+2
+    lowerLet <- lowerLet+1
+  }
+}
+
+
+exportSingleGofs <- function(lnis, title, lets) {
+  
+  plotWidth <- 530
+  plotHeight <- 850
+  
+  modelType <- substr(title, 1, 2)
+  
+  letCnt <- 1
+  for (vodType in VOD_TYPES) {
+    fileName <- paste("gof-", title,"-", vodType, ".png", sep = "")
+    png(paste("/Users/hendrik/Desktop/", fileName, sep = ""), 
+        width = plotWidth, 
+        height = plotHeight, 
+        units = "px", 
+        res = 196)
+    plotSingleGof(lnis, vodType, modelType, paste(lets[letCnt], ". ", title, sep=""))
+    dev.off()
+    letCnt <- letCnt+1
+  }
+  
+}
+
+
+plotSingleGof <- function(lnis ,vodType, modelType, title) {
+  
+  # binding of simulation and experimental data
+  LNIs <- rbind(LNIS_EXP1, lnis)
+
+  # font sizes  
+  xSize <- 0.75
+  ySize <- 0.9
+  yAxisSize <- 0.75
+  legendSize <- 0.75
+  titleSize <- 1
+  
+  # margins
+  par(mfrow=c(1,1), oma = c(0, 2, 1, 0), mar = c(2, 1, 0, 0))
+  
+  # colors
+  cols <- c("black", "gray")
+  if (modelType == "CQ") {
+    cols <- c("black", "#D55E00")
+  } else if (modelType == "CX") {
+    cols <- c("black", "#56B4E9")    
+  }
+  
+  # plot data
+  plotData <- NA
+  if (vodType == "sym") {
+    plotData <- data.frame(h1 = LNIs$sym_h1,
+                           h2 = LNIs$sym_h2,
+                           h3 = LNIs$sym_h3)
+                           #, others = LNIs$sym_others)
+  } else if (vodType == "asym1") {
+    plotData <- data.frame(h1 = LNIs$asym1_h1,
+                           h2 = LNIs$asym1_h2,
+                           h3 = LNIs$asym1_h3)
+                           #, others = LNIs$asym1_others)
+  } else if (vodType == "asym2") {
+    plotData <- data.frame(h1 = LNIs$asym2_h1,
+                           h2 = LNIs$asym2_h2,
+                           h3 = LNIs$asym2_h3)
+                           #, others = LNIs$asym2_others)
+  }
+  
+  # plot
+  barplot(as.matrix(plotData), 
+          yaxt = "n", 
+          names.arg = c("solitary \nvolunteer.",
+                        "turn-taking \n(2 players)",
+                        "turn-taking \n(3 players)"),
+          cex.axis = xSize, cex.names = xSize, cex.lab = xSize,
+          beside = TRUE, col = cols, ylim = range(0:100))
+  
+  # x-label
+  # mtext('    Frequency', side = 1, outer = TRUE, line = 0.8, cex = xSize)
+  
+  # y-axis
+  axis(side=2, at=seq(0, 100, by = 10), cex.axis = yAxisSize, las = 1)
+  mtext('    Frequency', side = 2, outer = TRUE, line = 1, cex = ySize)
+  
+  # legend
+  legend(x = 1, y = 100, c("Experiment", substr(title, 4, nchar(title))), cex=legendSize, fill=cols, title = "Data Source")
+  
+  # title
+  #title(title, outer=TRUE, cex.main = titleSize)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+findExemplarySimulations <- function() {
+  
+  # 1. ClassicQ
+  cQData <- rbind(read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170609-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170610-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170611-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170615-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170616-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170617-classicQ-fit.csv"),
+                  read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170618-classicQ-fit.csv"))
+  
+  # 1.1. best fit combined
+  cQDataOrdered <- cQData[order(cQData[,11]), ]
+  cQDataOrdered[1,]$simCount                        # 362
+  
+  # 1.2. best fit symmetric
+  cQSym <- cQData[cQData$vod_type == "sym", ]
+  cQSymOrdered <- cQSym[order(cQSym[,7]), ]
+  cQSymOrdered[1,]$simCount                         # 1557
+  
+  for (i in 1:20) {
+    print(paste("sim:", cQSymOrdered[i,]$simCount, 
+                "- RMSE sym:", cQSymOrdered[i,]$RMSE_per_vod_type,
+                "|| RMSE combined:", 
+                cQData[cQData$simCount == cQSymOrdered[i,]$simCount & cQData$vod_type == "sym", ]$RMSE_combined))
+  }   # 1557
+  
+  # 1.3. best fit asymmetric 
+  cQAsym1 <- cQData[cQData$vod_type == "asym1", ]
+  cQAsym1Ordered <- cQAsym1[order(cQAsym1[,7]), ]
+  cQAsym1Ordered[1,]$simCount
+  
+  for (i in 1:50) {
+    print(paste("sim:", cQAsym1Ordered[i,]$simCount, 
+                "- RMSE asym1:", cQAsym1Ordered[i,]$RMSE_per_vod_type,
+                "|| RMSE asym2:", 
+                cQData[cQData$simCount == cQAsym1Ordered[i,]$simCount & cQData$vod_type == "asym2", ]$RMSE_per_vod_type,
+                " || balancing:",
+                cQData[cQData$simCount == cQAsym1Ordered[i,]$simCount & cQData$vod_type == "asym2", ]$p1_balancing,
+                "|| RMSE combined:", 
+                cQData[cQData$simCount == cQAsym1Ordered[i,]$simCount & cQData$vod_type == "asym2", ]$RMSE_combined))
+  }   # 402
+  
+  
+  # 2. CoordinateX
+  cXData <- read.csv("/Users/hendrik/git/uu/mscp-model/simulations/20170611-coordinateX-fit.csv")
+  
+  # 2.1. best fit combined
+  cXDataOrdered <- cXData[order(cXData[,11]), ]
+  cXDataOrdered[1,]$simCount                        # 1983
+  
+  # 2.2. best fit symmetric
+  cXSym <- cXData[cXData$vod_type == "sym", ]
+  cXSymOrdered <- cXSym[order(cXSym[,7]), ]
+  cXSymOrdered[1,]$simCount                         # 1998
+  
+  for (i in 1:20) {
+    print(paste("sim:", cXSymOrdered[i,]$simCount, 
+                "- RMSE sym:", cXSymOrdered[i,]$RMSE_per_vod_type,
+                "|| RMSE combined:", 
+                cXData[cXData$simCount == cXSymOrdered[i,]$simCount & cXData$vod_type == "sym", ]$RMSE_combined))
+  }   # 1983
+  
+  # 2.3. best fit asymmetric 
+  cXAsym1 <- cXData[cXData$vod_type == "asym1", ]
+  cXAsym1Ordered <- cXAsym1[order(cXAsym1[,7]), ]
+  cXAsym1Ordered[1,]$simCount
+  
+  for (i in 1:20) {
+    print(paste("sim:", cXAsym1Ordered[i,]$simCount, 
+                "- RMSE asym1:", cXAsym1Ordered[i,]$RMSE_per_vod_type,
+                "|| RMSE asym2:", 
+                cXData[cXData$simCount == cXAsym1Ordered[i,]$simCount & cXData$vod_type == "asym2", ]$RMSE_per_vod_type,
+                " || balancing:",
+                cXData[cXData$simCount == cXAsym1Ordered[i,]$simCount & cXData$vod_type == "asym2", ]$p1_balancing,
+                "|| RMSE combined:", 
+                cXData[cXData$simCount == cXAsym1Ordered[i,]$simCount & cXData$vod_type == "asym2", ]$RMSE_combined))
+  }   # 2648  
+  
+  cXData[cXData$simCount == 2807, ]$RMSE_per_vod_type
+}
+
+
+
+
+
+
+
+
+plotInteractionAndConvergencePattern <- function() {
+  
+  vodSimData <- list()
+  for (i in 1:10) {
+    filename <- paste("/Users/hendrik/Desktop/thesis-patterns/ClassicQ/362_best_combined/sym/", BASE_FILENAME, i, ".Rdata", sep = "")
+    vodSimData[[i]] <- get(load(filename))
+  }
+  
+  convergencePatterns <- list()
+  for (i in 1:(length(vodSimData))) {
+    lniSequence <- extractLNISequence(vodSimData[[i]])
+    lnis <- computeLNIs(lniSequence)
+    convergencePatterns[[i]] <- computeConvergencePatterns(lniSequence)
+  }
+  
+  
+  currVodSimData <- vodSimData[[1]]
+  convergencePattern <- convergencePatterns[[1]]
+  
+  filename <- "/Users/hendrik/Desktop/pattern-test.png"
+  
+  
+  
+  png(filename,
+      width = 1900, 
+      height = 400, 
+      units = "px", 
+      res = 196)
+  # setting up multiple plots
+  plotsPerImage <- 2
+  par(mfrow=c(plotsPerImage,1),oma=c(2.8,0,0,0), mai = c(0, 1, 0.1, 0.1))
+  
+  nf <- layout(matrix(c(1,2),ncol=1), widths=c(54,54), heights=c(3,5), TRUE) 
+  plotInteractionPattern(currVodSimData, 1, 2)
+  plotConvergencePattern(convergencePattern)
+  
+  dev.off() 
+  
+  
+}
+
+
 
 
 ###################################### EVENTUAL INTEGRITY CHECKS #####################################
