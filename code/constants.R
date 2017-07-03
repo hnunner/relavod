@@ -88,6 +88,9 @@ LNIS_CQ1442 <- data.frame("sym_h1" = 10, "sym_h2" = 1, "sym_h3" = 0, "sym_others
 LNIS_CQ1947 <- data.frame("sym_h1" = 0.65, "sym_h2" = 1.36, "sym_h3" = 1.07, "sym_others" = 96.68,
                           "asym1_h1" = 38.9, "asym1_h2" = 2.13, "asym1_h3" = 0.68, "asym1_others" = 58.18,
                           "asym2_h1" = 47.4, "asym2_h2" = 2, "asym2_h3" = 0.31, "asym2_others" = 50.39)
+LNIS_CQ1949 <- data.frame("sym_h1" = 1.3, "sym_h2" = 3.25, "sym_h3" = 2.96, "sym_others" = 92.49,
+                          "asym1_h1" = 84.37, "asym1_h2" = 0.4, "asym1_h3" = 0.35, "asym1_others" = 14.88,
+                          "asym2_h1" = 89.79, "asym2_h2" = 0.36, "asym2_h3" = 0.38, "asym2_others" = 9.47)
 
 LNIS_CX200 <- data.frame("sym_h1" = 0, "sym_h2" = 2, "sym_h3" = 6.67, "sym_others" = 91.33,
                          "asym1_h1" = 38, "asym1_h2" = 2, "asym1_h3" = 3, "asym1_others" = 57,

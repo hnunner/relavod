@@ -118,17 +118,21 @@ computeConvergencePatterns <- function(lniSequence) {
   h3 <- computeConvergencePattern(3, lniSequence)
   
   # hgher order patterns
-  h4 <- computeConvergencePattern(4, lniSequence)
-  h5 <- computeConvergencePattern(5, lniSequence)
-  h6 <- computeConvergencePattern(6, lniSequence)
-  h7 <- computeConvergencePattern(7, lniSequence)
-  h8 <- computeConvergencePattern(8, lniSequence)
-  h9 <- computeConvergencePattern(9, lniSequence)
+  # h4 <- computeConvergencePattern(4, lniSequence)
+  # h5 <- computeConvergencePattern(5, lniSequence)
+  # h6 <- computeConvergencePattern(6, lniSequence)
+  # h7 <- computeConvergencePattern(7, lniSequence)
+  # h8 <- computeConvergencePattern(8, lniSequence)
+  # h9 <- computeConvergencePattern(9, lniSequence)
+  # 
+  # # everything that's not falling under any of the categories above
+  # others <- as.numeric(!(min1s|h1|h2|h3|h4|h5|h6|h7|h8|h9))
+  # 
+  # res <- data.frame(min1s, h1, h2, h3, h4, h5, h6, h7, h8, h9, others)
   
-  # everything that's not falling under any of the categories above
-  others <- as.numeric(!(min1s|h1|h2|h3|h4|h5|h6|h7|h8|h9))
+  others <- as.numeric(!(min1s|h1|h2|h3))
+  res <- data.frame(min1s, h1, h2, h3, others)
   
-  res <- data.frame(min1s, h1, h2, h3, h4, h5, h6, h7, h8, h9, others)
   return(res)
 }
 
@@ -488,8 +492,8 @@ plotConvergencePattern <- function(convergenceData, currentPlot = 1, overallPlot
   # }
   
   othersPatterns <- data.frame("which" = numeric(1), "others" = numeric(1))
-  if (length(which(convergenceData[,11] == 0)) < length(convergenceData$others)) {
-    othersPatterns <- data.frame(which(convergenceData[,11] == 1), 4)
+  if (length(which(convergenceData[,5] == 0)) < length(convergenceData$others)) {
+    othersPatterns <- data.frame(which(convergenceData[,5] == 1), 4)
   }
   
   
@@ -503,7 +507,20 @@ plotConvergencePattern <- function(convergenceData, currentPlot = 1, overallPlot
                                                              #(ncol(convergenceData)+0.5)))
   
   # x-axis
-  axis(side=1, at=seq(0,nrow(convergenceData),by=5), cex.axis = 0.6, las = 2)
+  xAtSeq <- seq(0,nrow(convergenceData),by=5)
+  xLabels <- seq(0,nrow(convergenceData),by=5)
+  xLal <- 2
+  
+  # only 150 (35 first + 5 gap + 110 last) rounds in total
+  if (nrow(convergenceData) > PLOT_MAX_ROUNDS) {
+    xAtSeq <- seq(0,nrow(convergenceData),by=250)
+    xLabels <- c("0", "", "500","","1.000","","1.500","","2.000","","2.500",
+                 "","3.000","","3.500","","4.000","","4.500","","5.000")
+    xLas <- 1
+  }
+  
+  
+  axis(side=1, at=xAtSeq, labels=xLabels, cex.axis = 0.6, las = xLas)
   mtext('Round', side = 1, outer = TRUE, line = 1.6, cex = 0.8)
   
   # y-axis per plot
@@ -529,7 +546,7 @@ plotConvergencePattern <- function(convergenceData, currentPlot = 1, overallPlot
   points(othersPatterns, type = 'p', pch = 20)
   
   # lines 
-  segments(x0 = 0, x1 = 150, y0 = c(1,2,3,4,5), col = "gray60")
+  segments(x0 = 0, x1 = nrow(convergenceData), y0 = c(1,2,3,4,5), col = "gray60")
   
   if (currentPlot == overallPlots) {
     # overall x-axis
@@ -585,8 +602,6 @@ plotInteractionPatterns <- function(vodData) {
 #       flag denoting whether plots need to be cut (max. 150 rounds)
 #----------------------------------------------------------------------------------------------------#
 plotInteractionPattern <- function(vodData, currentPlot = 1, overallPlots = 1) {
-  
-  vodData <- currVodSimData
   
   # only columns of players' actions
   vodData <- vodData[2:length(vodData$round),2:4]
@@ -644,6 +659,7 @@ plotInteractionPattern <- function(vodData, currentPlot = 1, overallPlots = 1) {
     mtext('Group members\' decision across sessions (x = \'cooperation\')', side = 2, 
           outer = TRUE, line = -1.8)
   }
+  
 }
 
 #----------------------------------------------------------------------------------------------------#
@@ -1133,6 +1149,12 @@ analyzeClassicQFits <- function() {
   getMedians(cQData[cQData$p1_social_behavior == "altruistic" & cQData$p1_prop_start < 100, ], "$\\varnothing$")
   
   
+  # selfish, optimistic, slow learner
+  getMedians(cQData[cQData$p1_social_behavior == "selfish" 
+                    & cQData$p1_prop_start >= 100
+                    & cQData$p1_alpha <= 0.3, ], "$\\varnothing$")
+  
+  
   # CQ.362
   getMedians(cQData[cQData$simCount == 362,], "NA")
   
@@ -1144,6 +1166,9 @@ analyzeClassicQFits <- function() {
   
   # CQ.1947
   getMedians(cQData[cQData$simCount == 1947,], "NA")
+  
+  # CQ.1949
+  getMedians(cQData[cQData$simCount == 1949,], "NA")
   
 }
 
@@ -1199,6 +1224,25 @@ analyzeCoordinateXFits <- function() {
   # altruistic, pessimistic
   getMedians(cXData[cXData$p1_social_behavior == "altruistic" 
                     & cXData$p1_prop_start < 100, ], "$\\varnothing$")
+  
+  
+  # selfish, optimistic, slow learner
+  getMedians(cXData[cXData$p1_social_behavior == "selfish" 
+                    & cXData$p1_prop_start >= 100
+                    & cXData$p1_alpha <= 0.3, ], "$\\varnothing$")
+  
+  
+  # selfish, optimistic, slow learner, max. coord. pos. 2
+  getMedians(cXData[cXData$p1_social_behavior == "selfish" 
+                    & cXData$p1_prop_start >= 100
+                    & cXData$p1_alpha <= 0.3
+                    & cXData$p1_X == 2, ], "$\\varnothing$")
+  
+  # altruistic, pessimistic, slow learner, max. coord. pos. 4
+  getMedians(cXData[cXData$p1_social_behavior == "selfish" 
+                    & cXData$p1_prop_start >= 100
+                    & cXData$p1_alpha <= 0.3
+                    & cXData$p1_X == 4, ], "$\\varnothing$")
   
   
   # CX.200
@@ -1405,7 +1449,182 @@ plotAltruisticPessimisticComparisons <- function() {
       res = 196)
   plotParameterComparisons(pessimistic, "h. Altruistic Pessimistic Fit", "bottomLeft")
   dev.off()
+}
+
+plotSlowLearningComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            37.83, 31.3, 44.22, 37.66,
+            34.9, 23.1, 19.53, 26.76)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  slow <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "i-slow-learning-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  plotParameterComparisons(slow, "i. Slow Learning Fit", "bottomLeft")
+  dev.off()
 }  
+
+plotFastLearningComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            38.13, 31.88, 44.55, 38.01,
+            35.22, 26.61, 37.96, 31.16)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  fast <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "j-fast-learning-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  plotParameterComparisons(fast, "j. Fast Learning Fit", "bottomLeft")
+  dev.off()
+}  
+
+
+
+
+
+plotMaxCoordPosComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3,
+             4,4,4,4)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            37.19, 22.62, 15.32, 26.8,
+            36.76, 29.59, 42.46, 35.36,
+            27.94, 23.26, 31.45, 27.37)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  data <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "k-max-coord-pos-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight, 
+      units = "px", 
+      res = 196)
+  
+  # Create Line Chart
+  # convert factor to numeric for convenience 
+  data$Model <- as.numeric(data$Model)
+  nmodels <- max(data$Model)
+  data$VOD <- as.numeric(data$VOD)
+  
+  # get the range for the x and y axis 
+  xrange <- range(data$VOD) 
+  yrange <- range(data$RMSE) 
+  
+  # set up the plot 
+  plot(xrange, c(0,50), type="n", xlab="VOD types",
+       ylab="RSME", xaxt = "n")
+  axis(1, labels = c("Symmetric", "Asymmetric 1", "Asymmetric 2", "combined"), at = c(1,2,3,4))
+  colors <- c("gray", "#51beff", "#1d7cb5", "#052133")
+  linetype <- c(1:nmodels) 
+  plotchar <- seq(18,18+nmodels,1)
+  
+  # add lines 
+  for (i in 1:nmodels) { 
+    sub <- subset(data, Model==i) 
+    lines(sub$VOD, sub$RMSE, type="b", lwd=1.5,
+          lty=linetype[i], col=colors[i], pch=plotchar[i]) 
+  } 
+  
+  # add a title and subtitle 
+  title("k. Maximum Coordination Position Fit (CoordinateX)")
+  
+  # add a legend 
+  legend(1.2, 18, c("NA (Random)", "X = 2", "X = 3", "X = 4"), cex=0.8, col=colors,
+         pch=plotchar, lty=linetype)
+  
+  dev.off()
+}  
+
+
+
+plotBestCombinationMaxCoordPosComparisons <- function() {
+  Model <- c(1,1,1,1,
+             2,2,2,2,
+             3,3,3,3,
+             4,4,4,4,
+             5,5,5,5)
+  RMSE <- c(32.3, 27.96, 41.05, 34.2,
+            33.29, 23.42, 21.13, 27.71,
+            33.66, 18.98, 13.53, 24.54,
+            36.23, 20.32, 12.6, 25.49,
+            31.64, 20.39, 19.34, 25.48)
+  VOD <- c(1,2,3,4,
+           1,2,3,4,
+           1,2,3,4,
+           1,2,3,4,
+           1,2,3,4)
+  
+  data <- data.frame(Model, RMSE, VOD)
+  
+  png(paste("/Users/hendrik/Desktop/", "l-best-max-coord-pos-comparisons.png", sep = ""), 
+      width = fitPlotWidth, 
+      height = fitPlotHeight+150, 
+      units = "px", 
+      res = 196)
+  
+  # Create Line Chart
+  # convert factor to numeric for convenience 
+  data$Model <- as.numeric(data$Model)
+  nmodels <- max(data$Model)
+  data$VOD <- as.numeric(data$VOD)
+  
+  # get the range for the x and y axis 
+  xrange <- range(data$VOD) 
+  yrange <- range(data$RMSE) 
+  
+  # set up the plot 
+  plot(xrange, c(0,60), type="n", xlab="VOD types",
+       ylab="RSME", xaxt = "n")
+  axis(1, labels = c("Symmetric", "Asymmetric 1", "Asymmetric 2", "combined"), at = c(1,2,3,4))
+  colors <- c("gray", "#9ad9ff", "#51beff", "#1d7cb5", "#052133")
+  linetype <- c(1:nmodels) 
+  plotchar <- seq(18,18+nmodels,1)
+  
+  # add lines 
+  for (i in 1:nmodels) { 
+    sub <- subset(data, Model==i) 
+    lines(sub$VOD, sub$RMSE, type="b", lwd=1.5,
+          lty=linetype[i], col=colors[i], pch=plotchar[i]) 
+  } 
+  
+  # add a title and subtitle 
+  title("k. Best Combinations Fit (CoordinateX)")
+  
+  # add a legend 
+  legend(0.95, 60, c("Random", 
+                     "selfish, optimistic",
+                     "selfish, optimistic, slow learner",
+                     "selfish, optimistic, slow learner, X = 2", 
+                     "selfish, optimistic, slow learner, X = 4"), cex=0.8, col=colors,
+         pch=plotchar, lty=linetype)
+  
+  dev.off()
+}  
+
+
+
+
 
   
 plotParameterComparisons <- function(data, title, legendPos = "topLeft") {
@@ -1686,6 +1905,7 @@ exportAllGofs <- function() {
                LNIS_CQ402, "CQ.402",
                LNIS_CQ1442, "CQ.1442",
                LNIS_CQ1947, "CQ.1947",
+               LNIS_CQ1949, "CQ.1949",
             
                LNIS_CX200, "CX.200",
                LNIS_CX1983, "CX.1983",
@@ -1901,43 +2121,53 @@ findExemplarySimulations <- function() {
 
 plotInteractionAndConvergencePattern <- function() {
   
-  vodSimData <- list()
-  for (i in 1:10) {
-    filename <- paste("/Users/hendrik/Desktop/thesis-patterns/ClassicQ/362_best_combined/sym/", BASE_FILENAME, i, ".Rdata", sep = "")
-    vodSimData[[i]] <- get(load(filename))
+  patternDirs <- c(#"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/ClassicQ/362_best_combined/",
+                   #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/ClassicQ/402_best_asym/",
+                   #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/ClassicQ/1442_best_asym-alt/",
+                   #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/ClassicQ/1947_best_sym-alt/")
+                   #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/CoordinateX/200_best_asym-alt/",
+                   #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/CoordinateX/1983_best_combined-and-scarce/",
+                   #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/CoordinateX/2648_best_asym/",
+                   #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/CoordinateX/2807_best_sym-alt-and-scarce/")
+                   "/Users/hendrik/git/uu/mscp-thesis/!data-patterns/ClassicQ/1949/")
+  
+  for (patternDir in patternDirs) {
+    for (vodType in VOD_TYPES) {
+      currentDir <- paste(patternDir, vodType, "/", sep="")
+      
+      vodSimData <- list()
+      for (i in 1:length(list.files(currentDir, recursive = FALSE))) {
+        filename <- paste(currentDir, BASE_FILENAME, i, ".Rdata", sep = "")
+        vodSimData[[i]] <- get(load(filename))
+      }
+      
+      convergencePatterns <- list()
+      for (i in 1:(length(vodSimData))) {
+        lniSequence <- extractLNISequence(vodSimData[[i]])
+        lnis <- computeLNIs(lniSequence)
+        convergencePatterns[[i]] <- computeConvergencePatterns(lniSequence)
+      }
+      
+      
+      for (i in 1:length(convergencePatterns)) {
+        filename <- paste(patternDir, vodType, "-patterns-", i, ".png", sep="")
+        png(filename,
+            width = 1900, 
+            height = 400, 
+            units = "px", 
+            res = 196)
+        # setting up multiple plots
+        plotsPerImage <- 2
+        par(mfrow=c(plotsPerImage,1),oma=c(2.8,0,0,0), mai = c(0, 1, 0.1, 0.1))
+        
+        nf <- layout(matrix(c(1,2),ncol=1), widths=c(54,54), heights=c(3,5), TRUE) 
+        plotInteractionPattern(vodSimData[[i]], 1, 2)
+        plotConvergencePattern(convergencePatterns[[i]])
+        
+        dev.off() 
+      }
+    }
   }
-  
-  convergencePatterns <- list()
-  for (i in 1:(length(vodSimData))) {
-    lniSequence <- extractLNISequence(vodSimData[[i]])
-    lnis <- computeLNIs(lniSequence)
-    convergencePatterns[[i]] <- computeConvergencePatterns(lniSequence)
-  }
-  
-  
-  currVodSimData <- vodSimData[[1]]
-  convergencePattern <- convergencePatterns[[1]]
-  
-  filename <- "/Users/hendrik/Desktop/pattern-test.png"
-  
-  
-  
-  png(filename,
-      width = 1900, 
-      height = 400, 
-      units = "px", 
-      res = 196)
-  # setting up multiple plots
-  plotsPerImage <- 2
-  par(mfrow=c(plotsPerImage,1),oma=c(2.8,0,0,0), mai = c(0, 1, 0.1, 0.1))
-  
-  nf <- layout(matrix(c(1,2),ncol=1), widths=c(54,54), heights=c(3,5), TRUE) 
-  plotInteractionPattern(currVodSimData, 1, 2)
-  plotConvergencePattern(convergencePattern)
-  
-  dev.off() 
-  
-  
 }
 
 
