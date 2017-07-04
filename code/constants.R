@@ -82,6 +82,9 @@ LNIS_CQ362 <- data.frame("sym_h1" = 10.33, "sym_h2" = 4, "sym_h3" = 0, "sym_othe
 LNIS_CQ402 <- data.frame("sym_h1" = 4, "sym_h2" = 2, "sym_h3" = 0, "sym_others" = 93.33,
                          "asym1_h1" = 41.66, "asym1_h2" = 4, "asym1_h3" = 2, "asym1_others" = 53.67,
                          "asym2_h1" = 64, "asym2_h2" = 2, "asym2_h3" = 0, "asym2_others" = 34)
+LNIS_CQ1280 <- data.frame("sym_h1" = 10.33, "sym_h2" = 0, "sym_h3" = 0, "sym_others" = 89.67,
+                          "asym1_h1" = 69.33, "asym1_h2" = 0, "asym1_h3" = 0, "asym1_others" = 30.67,
+                          "asym2_h1" = 84, "asym2_h2" = 0, "asym2_h3" = 0, "asym2_others" = 16)
 LNIS_CQ1442 <- data.frame("sym_h1" = 10, "sym_h2" = 1, "sym_h3" = 0, "sym_others" = 90,
                           "asym1_h1" = 35, "asym1_h2" = 3, "asym1_h3" = 2, "asym1_others" = 60.33,
                           "asym2_h1" = 61.7, "asym2_h2" = 1.5, "asym2_h3" = 6.7, "asym2_others" = 30.1)
@@ -95,6 +98,12 @@ LNIS_CQ1949 <- data.frame("sym_h1" = 1.3, "sym_h2" = 3.25, "sym_h3" = 2.96, "sym
 LNIS_CX200 <- data.frame("sym_h1" = 0, "sym_h2" = 2, "sym_h3" = 6.67, "sym_others" = 91.33,
                          "asym1_h1" = 38, "asym1_h2" = 2, "asym1_h3" = 3, "asym1_others" = 57,
                          "asym2_h1" = 63.67, "asym2_h2" = 2, "asym2_h3" = 0, "asym2_others" = 34.33)
+LNIS_CX1009 <- data.frame("sym_h1" = 0, "sym_h2" = 9.33, "sym_h3" = 0, "sym_others" = 90.67,
+                          "asym1_h1" = 88.67, "asym1_h2" = 0, "asym1_h3" = 0, "asym1_others" = 10.33,
+                          "asym2_h1" = 89.67, "asym2_h2" = 1, "asym2_h3" = 0, "asym2_others" = 9.33)
+LNIS_CX1981 <- data.frame("sym_h1" = 1, "sym_h2" = 32.67, "sym_h3" = 0, "sym_others" = 66.33,
+                          "asym1_h1" = 92.33, "asym1_h2" = 0, "asym1_h3" = 2, "asym1_others" = 7.67,
+                          "asym2_h1" = 95, "asym2_h2" = 0, "asym2_h3" = 0, "asym2_others" = 5)
 LNIS_CX1983 <- data.frame("sym_h1" = 0, "sym_h2" = 2, "sym_h3" = 40.34, "sym_others" = 57.67,
                           "asym1_h1" = 23, "asym1_h2" = 0, "asym1_h3" = 2, "asym1_others" = 75,
                           "asym2_h1" = 67, "asym2_h2" = 0, "asym2_h3" = 0, "asym2_others" = 33)

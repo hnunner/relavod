@@ -509,7 +509,7 @@ plotConvergencePattern <- function(convergenceData, currentPlot = 1, overallPlot
   # x-axis
   xAtSeq <- seq(0,nrow(convergenceData),by=5)
   xLabels <- seq(0,nrow(convergenceData),by=5)
-  xLal <- 2
+  xLas <- 2
   
   # only 150 (35 first + 5 gap + 110 last) rounds in total
   if (nrow(convergenceData) > PLOT_MAX_ROUNDS) {
@@ -799,7 +799,7 @@ exportLNIComparison <- function(directory, meanLNIs) {
 #         possible: 'all', constants.R: 'VOD_TYPES[x]'
 #----------------------------------------------------------------------------------------------------#
 analyzeData <- function(modelType = MODEL_TYPES[3],
-                        simCount = 1961,
+                        simCount = 2917,
                         vodType = "all",
                         fit = FALSE, 
                         fitCSV = NA) {
@@ -1155,6 +1155,18 @@ analyzeClassicQFits <- function() {
                     & cQData$p1_alpha <= 0.3, ], "$\\varnothing$")
   
   
+  
+  
+  # best fit alternative
+  alts <- cQData[cQData$p1_social_behavior == "selfish" 
+                 & cQData$p1_prop_start == 60
+                 & cQData$p1_alpha == 0.25
+                 & cQData$p1_gamma == 0.6
+                 & cQData$p1_epsilon_start == 0.2
+                 & cQData$p1_epsilon_decay == 1
+                 & cQData$p1_X == 3, ]
+  
+  
   # CQ.362
   getMedians(cQData[cQData$simCount == 362,], "NA")
   
@@ -1169,6 +1181,9 @@ analyzeClassicQFits <- function() {
   
   # CQ.1949
   getMedians(cQData[cQData$simCount == 1949,], "NA")
+  
+  # CQ.1280
+  getMedians(cQData[cQData$simCount == 1280,], "NA")
   
 }
 
@@ -1245,6 +1260,18 @@ analyzeCoordinateXFits <- function() {
                     & cXData$p1_X == 4, ], "$\\varnothing$")
   
   
+  
+  # best fit alternative
+  alts <- cXData[cXData$p1_social_behavior == "selfish" 
+                 & cXData$p1_balancing == "greedy"
+                 & cXData$p1_prop_start == 100
+                 & cXData$p1_alpha == 0.4
+                 & cXData$p1_gamma == 0.5
+                 & cXData$p1_epsilon_start == 0.05
+                 & cXData$p1_epsilon_decay == 0.98
+                 & cXData$p1_X == 2, ]
+  
+  
   # CX.200
   getMedians(cXData[cXData$simCount == 200,], "NA")
   
@@ -1256,6 +1283,12 @@ analyzeCoordinateXFits <- function() {
   
   # CX.2807
   getMedians(cXData[cXData$simCount == 2807,], "NA")
+  
+  
+  # CX.1009
+  getMedians(cXData[cXData$simCount == 1009,], "NA")
+  # CX.1981
+  getMedians(cXData[cXData$simCount == 1981,], "NA")
 }
 
 #
@@ -1903,11 +1936,14 @@ exportAllGofs <- function() {
   
   lnis <- list(LNIS_CQ362, "CQ.362",
                LNIS_CQ402, "CQ.402",
+               LNIS_CQ1280, "CQ.1280",
                LNIS_CQ1442, "CQ.1442",
                LNIS_CQ1947, "CQ.1947",
                LNIS_CQ1949, "CQ.1949",
             
                LNIS_CX200, "CX.200",
+               LNIS_CX1009, "CX.1009",
+               LNIS_CX1981, "CX.1981",
                LNIS_CX1983, "CX.1983",
                LNIS_CX2648, "CX.2648",
                LNIS_CX2807, "CX.2807")
@@ -2129,7 +2165,10 @@ plotInteractionAndConvergencePattern <- function() {
                    #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/CoordinateX/1983_best_combined-and-scarce/",
                    #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/CoordinateX/2648_best_asym/",
                    #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/CoordinateX/2807_best_sym-alt-and-scarce/")
-                   "/Users/hendrik/git/uu/mscp-thesis/!data-patterns/ClassicQ/1949/")
+                   #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/ClassicQ/1949/")
+                   #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/ClassicQ/1280/",
+                   #"/Users/hendrik/git/uu/mscp-thesis/!data-patterns/CoordinateX/1009/",
+                   "/Users/hendrik/git/uu/mscp-thesis/!data-patterns/CoordinateX/1981/")
   
   for (patternDir in patternDirs) {
     for (vodType in VOD_TYPES) {

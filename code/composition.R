@@ -44,10 +44,10 @@ simulateAndAnalyze <- function(modelType = MODEL_TYPES[3],
 #----------------------------------------------------------------------------------------------------#
 fitParameters <- function() {
   
-  vodCount <- 4
-  roundsPerVod <- 5000
+  vodCount <- 10
+  roundsPerVod <- 150
   
-  for (modelType in MODEL_TYPES[2]) {
+  for (modelType in MODEL_TYPES[3]) {
     
     # Random
     if (modelType == "Random") {
@@ -72,24 +72,24 @@ fitParameters <- function() {
     } else {
       i <- 1
       
-      bTypes <- BALANCING_TYPES
+      bTypes <- BALANCING_TYPES[2]
       sBehavs <- SOCIAL_BEHAVIORS[1]
       for (balancingType in bTypes) {
         for (socialBehavior in sBehavs) {
           
-          propStarts <- c(120)
+          propStarts <- c(100)
           for (propStart in propStarts) {
             
-            epsilonStarts <- c(0.1)
+            epsilonStarts <- c(0.05)
             for (epsilonStart in epsilonStarts) {
               
-              epsilonDecays <- c(0.99954, 1)
+              epsilonDecays <- c(0.98)
               for (epsilonDecay in epsilonDecays) {
 
-                alphas <- c(0.25)
+                alphas <- c(0.4)
                 for (alpha in alphas) {
 
-                  gammas <- c(0.6)
+                  gammas <- c(0.5)
                   for (gamma in gammas) {
 
                     
@@ -151,7 +151,7 @@ fitParameters <- function() {
                       
                       fitCSV <- paste(SIM_DIR, gsub("-", "", Sys.Date(), fixed = TRUE), "-coordinateX-fit.csv", sep = "")
                       
-                      coordXs <- c(2,3,4)
+                      coordXs <- c(3)
                       for (coordX in coordXs) {
                         
                         cat(paste("\nsimulation", i,"out of",
@@ -184,7 +184,7 @@ fitParameters <- function() {
                                                      gamma = gamma,
                                                      coordX = coordX)
                         
-                        analyzeData(modelType = modelType, fit = TRUE, fitCSV = fitCSV)
+                        analyzeData(modelType = modelType, fit = FALSE, fitCSV = fitCSV)
                         
                         i <- i+1
                         cat("done\n")
