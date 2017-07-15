@@ -1946,7 +1946,9 @@ exportAllGofs <- function() {
                LNIS_CX1981, "CX.1981",
                LNIS_CX1983, "CX.1983",
                LNIS_CX2648, "CX.2648",
-               LNIS_CX2807, "CX.2807")
+               LNIS_CX2807, "CX.2807",
+               
+               LNIS_RANDOM, "Random")
   
   lni <- 1
   lowerLet <- 1

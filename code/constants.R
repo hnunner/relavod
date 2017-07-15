@@ -114,6 +114,10 @@ LNIS_CX2807 <- data.frame("sym_h1" = 0, "sym_h2" = 2, "sym_h3" = 37.67, "sym_oth
                           "asym1_h1" = 0, "asym1_h2" = 2, "asym1_h3" = 9, "asym1_others" = 89,
                           "asym2_h1" = 45.33, "asym2_h2" = 2, "asym2_h3" = 2, "asym2_others" = 50.67)
 
+LNIS_RANDOM <- data.frame("sym_h1" = 2, "sym_h2" = 6.33, "sym_h3" = 4, "sym_others" = 87.67,
+                          "asym1_h1" = 2, "asym1_h2" = 5.67, "asym1_h3" = 4, "asym1_others" = 88.33,
+                          "asym2_h1" = 2, "asym2_h2" = 5, "asym2_h3" = 7.67, "asym2_others" = 85.33)
+
 ############## PLOTS ##############
 PLOT_MAX_ROUNDS <<- 150
 PRE_GAP_LENGTH <<- 30                     # rounds before gap for plots > 150 rounds
