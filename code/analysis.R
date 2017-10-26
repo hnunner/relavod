@@ -36,7 +36,6 @@ getVodBaseDir <- function(modelType, simCount = "latest") {
   baseDir <- paste(modelDir, "/", 
                    getSimCount(modelDir, simCount), 
                    sep = "")
-  
   return(baseDir)
 }
 
@@ -63,6 +62,7 @@ importVodSimData <- function(modelType = MODEL_TYPES[7],
   
   vodSimData = list()
   simCountFiles <- list.files(vodTypeDir, recursive = FALSE)
+  
   for (i in 1:(length(simCountFiles))) {
     filename <- paste(vodTypeDir, "/", BASE_FILENAME, i, ".Rdata", sep = "")
     vodSimData[[i]] <- get(load(filename))
@@ -799,7 +799,7 @@ exportLNIComparison <- function(directory, meanLNIs) {
 #         possible: 'all', constants.R: 'VOD_TYPES[x]'
 #----------------------------------------------------------------------------------------------------#
 analyzeData <- function(modelType = MODEL_TYPES[3],
-                        simCount = 2917,
+                        simCount = "latest",
                         vodType = "all",
                         fit = FALSE, 
                         fitCSV = NA) {

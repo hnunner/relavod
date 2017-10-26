@@ -8,10 +8,11 @@ checkIntegrity <- function() {
   if (VOD_TYPES[2] != "asym1") stop("Integrity check failed: invalid second VOD type")
   if (VOD_TYPES[3] != "asym2") stop("Integrity check failed: invalid third VOD type")
   
-  if (length(MODEL_TYPES) != 3) stop("Integrity check failed: invalid amount of model types")
+  if (length(MODEL_TYPES) != 4) stop("Integrity check failed: invalid amount of model types")
   if (MODEL_TYPES[1] != "Random") stop("Integrity check failed: invalid first model type")
   if (MODEL_TYPES[2] != "ClassicQ") stop("Integrity check failed: invalid second model type")
   if (MODEL_TYPES[3] != "CoordinateX") stop("Integrity check failed: invalid third model type")
+  if (MODEL_TYPES[4] != "SequenceX") stop("Integrity check failed: invalid fourth model type")
   
   if (length(BALANCING_TYPES) != 2) stop("Integrity check failed: invalid amount of balancing types")
   if (BALANCING_TYPES[1] != "greedy") stop("Integrity check failed: invalid first balancing type")

@@ -78,8 +78,7 @@ SequenceXPlayer <- setRefClass("SequenceXPlayer",
                                  #-------------------------------------------------------------------#
                                  fields = c("X", "BALANCING", "PROP_START", "EPSILON_START", 
                                             "EPSILON_DECAY", "ALPHA", "GAMMA", "SOCIAL_BEHAVIOR", 
-                                            "strategies", "currStrat", "actions", 
-                                            "epsilon", "oeu"),
+                                            "sequences", "currSeq", "actions", "epsilon", "oeu"),
                                  
                                  #-------------------------------------------------------------------#
                                  #  class methods (public by defualt)
@@ -391,7 +390,7 @@ SequenceXPlayer <- setRefClass("SequenceXPlayer",
                                      }
                                      details <- c("#####",
                                                   round(epsilon, digits = 5), 
-                                                  currStrat, 
+                                                  currSeq, 
                                                   actionSeq, 
                                                   round(oeu, digits = 2))
                                      for (i in 1:length(sequences$seq)) {

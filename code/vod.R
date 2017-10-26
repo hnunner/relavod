@@ -113,6 +113,7 @@ Vod <- setRefClass("Vod",
                        playersDetails <- c()
                        for (i in 1:length(players)) {
                          playerDetails <- players[[i]]$getCurrentPersonalDetails()
+                         
                          if (!all(is.na(playerDetails))) {
                            playersDetails <- c(playersDetails, playerDetails)
                          }

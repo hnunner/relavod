@@ -55,7 +55,7 @@ initPlayers <- function(modelType, vodType,
                         classicX, 
                         classicPlayersPerState, 
                         
-                        coordX
+                        coordX,
                         
                         seqX) {
   
@@ -95,6 +95,9 @@ initPlayers <- function(modelType, vodType,
       
     # SequenceX
     } else if (modelType == MODEL_TYPES[4]) {
+      if (LOG_LEVEL == "all") {
+        print(paste("Starting to initialize SequenceX player ", currPlayer))
+      }
       players[[currPlayer]] <- SequenceXPlayer$new(currPlayer, coopCosts,
                                                    seqX, balancingType,propStart, epsilonStart,
                                                    epsilonDecay, alpha, gamma, socialBehavior)
@@ -276,7 +279,7 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
                               classicX = CLASSIC_X, 
                               classicPlayersPerState = CLASSIC_PLAYERS_PER_STATE, 
                               
-                              coordX = COORD_X
+                              coordX = COORD_X,
                               
                               seqX = SEQ_X) {       
   

@@ -44,10 +44,10 @@ simulateAndAnalyze <- function(modelType = MODEL_TYPES[3],
 #----------------------------------------------------------------------------------------------------#
 fitParameters <- function() {
   
-  vodCount <- 10
-  roundsPerVod <- 150
+  vodCount <- 2
+  roundsPerVod <- 5
   
-  for (modelType in MODEL_TYPES) {
+  for (modelType in MODEL_TYPES[4]) {
     
     # Random
     if (modelType == "Random") {
@@ -217,7 +217,7 @@ fitParameters <- function() {
                                   "\tepsilon decay:", epsilonDecay, "\n",
                                   "\talpha:", alpha, "\n",
                                   "\tgamma:", gamma, "\n",
-                                  "\tcoordX:", coordX, "\n"))
+                                  "\tseqX:", seqX, "\n"))
                         
                         computeSequenceXSimulation(vodCount = vodCount,
                                                      roundsPerVod = roundsPerVod,
