@@ -44,10 +44,10 @@ simulateAndAnalyze <- function(modelType = MODEL_TYPES[3],
 #----------------------------------------------------------------------------------------------------#
 fitParameters <- function() {
   
-  vodCount <- 2
-  roundsPerVod <- 5
+  vodCount <- 10
+  roundsPerVod <- 150
   
-  for (modelType in MODEL_TYPES[4]) {
+  for (modelType in MODEL_TYPES) {
     
     # Random
     if (modelType == "Random") {
@@ -72,24 +72,24 @@ fitParameters <- function() {
     } else {
       i <- 1
       
-      bTypes <- BALANCING_TYPES[2]
-      sBehavs <- SOCIAL_BEHAVIORS[1]
+      bTypes <- BALANCING_TYPES
+      sBehavs <- SOCIAL_BEHAVIORS
       for (balancingType in bTypes) {
         for (socialBehavior in sBehavs) {
           
-          propStarts <- c(100)
+          propStarts <- c(60, 100, 120, 300)
           for (propStart in propStarts) {
             
-            epsilonStarts <- c(0.05)
+            epsilonStarts <- c(0.05, 0.1, 0.2)
             for (epsilonStart in epsilonStarts) {
               
-              epsilonDecays <- c(0.98)
+              epsilonDecays <- c(0.98, 1)
               for (epsilonDecay in epsilonDecays) {
 
-                alphas <- c(0.4)
+                alphas <- c(0.25, 0.4, 0.6)
                 for (alpha in alphas) {
 
-                  gammas <- c(0.5)
+                  gammas <- c(0.5, 0.6, 0.9)
                   for (gamma in gammas) {
 
                     
@@ -98,7 +98,7 @@ fitParameters <- function() {
                       
                       fitCSV <- paste(SIM_DIR, gsub("-", "", Sys.Date(), fixed = TRUE), "-classicQ-fit.csv", sep = "")
                       
-                      classicXs <- c(3)
+                      classicXs <- c(2, 3, 4)
                       for (classicX in classicXs) {
                         
                         classicPlayersPerStates <- c(1)
@@ -151,7 +151,7 @@ fitParameters <- function() {
                       
                       fitCSV <- paste(SIM_DIR, gsub("-", "", Sys.Date(), fixed = TRUE), "-coordinateX-fit.csv", sep = "")
                       
-                      coordXs <- c(3)
+                      coordXs <- c(2, 3, 4)
                       for (coordX in coordXs) {
                         
                         cat(paste("\nsimulation", i,"out of",
@@ -197,7 +197,7 @@ fitParameters <- function() {
                       
                       fitCSV <- paste(SIM_DIR, gsub("-", "", Sys.Date(), fixed = TRUE), "-sequencex-fit.csv", sep = "")
                       
-                      seqXs <- c(3)
+                      seqXs <- c(2, 3, 4)
                       for (seqX in seqXs) {
                         
                         cat(paste("\nsimulation", i,"out of",
