@@ -55,7 +55,9 @@ initPlayers <- function(modelType, vodType,
                         classicX, 
                         classicPlayersPerState, 
                         
-                        coordX) {
+                        coordX
+                        
+                        seqX) {
   
   # determining the cooperation costs per player, depending on VOD type
   coopCosts <- c()
@@ -84,12 +86,18 @@ initPlayers <- function(modelType, vodType,
                                                   classicX, classicPlayersPerState, balancingType,
                                                   propStart, epsilonStart, epsilonDecay, alpha, 
                                                   gamma, socialBehavior)
-
+      
     # CoordinateX
     } else if (modelType == MODEL_TYPES[3]) {
       players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, coopCosts, 
                                                      coordX, balancingType,propStart, epsilonStart, 
                                                      epsilonDecay, alpha, gamma, socialBehavior)
+      
+    # SequenceX
+    } else if (modelType == MODEL_TYPES[4]) {
+      players[[currPlayer]] <- SequenceXPlayer$new(currPlayer, coopCosts,
+                                                   seqX, balancingType,propStart, epsilonStart,
+                                                   epsilonDecay, alpha, gamma, socialBehavior)
       
     # unknown
     } else {
@@ -268,7 +276,9 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
                               classicX = CLASSIC_X, 
                               classicPlayersPerState = CLASSIC_PLAYERS_PER_STATE, 
                               
-                              coordX = COORD_X) {       
+                              coordX = COORD_X
+                              
+                              seqX = SEQ_X) {       
   
   # initializations
   initSimulation(modelType)
@@ -290,7 +300,7 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
       # initializing the players
       players <- initPlayers(modelType, currVodType, randomCoopRatio, balancingType,
                              socialBehavior, propStart, epsilonStart, epsilonDecay,
-                             alpha, gamma, classicX, classicPlayersPerState, coordX)
+                             alpha, gamma, classicX, classicPlayersPerState, coordX, seqX)
       
       # creating a new VOD for the players
       vod <- Vod$new(players)
@@ -368,4 +378,25 @@ computeCoordinateXSimulation <- function(vodCount, roundsPerVod, balancingType, 
                     gamma = gamma,
                     
                     coordX = coordX)
+}
+
+#----------------------------------------------------------------------------------------------------#
+#   function: computeSequenceXSimulation
+#----------------------------------------------------------------------------------------------------#
+computeSequenceXSimulation <- function(vodCount, roundsPerVod, balancingType, socialBehavior,
+                                       propStart, epsilonStart, epsilonDecay, alpha, gamma, seqX) {       
+  computeSimulation(modelType = "SequenceX", 
+                    vodType = "all", 
+                    vodCount = vodCount, 
+                    roundsPerVod = roundsPerVod,
+                    
+                    balancingType = balancingType,
+                    socialBehavior = socialBehavior,
+                    propStart = propStart,
+                    epsilonStart = epsilonStart,
+                    epsilonDecay = epsilonDecay,
+                    alpha = alpha,
+                    gamma = gamma,
+                    
+                    seqX = seqX)
 }

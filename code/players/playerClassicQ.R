@@ -224,7 +224,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   if (SOCIAL_BEHAVIOR == "selfish") {
                                     util <- allPlayersUtils[ID]
                                   } else if (SOCIAL_BEHAVIOR == "altruistic") {
-                                    util <- sum(allPlayersUtils)
+                                    util <- sum(allPlayersUtils) / 3
                                   } else {
                                     stop(paste("Unknown social behavior: ", SOCIAL_BEHAVIOR))
                                   }
@@ -399,7 +399,7 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                       stop(paste("Unknown action: ", action))
                                     }
                                   } else if (SOCIAL_BEHAVIOR == "altruistic") {
-                                    oeu <<- UTIL_MAX + UTIL_MAX + (UTIL_MAX - lowestCoopCosts)
+                                    oeu <<- (UTIL_MAX + UTIL_MAX + (UTIL_MAX - lowestCoopCosts)) / 3
                                   } else {
                                     stop(paste("Unknown social behavior: ", SOCIAL_BEHAVIOR))
                                   }

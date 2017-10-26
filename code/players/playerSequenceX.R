@@ -1,20 +1,20 @@
 ######################################## SOURCING MOTHER CLASS #######################################
 if(!exists("Player", mode="function")) source(paste(PLAYERS_DIR, "player.R", sep = ""))
 ########################################## GLOBAL PARAMETERS #########################################
-X_MAX <<- 15              # triggers a warning during initialization, when X exceeds X_MAX
+X_MAX <<- 9              # triggers a warning during initialization, when X exceeds X_MAX
 # PROP_START <<- 100
 # EPSILON_START <<- 0.1
 # EPSILON_DECAY <<- 1
 # ALPHA <<- 0.4
 # GAMMA <<- 0.6
 
-#####------------------------------------ CoordinateXPlayer -------------------------------------#####
-# class: CoordinateXPlayer
-#     Class extending the basic Player class. This class represents a player using a coordinate-x
-#     strategy, with x representing at which position of an action sequence the player cooperates. 
-#     E.g., x=4 means that the player will deviate three times and then coordinate. Reinforcement 
-#     learning is used to evaluate taken actions and epsilon-decay is used to balance between
-#     exploration and exploitation.
+#####------------------------------------ SequenceXPlayer -------------------------------------#####
+# class: SequenceXPlayer
+#     Class extending the basic Player class. This class represents a player using a sequence-x
+#     strategy, with x representing the length of action sequences. 
+#     E.g., x=3 means that the player will choose from a set of 8 actions: CCC, CCD, CDC, CDD,
+#     DCC, DCD, DDC, DDD. Reinforcement learning is used to evaluate taken actions and epsilon-decay 
+#     is used to balance between exploration and exploitation.
 #
 #     Free parameters:
 #
@@ -34,7 +34,7 @@ X_MAX <<- 15              # triggers a warning during initialization, when X exc
 #     ________________________________________________________________________________________
 #     "Reference Class" (RC) concept found at http://adv-r.had.co.nz/OO-essentials.html
 #----------------------------------------------------------------------------------------------------#
-CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
+SequenceXPlayer <- setRefClass("SequenceXPlayer",
                                  
                                  #-------------------------------------------------------------------# 
                                  #  class inheritance
@@ -44,8 +44,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                  #-------------------------------------------------------------------#
                                  #   class parameters (public by default)
                                  #      param:  X
-                                 #           the amount of rounds representing a state; e.g., 3 means 
-                                 #           that a player looks at all actions in the previous 3 rounds 
+                                 #           the amount of actions in the available sequences 
                                  #      param:  BALANCING
                                  #           how to balance between exploration and exploitation (see 
                                  #           BALANCING_TYPE in constants.R)
@@ -66,10 +65,10 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                  #      param:  SOCIAL_BEHAVIOR
                                  #           either selfish (max. own rewards) or 
                                  #           altruistic (max. mutual rewards)
-                                 #      param:  strategies
-                                 #          the player's strategies (see "initialize")
-                                 #      param:  currStrat
-                                 #          the strategy currently used by the player
+                                 #      param:  sequences
+                                 #          the player's available sequences (see "initialize")
+                                 #      param:  currSeq
+                                 #          the sequence currently used by the player
                                  #      param:  actions
                                  #          vector of action sequence for the upcoming rounds
                                  #      param:  epsilon
@@ -123,15 +122,10 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      GAMMA <<- GAMMA
                                      SOCIAL_BEHAVIOR <<- SOCIAL_BEHAVIOR
                                      
-                                     # initialization of strategies
-                                     #    a single strategy is a tuple of:
-                                     #      1. after how many deviations a player cooperates
-                                     #      2. the player's propensity for the strategy
-                                     coord <- c(0:X)
-                                     prop <- rep(PROP_START, X+1)
-                                     strategies <<- data.frame(coord, prop)
-                                     currStrat <<- NA
-                                     
+                                     # initialization of sequences
+                                     sequences <<- initSequences()
+                                     currSeq <<- NA
+                                    
                                      # initialization of actions
                                      actions <<- c()
                                      
@@ -145,9 +139,29 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      callSuper(ID, coopCosts)
                                      
                                      if (LOG_LEVEL == "all") {
-                                       print(paste("Coordinate-X Player", ID, "whith X =", X,
+                                       print(paste("Sequence-X Player", ID, "whith X =", X,
                                                    "successfully created!"))
                                      }
+                                   },
+                                   
+                                   
+                                   #--------------------------------------------------------------------#
+                                   #   function: initSequences
+                                   #     Initialization of action sequences. X defines the length of
+                                   #     available action sequences. For example: X=2 -- CC, CD, DC, DD
+                                   #--------------------------------------------------------------------#
+                                   initSequences = function() {
+                                     library(gtools)
+                                     seqs <- permutations(2, X, c(0, 1), set = FALSE, 
+                                                          repeats.allowed = TRUE)
+                                     seq <- c()
+                                     for (i in 1:nrow(seqs)) {
+                                       seq <- c(seq, paste(seqs[i,], collapse = ""))
+                                     }
+                                     
+                                     props <- c(rep(PROP_START, length(seq)))
+                                     
+                                     return(data.frame(seq, props))
                                    },
                                    
                                    
@@ -188,22 +202,19 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                        stop(paste("Unknown social behavior: ", SOCIAL_BEHAVIOR))
                                      }
                                      
-                                     # if all actions have been performed, calculate new propensity 
-                                     # based on update function by Sutton & Barto (1998), p.148
-                                     oldProp <- strategies[strategies$coord == currStrat,2]
+                                     # calculate new propensity based on update function by 
+                                     # Sutton & Barto (1998), p.148
+                                     oldProp <- sequences[sequences$seq == currSeq, 2]
                                      newProp <- oldProp + ALPHA * 
                                        (util + GAMMA * oeu - oldProp)
-                                     strategies[strategies$coord == currStrat,2] <<- newProp
+                                     sequences[sequences$seq == currSeq, 2] <<- newProp
                                      
-                                     # Decay of epsilon: after a strategy has been fully
-                                     # performed. Not after each action, to ensure that each
-                                     # player has an equal probability to explore the same
-                                     # amount of strategies.
+                                     # decay of epsilon
                                      epsilon <<- epsilon * EPSILON_DECAY
-                                   
+                                     
                                      if (LOG_LEVEL == "all") {
                                        if (ID == 1) {
-                                         print(strategies)
+                                         print(sequences)
                                        }
                                      }
                                      
@@ -215,7 +226,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #  function: computeAction
                                    #    Selects the first action from the actions list. If the 
                                    #    action list is empty, it will be refilled based on the
-                                   #    propensities for the different strategies.
+                                   #    propensities for the different sequences.
                                    #-----------------------------------------------------------------#
                                    computeAction = function() {
                                      
@@ -224,10 +235,10 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                        
                                        # balancing between exploration and exploitation
                                        if (BALANCING == "greedy") {
-                                         currStrat <<- getGreedyStrat()
+                                         currSeq <<- getGreedySeq()
                                        }
                                        else if (BALANCING == "noise") {
-                                         currStrat <<- getNoisyStrat() 
+                                         currSeq <<- getNoisySeq() 
                                        }
                                        else {
                                          stop(paste("Unknown balancing type:", BALANCING))
@@ -243,90 +254,88 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      return(action)
                                    },
                                    
-
+                                   
                                    #-----------------------------------------------------------------#
-                                   #  function: getGreedyStrat
-                                   #    Gets a strategy according to epsilon-greedy approach.
+                                   #  function: getGreedySeq
+                                   #    Gets a sequence according to epsilon-greedy approach.
                                    #-----------------------------------------------------------------#
-                                   getGreedyStrat = function() {
-                                     # either explore other strategies, or exploit best strategy
+                                   getGreedySeq = function() {
+                                     # either explore other sequences, or exploit best sequence
                                      # using epsilon-greedy approach, as suggested by
                                      # Sutton & Barto (1998), p.148f.
-                                     pickableStrategies <- NA
+                                     pickableSeqs <- NA
                                      
                                      if (runif(1) <= epsilon) {     # explore (epsilon %)
-                                       # pick a random strategy with a lower than highest strategy
-                                       pickableStrategies <- 
-                                         strategies[strategies$prop < max(strategies$prop),]
-                                       if (!nrow(pickableStrategies)) {
-                                         pickableStrategies <- strategies
+                                       # pick a random sequence with a lower than highest sequence
+                                       pickableSeqs <- 
+                                         sequences[sequences$props < max(sequences$props),]
+                                       if (!nrow(pickableSeqs)) {
+                                         pickableSeqs <- sequences
                                        }
                                        
                                      } else {                       # exploit (1-epsilon %)
-                                       # pick a random strategy with the highest propensity
-                                       pickableStrategies <- 
-                                         strategies[strategies$prop == max(strategies$prop),]
+                                       # pick the strategy with the highest propensity
+                                       pickableSeqs <- 
+                                         sequences[sequences$props == max(sequences$props),]
                                      }
                                      
-                                     return(pickableStrategies[
-                                       sample(1:length(pickableStrategies$coord), 1), ]$coord)
+                                     return(pickableSeqs[sample(1:length(pickableSeqs$seq), 1), ]$seq)
                                    },   
                                    
                                    
                                    #-----------------------------------------------------------------#
-                                   #  function: getNoisyStrat
-                                   #    Gets a strategy according to epsilon-noise approach.
+                                   #  function: getNoisySeq
+                                   #    Gets a sequence according to epsilon-noise approach.
                                    #-----------------------------------------------------------------#
-                                   getNoisyStrat = function() {
+                                   getNoisySeq = function() {
                                      # balancing between exploration and exploitation
                                      # by using epsilon as noise factor
-                                     noisyStrategies <- strategies
+                                     noisySeqs <- sequences
                                      
-                                     for (i in 1:length(strategies$prop)) {
-                                       noisyStrategies$prop[i] <- strategies$prop[i] + 
-                                         (strategies$prop[i] * runif(1, -epsilon, epsilon))
+                                     for (i in 1:length(sequences$props)) {
+                                       noisySeqs$props[i] <- sequences$props[i] + 
+                                         (sequences$props[i] * runif(1, -epsilon, epsilon))
                                      }
                                      
-                                     return(noisyStrategies[with(noisyStrategies, order(-prop)),1][1])
+                                     return(noisySeqs[with(noisySeqs, order(-props)),1][1])
                                    },                                         
-                                       
+                                   
                                    
                                    #-----------------------------------------------------------------#
                                    #  function: setActionsAndOEU
                                    #    Selects the list of actions and the corresponding optimal
-                                   #    expected utility (OEU) based on the current strategy.
+                                   #    expected utility (OEU) based on the current sequence.
                                    #-----------------------------------------------------------------#
                                    setActionsAndOEU = function() {
                                      # choose action sequence and corresponding optimal expected 
-                                     # utility based on strategy
+                                     # utility based on sequence
                                      oeu <<- UTIL_NONE
+                                     actions <<- c()
                                      
-                                     # strategy = deviate once
-                                     if (currStrat == 0) {
-                                       actions <<- c(DEVIATE)
-                                       oeu <<- UTIL_MAX
-                                       
-                                     # strategy = cooperate at position i
-                                     } else {
-                                       actions <<- c()
-                                       i <- 1
-                                       while (i < currStrat) {
+                                     seqSplit <- strsplit(toString(currSeq), "")[[1]]
+                                     
+                                     for (action in seqSplit) {
+                                       if (action == DEVIATE) {
                                          actions <<- c(actions, DEVIATE)
-                                         oeu <<- 
-                                           oeu + UTIL_MAX
-                                         i <- i+1
+                                         oeu <<- oeu + UTIL_MAX
+                                         
+                                       } else if (action == COOPERATE) {
+                                         actions <<- c(actions, COOPERATE)
+                                         oeu <<- oeu + (UTIL_MAX - ownCoopCosts)
+                                         
+                                       } else {
+                                         stop(paste("Unknown action type:", actions[i]))
                                        }
-                                       actions <<- c(actions, COOPERATE)
-                                       oeu <<- 
-                                         oeu + (UTIL_MAX - ownCoopCosts)
-                                       oeu <<- 
-                                         oeu / length(actions)
                                      }
+                                     
+                                     oeu <<- oeu / length(seqSplit)
                                      
                                      if (SOCIAL_BEHAVIOR == "selfish") {
                                        # leave previous calculation
+                                       
                                      } else if (SOCIAL_BEHAVIOR == "altruistic") {
                                        oeu <<- (UTIL_MAX + UTIL_MAX + (UTIL_MAX - lowestCoopCosts)) / 3
+                                       
                                      } else {
                                        stop(paste("Unknown social behavior:", SOCIAL_BEHAVIOR))
                                      }
@@ -340,7 +349,7 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #-----------------------------------------------------------------#
                                    getModelParameters = function() {
                                      return(c(callSuper(), 
-                                              paste("p", ID,  "_params", sep = ""), "#####",
+                                              paste("p", ID, "_params", sep = ""), "#####",
                                               paste("p", ID, "_X", sep = ""), X, 
                                               paste("p", ID, "_balancing", sep = ""), BALANCING, 
                                               paste("p", ID, "_prop_start", sep = ""), PROP_START, 
@@ -359,12 +368,12 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    getPersonalDetailColumns = function() {
                                      columns <- c(paste("p", ID, sep = ""),
                                                   paste("p", ID, "_epsilon", sep = ""),
-                                                  paste("p", ID, "_currstrat", sep = ""),
+                                                  paste("p", ID, "_currseq", sep = ""),
                                                   paste("p", ID, "_actions", sep = ""),
                                                   paste("p", ID, "_optexputil", sep = ""))
-                                     for (i in 1:length(strategies$coord)) {
-                                       columns <- c(columns, paste("p", ID, "_coord", 
-                                                                   strategies[i,1], sep = ""))
+                                     for (i in 1:length(sequences$seq)) {
+                                       columns <- c(columns, paste("p", ID, "_seq", 
+                                                                   sequences[i,1], sep = ""))
                                      }
                                      return(columns)
                                    },
@@ -373,21 +382,20 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                    #-----------------------------------------------------------------#
                                    #   function: getCurrentPersonalDetails
                                    #     Returns the player's current personal details. In this case
-                                   #     the player's peronal strategy settings.
-                                   #     Formatting: c(prop_coord-0, prop_coord-1, ..., prop_coord-x)
+                                   #     the player's peronal sequence settings.
                                    #-----------------------------------------------------------------#
                                    getCurrentPersonalDetails = function() {
                                      actionSeq <- ""
                                      for (action in actions) {
-                                       actionSeq <- paste(actionSeq, action)
+                                       actionSeq <- paste(actionSeq, action, sep = "")
                                      }
                                      details <- c("#####",
                                                   round(epsilon, digits = 5), 
                                                   currStrat, 
                                                   actionSeq, 
                                                   round(oeu, digits = 2))
-                                     for (i in 1:length(strategies$coord)) {
-                                       details <- c(details, round(strategies[i,2], digits = 2))
+                                     for (i in 1:length(sequences$seq)) {
+                                       details <- c(details, round(sequences[i,2], digits = 2))
                                      }
                                      return(details)
                                    }

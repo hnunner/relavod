@@ -47,7 +47,7 @@ fitParameters <- function() {
   vodCount <- 10
   roundsPerVod <- 150
   
-  for (modelType in MODEL_TYPES[3]) {
+  for (modelType in MODEL_TYPES) {
     
     # Random
     if (modelType == "Random") {
@@ -101,19 +101,19 @@ fitParameters <- function() {
                       classicXs <- c(3)
                       for (classicX in classicXs) {
                         
-                        classicPlayersPerStates <- c(3)
+                        classicPlayersPerStates <- c(1)
                         for (classicPlayersPerState in classicPlayersPerStates) {
                           
                           cat(paste("\nsimulation", i,"out of",
-                                      length(classicPlayersPerStates) *
-                                      length(classicXs) *
-                                      length(gammas) *
-                                      length(alphas) *
-                                      length(epsilonDecays) *
-                                      length(epsilonStarts) *
-                                      length(propStarts) *
-                                      length(sBehavs) *
-                                      length(bTypes), ":\n",
+                                    length(classicPlayersPerStates) *
+                                    length(classicXs) *
+                                    length(gammas) *
+                                    length(alphas) *
+                                    length(epsilonDecays) *
+                                    length(epsilonStarts) *
+                                    length(propStarts) *
+                                    length(sBehavs) *
+                                    length(bTypes), ":\n",
                                     "\tmodel type:", modelType, "\n",
                                     "\tbalancing type:", balancingType, "\n",
                                     "\tsocial behavior:", socialBehavior, "\n",
@@ -144,8 +144,8 @@ fitParameters <- function() {
                         }
                       }
                     }
-
-                                        
+                    
+                    
                     # CoordinateX
                     if (modelType == "CoordinateX") {
                       
@@ -155,14 +155,14 @@ fitParameters <- function() {
                       for (coordX in coordXs) {
                         
                         cat(paste("\nsimulation", i,"out of",
-                                    length(coordXs) *
-                                    length(gammas) *
-                                    length(alphas) *
-                                    length(epsilonDecays) *
-                                    length(epsilonStarts) *
-                                    length(propStarts) *
-                                    length(sBehavs) *
-                                    length(bTypes), ":\n",
+                                  length(coordXs) *
+                                  length(gammas) *
+                                  length(alphas) *
+                                  length(epsilonDecays) *
+                                  length(epsilonStarts) *
+                                  length(propStarts) *
+                                  length(sBehavs) *
+                                  length(bTypes), ":\n",
                                   "\tmodel type:", modelType, "\n",
                                   "\tbalancing type:", balancingType, "\n",
                                   "\tsocial behavior:", socialBehavior, "\n",
@@ -183,6 +183,52 @@ fitParameters <- function() {
                                                      alpha = alpha,
                                                      gamma = gamma,
                                                      coordX = coordX)
+                        
+                        analyzeData(modelType = modelType, fit = FALSE, fitCSV = fitCSV)
+                        
+                        i <- i+1
+                        cat("done\n")
+                      }
+                    }
+                    
+                    
+                    # SequenceX
+                    if (modelType == "SequenceX") {
+                      
+                      fitCSV <- paste(SIM_DIR, gsub("-", "", Sys.Date(), fixed = TRUE), "-sequencex-fit.csv", sep = "")
+                      
+                      seqXs <- c(3)
+                      for (seqX in seqXs) {
+                        
+                        cat(paste("\nsimulation", i,"out of",
+                                  length(seqXs) *
+                                  length(gammas) *
+                                  length(alphas) *
+                                  length(epsilonDecays) *
+                                  length(epsilonStarts) *
+                                  length(propStarts) *
+                                  length(sBehavs) *
+                                  length(bTypes), ":\n",
+                                  "\tmodel type:", modelType, "\n",
+                                  "\tbalancing type:", balancingType, "\n",
+                                  "\tsocial behavior:", socialBehavior, "\n",
+                                  "\tpropensity start:", propStart, "\n",
+                                  "\tepsilon start:", epsilonStart, "\n",
+                                  "\tepsilon decay:", epsilonDecay, "\n",
+                                  "\talpha:", alpha, "\n",
+                                  "\tgamma:", gamma, "\n",
+                                  "\tcoordX:", coordX, "\n"))
+                        
+                        computeSequenceXSimulation(vodCount = vodCount,
+                                                     roundsPerVod = roundsPerVod,
+                                                     balancingType = balancingType,
+                                                     socialBehavior = socialBehavior,
+                                                     propStart = propStart,
+                                                     epsilonStart = epsilonStart,
+                                                     epsilonDecay = epsilonDecay,
+                                                     alpha = alpha,
+                                                     gamma = gamma,
+                                                     seqX = seqX)
                         
                         analyzeData(modelType = modelType, fit = FALSE, fitCSV = fitCSV)
                         

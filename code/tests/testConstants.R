@@ -17,11 +17,11 @@ checkIntegrity <- function() {
   if (BALANCING_TYPES[1] != "greedy") stop("Integrity check failed: invalid first balancing type")
   if (BALANCING_TYPES[2] != "noise") stop("Integrity check failed: invalid second balancing type")
   
-  if (!file.exists(SIM_DIR)) {
+  if (!dir.exists(SIM_DIR)) {
     stop("Integrity check failed: simulation directory missing")
   }
   
-  if (!file.exists(PLAYERS_DIR)) {
+  if (!dir.exists(PLAYERS_DIR)) {
     stop("Integrity check failed: players directory missing")
   }
   

@@ -30,7 +30,8 @@ DEVIATE <<- 0
 ############## MODELS ##############
 MODEL_TYPES <<- c("Random",               # purely random action selection
                   "ClassicQ",             # classical Q-Learning reinforcement strategy
-                  "CoordinateX")          # coordinate-x reinforcement strategy
+                  "CoordinateX",          # coordinate-x reinforcement strategy
+                  "SequenceX")            # sequence-x reinforcement strategy
 
 BALANCING_TYPES <<- c("greedy",           # espilon-greedy
                      "noise")             # espilon-noise
@@ -51,7 +52,11 @@ CLASSIC_PLAYERS_PER_STATE <<- 1           # actions of how many players defining
                                           #   PLAYERS_CNT = all players' actions
 
 # CoordinateX
-COORD_X <<- 4                             # max. after how many rounds to cooperate
+COORD_X <<- 3                             # default after how many rounds to cooperate
+
+# SequenceX
+SEQ_X <<- 3                               # default length of action sequence
+
 
 # Reinforcement Learning 
 # (ClassicQ & CoordinateX)
