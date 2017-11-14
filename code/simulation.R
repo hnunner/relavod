@@ -121,14 +121,14 @@ createSimulationsBaseDirectory <- function(modelType) {
   
   # creation of base directory for the model type
   modelTypeDir <- paste(SIM_DIR, modelType, "/", sep = "")
-  if (!file.exists(modelTypeDir)) {
+  if (!dir.exists(modelTypeDir)) {
     dir.create(modelTypeDir)
   }
   
   # creation of base directory for the simulations
   simDir <- NA
   dirCnt <- 0
-  while (is.na(simDir) || file.exists(simDir)) {
+  while (is.na(simDir) || dir.exists(simDir)) {
     dirCnt <- dirCnt+1
     simDir <- paste(modelTypeDir, dirCnt, "/", sep = "")
   }
@@ -149,7 +149,7 @@ createVodDirectory <- function(baseDir, vodType) {
   
   # creation of base directory for the VOD type
   vodTypeDir <- paste(baseDir, vodType, "/", sep = "")
-  if (!file.exists(vodTypeDir)) {
+  if (!dir.exists(vodTypeDir)) {
     dir.create(vodTypeDir)
   }
   
