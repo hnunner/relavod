@@ -292,8 +292,12 @@ SequenceXPlayer <- setRefClass("SequenceXPlayer",
                                      noisySeqs <- sequences
                                      
                                      for (i in 1:length(sequences$props)) {
-                                       noisySeqs$props[i] <- sequences$props[i] + 
-                                         (sequences$props[i] * runif(1, -epsilon, epsilon))
+                                       #noisySeqs$props[i] <- sequences$props[i] + 
+                                       #  (sequences$props[i] * runif(1, -epsilon, epsilon))
+                                       
+                                       # noise - normal distribution
+                                       noisySeqs$prop[i] <- rnorm(1, sequences$prop[i], 
+                                                                  sequences$prop[i] * epsilon)
                                      }
                                      
                                      return(noisySeqs[with(noisySeqs, order(-props)),1][1])

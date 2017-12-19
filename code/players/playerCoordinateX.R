@@ -283,8 +283,13 @@ CoordinateXPlayer <- setRefClass("CoordinateXPlayer",
                                      noisyStrategies <- strategies
                                      
                                      for (i in 1:length(strategies$prop)) {
-                                       noisyStrategies$prop[i] <- strategies$prop[i] + 
-                                         (strategies$prop[i] * runif(1, -epsilon, epsilon))
+                                       # noise - uniform distribution
+                                       #noisyStrategies$prop[i] <- strategies$prop[i] + 
+                                       #  (strategies$prop[i] * runif(1, -epsilon, epsilon))
+                                       
+                                       # noise - normal distribution
+                                       noisyStrategies$prop[i] <- rnorm(1, strategies$prop[i], 
+                                                                        strategies$prop[i] * epsilon)
                                      }
                                      
                                      return(noisyStrategies[with(noisyStrategies, order(-prop)),1][1])
