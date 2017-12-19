@@ -267,7 +267,7 @@ SequenceXPlayer <- setRefClass("SequenceXPlayer",
                                      if (runif(1) <= epsilon) {     # explore (epsilon %)
                                        # pick a random sequence with a lower than highest sequence
                                        pickableSeqs <- 
-                                         sequences[sequences$props < max(sequences$props),]
+                                         sequences[sequences$prop < max(sequences$prop),]
                                        if (!nrow(pickableSeqs)) {
                                          pickableSeqs <- sequences
                                        }
@@ -275,7 +275,7 @@ SequenceXPlayer <- setRefClass("SequenceXPlayer",
                                      } else {                       # exploit (1-epsilon %)
                                        # pick the strategy with the highest propensity
                                        pickableSeqs <- 
-                                         sequences[sequences$props == max(sequences$props),]
+                                         sequences[sequences$prop == max(sequences$prop),]
                                      }
                                      
                                      return(pickableSeqs[sample(1:length(pickableSeqs$seq), 1), ]$seq)
@@ -291,16 +291,16 @@ SequenceXPlayer <- setRefClass("SequenceXPlayer",
                                      # by using epsilon as noise factor
                                      noisySeqs <- sequences
                                      
-                                     for (i in 1:length(sequences$props)) {
-                                       #noisySeqs$props[i] <- sequences$props[i] + 
-                                       #  (sequences$props[i] * runif(1, -epsilon, epsilon))
+                                     for (i in 1:length(sequences$prop)) {
+                                       #noisySeqs$prop[i] <- sequences$prop[i] + 
+                                       #   (sequences$prop[i] * runif(1, -epsilon, epsilon))
                                        
                                        # noise - normal distribution
-                                       noisySeqs$prop[i] <- rnorm(1, sequences$prop[i], 
+                                       noisySeqs$prop[i] <- rnorm(1, sequences$prop[i],
                                                                   sequences$prop[i] * epsilon)
                                      }
                                      
-                                     return(noisySeqs[with(noisySeqs, order(-props)),1][1])
+                                     return(noisySeqs[with(noisySeqs, order(-prop)),1][1])
                                    },                                         
                                    
                                    
