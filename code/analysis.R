@@ -291,28 +291,7 @@ computeLNIs <- function(lniSequence) {
   # 3-sequences
   lni33 <- computeLNISequence(3, lniSequence)
   
-  # 4-sequences
-  lni43 <- computeLNISequence(4, lniSequence)
-  # 5-sequences
-  lni53 <- computeLNISequence(5, lniSequence)
-  # 6-sequences
-  lni63 <- computeLNISequence(6, lniSequence)
-  # 7-sequences
-  lni73 <- computeLNISequence(7, lniSequence)
-  # 8-sequences
-  lni83 <- computeLNISequence(8, lniSequence)
-  # 9-sequences
-  lni93 <- computeLNISequence(9, lniSequence)
-  
-  # minus-1-sequences
-  elements <- table(lniSequence)
-  lnimin13 <- 0
-  if (length(elements[names(elements) == "-1"]) > 0) {
-    lnimin13 <- as.numeric(elements[names(elements) == "-1"]) / length(lniSequence) * 100
-  } 
-  
-  res <- data.frame(lni13, lni23, lni33, (100 - sum(lni13, lni23, lni33)),
-                    lni43, lni53, lni63, lni73, lni83, lni93, lnimin13)
+  res <- data.frame(lni13, lni23, lni33)
   
   return(res)
 }
@@ -692,8 +671,39 @@ exportInteractionPatterns <- function(directory, vodType, vodData) {
   }
 }
 
+
+croppedRmse <- function(sim, obs) {
+  if (length(sim) != length(obs)) {
+    stop("sim and obs not comparable!")
+  }
+  if (length(sim) != 9) {
+    stop("invalid amount of values")
+  }
+  n <- length(sim)
+
+  s <- 0
+  for (i in 1:n) {
+    bestIndex <- 0
+    if (i <= 3) {
+      bestIndex <- 1
+    } else if (i <= 6) {
+      bestIndex <- 4
+    } else if (i <= 9) {
+      bestIndex <- 7
+    }
+
+    # consider only simulation data that has a lower LNI than the original
+    # higher values are considered to "match" the observed data
+    if (i != bestIndex || (i == bestIndex && sim[i] < obs[i])) {
+      s <- s + (sim[i] - obs[i])^2
+    }
+  }
+  s <- 1/n * s
+  return(sqrt(s))
+}
+
 #----------------------------------------------------------------------------------------------------#
-# function: croppedRmse
+# function: croppedRmsePerVODType
 #   Computes a cropped version of the rmse. That is, only LNIs that are lower than the LNIs
 #   from the original study by Diekmann & Prezpiorka (2016) are considered. This ensures that
 #   models that outperform the human data do not get punished for their effectivity.
@@ -702,18 +712,31 @@ exportInteractionPatterns <- function(directory, vodType, vodData) {
 #       the simulated LNIs
 #   param:  obs
 #       the observed LNIs
+#   param:  vodType
+#       the type of VOD
 #----------------------------------------------------------------------------------------------------#
-croppedRmse <- function(sim, obs) {
+croppedRmsePerVODType <- function(sim, obs, vodType) {
   if (length(sim) != length(obs)) {
     stop("sim and obs not comparable!")
   }
-
   n <- length(sim)
+
+  # index of the LNI performing best; here: 1 = h1, 2 = h2, 3 = h3 
+  bestIndex <- 0    
+  # asym1, asym2
+  if (vodType == "asym1" || vodType == "asym2") {
+    bestIndex <- 1
+  } else if (vodType == "sym") {
+    bestIndex <- 3
+  } else {
+    stop(paste("unknown vod type:", vodType))
+  }
+  
   s <- 0
   for (i in 1:n) {
     # consider only simulation data that has a lower LNI than the original
     # higher values are considered to "match" the observed data
-    if (sim[i] < obs[i]) {
+    if (i != bestIndex || (i == bestIndex && sim[i] < obs[i])) {
       s <- s + (sim[i] - obs[i])^2
     }
   }
@@ -740,24 +763,21 @@ plotGOF <- function(meanLNIs) {
   # compare model and experimental data: Symmetric
   plotDataSym1 <- data.frame(h1 = LNIs$sym_h1,
                          h2 = LNIs$sym_h2,
-                         h3 = LNIs$sym_h3,
-                         others = LNIs$sym_others)
+                         h3 = LNIs$sym_h3)
   barplot(as.matrix(plotDataSym1), xlab = "Symmetric", 
           beside = TRUE, col = cols, ylim = range(0:100))
   
   # compare model and experimental data: Asymmetric 1
   plotDataAsym1 <- data.frame(h1 = LNIs$asym1_h1,
                          h2 = LNIs$asym1_h2,
-                         h3 = LNIs$asym1_h3,
-                         others = LNIs$asym1_others)
+                         h3 = LNIs$asym1_h3)
   barplot(as.matrix(plotDataAsym1), yaxt = "n", xlab = "Asymmetric 1", 
           beside = TRUE, col = cols, ylim = range(0:100))
   
   # compare model and experimental data: Asymmetric 2
   plotDataAsym2 <- data.frame(h1 = LNIs$asym2_h1,
                               h2 = LNIs$asym2_h2,
-                              h3 = LNIs$asym2_h3,
-                              others = LNIs$asym2_others)
+                              h3 = LNIs$asym2_h3)
   barplot(as.matrix(plotDataAsym2), yaxt = "n", xlab = "Asymmetric 2", 
           beside = TRUE, col = cols, ylim = range(0:100))
 
@@ -866,21 +886,7 @@ analyzeData <- function(modelType = MODEL_TYPES[3],
     }
     colnames(vodTypeLNIs) <- c((paste(currVodType, "_h1", sep = "")),
                                (paste(currVodType, "_h2", sep = "")),
-                               (paste(currVodType, "_h3", sep = "")),
-                               (paste(currVodType, "_others", sep = "")),
-                               (paste(currVodType, "_h4", sep = "")),
-                               (paste(currVodType, "_h5", sep = "")),
-                               (paste(currVodType, "_h6", sep = "")),
-                               (paste(currVodType, "_h7", sep = "")),
-                               (paste(currVodType, "_h8", sep = "")),
-                               (paste(currVodType, "_h9", sep = "")),
-                               (paste(currVodType, "_h_minus1", sep = "")))
-    
-    comparableKeeps <- c(comparableKeeps,
-                         (paste(currVodType, "_h1", sep = "")),
-                         (paste(currVodType, "_h2", sep = "")),
-                         (paste(currVodType, "_h3", sep = "")),
-                         (paste(currVodType, "_others", sep = "")))
+                               (paste(currVodType, "_h3", sep = "")))
     
     if (nrow(LNIs) == 0) {
       LNIs <- vodTypeLNIs
@@ -893,10 +899,10 @@ analyzeData <- function(modelType = MODEL_TYPES[3],
   meanLNIs <- apply(LNIs, 2, median)
 
   # exporting Goodness of Fit
-  exportGOF(exportDir, meanLNIs[comparableKeeps])
+  exportGOF(exportDir, meanLNIs)
   
   # exporting LNI comparison data (model vs. experiment)
-  exportLNIComparison(exportDir, meanLNIs[comparableKeeps])
+  exportLNIComparison(exportDir, meanLNIs)
 
   
   if (fit) {
@@ -908,33 +914,40 @@ analyzeData <- function(modelType = MODEL_TYPES[3],
     
     library(hydroGOF)
 
-    symRMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]))
-    symNRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]))
-    symRSQ <- summary(lm(as.numeric(LNIS_EXP1[1:4]) ~ as.numeric(meanLNIs[comparableKeeps][1:4])))$r.squared
+    symCroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[1:3]), as.numeric(LNIS_EXP1[1:3]), "sym")
+    symRMSE <- rmse(as.numeric(meanLNIs[1:3]), as.numeric(LNIS_EXP1[1:3]))
+    symNRMSE <- nrmse(as.numeric(meanLNIs[1:3]), as.numeric(LNIS_EXP1[1:3]))
+    symRSQ <- summary(lm(as.numeric(LNIS_EXP1[1:3]) ~ as.numeric(meanLNIs[1:3])))$r.squared
     
-    asym1RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]))
-    asym1NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]))
-    asym1RSQ <- summary(lm(as.numeric(LNIS_EXP1[5:8]) ~ as.numeric(meanLNIs[comparableKeeps][5:8])))$r.squared
+    asym1CroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[4:6]), as.numeric(LNIS_EXP1[4:6]), "asym1")
+    asym1RMSE <- rmse(as.numeric(meanLNIs[4:6]), as.numeric(LNIS_EXP1[4:6]))
+    asym1NRMSE <- nrmse(as.numeric(meanLNIs[4:6]), as.numeric(LNIS_EXP1[4:6]))
+    asym1RSQ <- summary(lm(as.numeric(LNIS_EXP1[4:6]) ~ as.numeric(meanLNIs[4:6])))$r.squared
     
-    asym2RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]))
-    asym2NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]))
-    asym2RSQ <- summary(lm(as.numeric(LNIS_EXP1[9:12]) ~ as.numeric(meanLNIs[comparableKeeps][9:12])))$r.squared
+    asym2CroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[7:9]), as.numeric(LNIS_EXP1[7:9]), "asym2")
+    asym2RMSE <- rmse(as.numeric(meanLNIs[7:9]), as.numeric(LNIS_EXP1[7:9]))
+    asym2NRMSE <- nrmse(as.numeric(meanLNIs[7:9]), as.numeric(LNIS_EXP1[7:9]))
+    asym2RSQ <- summary(lm(as.numeric(LNIS_EXP1[7:9]) ~ as.numeric(meanLNIs[7:9])))$r.squared
     
-    RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1))
-    NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1))
-    RSQ <- summary(lm(as.numeric(LNIS_EXP1) ~ as.numeric(meanLNIs[comparableKeeps])))$r.squared
+    croppedRMSE <- croppedRmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
+    RMSE <- rmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
+    NRMSE <- nrmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
+    RSQ <- summary(lm(as.numeric(LNIS_EXP1) ~ as.numeric(meanLNIs)))$r.squared
     
     GOF_per_vod_type <- c("###", "###", "###")
+    cropped_RMSE_per_vod_type <- c(symCroppedRMSE, asym1CroppedRMSE, asym2CroppedRMSE)
     RMSE_per_vod_type <- c(symRMSE, asym1RMSE, asym2RMSE)
     NRMSE_per_vod_type <- c(symNRMSE, asym1NRMSE, asym2NRMSE)
     RSQ_per_vod_type <- c(symRSQ, asym1RSQ, asym2RSQ)
     GOF_combined <- c("#", "#", "#")
+    cropped_RMSE_combined <- c(croppedRMSE, croppedRMSE, croppedRMSE)
     RMSE_combined <- c(RMSE, RMSE, RMSE)
     NRMSE_combined <- c(NRMSE, NRMSE, NRMSE)
     RSQ_combined <- c(RSQ, RSQ, RSQ)
     vod_params <- c("###", "###", "###")
-    gofs <- data.frame(GOF_per_vod_type, RMSE_per_vod_type, NRMSE_per_vod_type, RSQ_per_vod_type, 
-                       GOF_combined, RMSE_combined, NRMSE_combined, RSQ_combined, vod_params)
+    gofs <- data.frame(GOF_per_vod_type, cropped_RMSE_per_vod_type, RMSE_per_vod_type, NRMSE_per_vod_type, 
+                       RSQ_per_vod_type, GOF_combined, cropped_RMSE_combined, RMSE_combined, NRMSE_combined, 
+                       RSQ_combined, vod_params)
     
     library(dplyr)
     fitInfo <- cbind(gofs, modelParams[2:ncol(modelParams)]) %>% select(model_type, vod_type, everything())
