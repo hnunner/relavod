@@ -692,15 +692,34 @@ exportInteractionPatterns <- function(directory, vodType, vodData) {
   }
 }
 
-
-
-
+#----------------------------------------------------------------------------------------------------#
+# function: croppedRmse
+#   Computes a cropped version of the rmse. That is, only LNIs that are lower than the LNIs
+#   from the original study by Diekmann & Prezpiorka (2016) are considered. This ensures that
+#   models that outperform the human data do not get punished for their effectivity.
+#
+#   param:  sim
+#       the simulated LNIs
+#   param:  obs
+#       the observed LNIs
+#----------------------------------------------------------------------------------------------------#
 croppedRmse <- function(sim, obs) {
-  return(sqrt((sim - obs)^2))
+  if (length(sim) != length(obs)) {
+    stop("sim and obs not comparable!")
+  }
+
+  n <- length(sim)
+  s <- 0
+  for (i in 1:n) {
+    # consider only simulation data that has a lower LNI than the original
+    # higher values are considered to "match" the observed data
+    if (sim[i] < obs[i]) {
+      s <- s + (sim[i] - obs[i])^2
+    }
+  }
+  s <- 1/n * s
+  return(sqrt(s))
 }
-
-
-
 
 #----------------------------------------------------------------------------------------------------#
 # function: plotGOF
