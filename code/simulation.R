@@ -277,7 +277,7 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
                               gamma = GAMMA,
                               
                               classicX = CLASSIC_X, 
-                              classicPlayersPerState = CLASSIC_PLAYERS_PER_STATE, 
+                              cQPlayersPerState = CLASSIC_PLAYERS_PER_STATE, 
                               
                               coordX = COORD_X,
                               
@@ -343,7 +343,7 @@ computeRandomSimulation <- function(vodCount, roundsPerVod, randomCoopRatio) {
 #----------------------------------------------------------------------------------------------------#
 computeClassicQSimulation <- function(vodCount, roundsPerVod, balancingType, socialBehavior,
                                       propStart, epsilonStart, epsilonDecay, alpha, gamma,
-                                      classicX, classicPlayersPerState) {       
+                                      classicX, cQPlayersPerState) {       
   computeSimulation(modelType = "ClassicQ", 
                     vodType = "all", 
                     vodCount = vodCount, 
@@ -358,7 +358,7 @@ computeClassicQSimulation <- function(vodCount, roundsPerVod, balancingType, soc
                     gamma = gamma,
                     
                     classicX = classicX,
-                    classicPlayersPerState = classicPlayersPerState)
+                    cQPlayersPerState = cQPlayersPerState)
 }
 
 #----------------------------------------------------------------------------------------------------#
