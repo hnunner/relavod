@@ -692,6 +692,16 @@ exportInteractionPatterns <- function(directory, vodType, vodData) {
   }
 }
 
+
+
+
+croppedRmse <- function(sim, obs) {
+  return(sqrt((sim - obs)^2))
+}
+
+
+
+
 #----------------------------------------------------------------------------------------------------#
 # function: plotGOF
 #   Plots the goodness of fit between the mean LNIs of a simulation and the mean LNIs of 
@@ -733,6 +743,8 @@ plotGOF <- function(meanLNIs) {
           beside = TRUE, col = cols, ylim = range(0:100))
 
   # GOF values
+  croppedRMSE <- croppedRMSE(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
+  
   library(hydroGOF)
   RMSE <- rmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
   NRMSE <- nrmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
@@ -740,9 +752,10 @@ plotGOF <- function(meanLNIs) {
   
   # legend and title
   legend(x = "topright", y = 10, c("Model","Diekmann & Przepiorka (2016)"), cex=0.7, fill=cols)
-  title(bquote(paste("Model Data vs. Experimental Data (RMSE = ", .(round(RMSE, digits = 2)), 
-              ", NRMSE = ", .(round(NRMSE, digits = 2)), "%, ", 
-              R^2, " = ", .(round(RSQ, digits = 2)), ")", sep = "")), 
+  title(bquote(paste("Model Data vs. Experimental Data (croppedRMSE = ", .(round(croppedRMSE, digits = 2)),
+                     ", RMSE = ", .(round(RMSE, digits = 2)), 
+                     ", NRMSE = ", .(round(NRMSE, digits = 2)), "%, ", 
+                     R^2, " = ", .(round(RSQ, digits = 2)), ")", sep = "")), 
         outer=TRUE)
   mtext('average LNI', side = 2, outer = TRUE, line = 1.5, cex = 0.7)
 
