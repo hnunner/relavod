@@ -291,9 +291,31 @@ computeLNIs <- function(lniSequence) {
   # 3-sequences
   lni33 <- computeLNISequence(3, lniSequence)
   
-  res <- data.frame(lni13, lni23, lni33)
+  # 4-sequences
+  lni43 <- computeLNISequence(4, lniSequence)
+  # 5-sequences
+  lni53 <- computeLNISequence(5, lniSequence)
+  # 6-sequences
+  lni63 <- computeLNISequence(6, lniSequence)
+  # 7-sequences
+  lni73 <- computeLNISequence(7, lniSequence)
+  # 8-sequences
+  lni83 <- computeLNISequence(8, lniSequence)
+  # 9-sequences
+  lni93 <- computeLNISequence(9, lniSequence)
+  
+  # minus-1-sequences
+  elements <- table(lniSequence)
+  lnimin13 <- 0
+  if (length(elements[names(elements) == "-1"]) > 0) {
+    lnimin13 <- as.numeric(elements[names(elements) == "-1"]) / length(lniSequence) * 100
+  } 
+  
+  res <- data.frame(lni13, lni23, lni33, (100 - sum(lni13, lni23, lni33)),
+                    lni43, lni53, lni63, lni73, lni83, lni93, lnimin13)
   
   return(res)
+  
 }
 
 #----------------------------------------------------------------------------------------------------#
@@ -676,20 +698,21 @@ croppedRmse <- function(sim, obs) {
   if (length(sim) != length(obs)) {
     stop("sim and obs not comparable!")
   }
-  if (length(sim) != 9) {
+  n <- length(sim)
+  if (n != 12) {
     stop("invalid amount of values")
   }
-  n <- length(sim)
 
   s <- 0
   for (i in 1:n) {
     bestIndex <- 0
-    if (i <= 3) {
-      bestIndex <- 1
-    } else if (i <= 6) {
-      bestIndex <- 4
-    } else if (i <= 9) {
-      bestIndex <- 7
+    # sym
+    if (i <= 4) {
+      bestIndex <- 3
+    } else if (i <= 8) {
+      bestIndex <- 5
+    } else if (i <= 12) {
+      bestIndex <- 9
     }
 
     # consider only simulation data that has a lower LNI than the original
@@ -720,8 +743,11 @@ croppedRmsePerVODType <- function(sim, obs, vodType) {
     stop("sim and obs not comparable!")
   }
   n <- length(sim)
+  if (n != 4) {
+    stop("invalid amount of values")
+  }
 
-  # index of the LNI performing best; here: 1 = h1, 2 = h2, 3 = h3 
+  # index of the LNI performing best; here: 1 = h1, 2 = h2, 3 = h3
   bestIndex <- 0    
   # asym1, asym2
   if (vodType == "asym1" || vodType == "asym2") {
@@ -762,28 +788,29 @@ plotGOF <- function(meanLNIs) {
   
   # compare model and experimental data: Symmetric
   plotDataSym1 <- data.frame(h1 = LNIs$sym_h1,
-                         h2 = LNIs$sym_h2,
-                         h3 = LNIs$sym_h3)
+                             h2 = LNIs$sym_h2,
+                             h3 = LNIs$sym_h3,
+                             others = LNIs$sym_others)
   barplot(as.matrix(plotDataSym1), xlab = "Symmetric", 
           beside = TRUE, col = cols, ylim = range(0:100))
   
   # compare model and experimental data: Asymmetric 1
   plotDataAsym1 <- data.frame(h1 = LNIs$asym1_h1,
-                         h2 = LNIs$asym1_h2,
-                         h3 = LNIs$asym1_h3)
+                              h2 = LNIs$asym1_h2,
+                              h3 = LNIs$asym1_h3,
+                              others = LNIs$asym1_others)
   barplot(as.matrix(plotDataAsym1), yaxt = "n", xlab = "Asymmetric 1", 
           beside = TRUE, col = cols, ylim = range(0:100))
   
   # compare model and experimental data: Asymmetric 2
   plotDataAsym2 <- data.frame(h1 = LNIs$asym2_h1,
                               h2 = LNIs$asym2_h2,
-                              h3 = LNIs$asym2_h3)
+                              h3 = LNIs$asym2_h3,
+                              others = LNIs$asym2_others)
   barplot(as.matrix(plotDataAsym2), yaxt = "n", xlab = "Asymmetric 2", 
           beside = TRUE, col = cols, ylim = range(0:100))
-
-  # GOF values
-  croppedRMSE <- croppedRmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
   
+  # GOF values
   library(hydroGOF)
   RMSE <- rmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
   NRMSE <- nrmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
@@ -796,8 +823,9 @@ plotGOF <- function(meanLNIs) {
                      R^2, " = ", .(round(RSQ, digits = 2)), ")", sep = "")), 
         outer=TRUE)
   mtext('average LNI', side = 2, outer = TRUE, line = 1.5, cex = 0.7)
-
+  
   # return(data.frame(RMSE, NRMSE, RSQ))
+  
 }
 
 #----------------------------------------------------------------------------------------------------#
@@ -865,6 +893,7 @@ analyzeData <- function(modelType = MODEL_TYPES[3],
   LNIs <- data.frame()
   
   # looping over the VOD types to be analyzed (e.g.: sym -> asym1 -> asym2)
+  comparableKeeps <- c()
   for (i in 1:length(vodType)) {
     currVodType <- vodType[i]
     
@@ -884,7 +913,21 @@ analyzeData <- function(modelType = MODEL_TYPES[3],
     }
     colnames(vodTypeLNIs) <- c((paste(currVodType, "_h1", sep = "")),
                                (paste(currVodType, "_h2", sep = "")),
-                               (paste(currVodType, "_h3", sep = "")))
+                               (paste(currVodType, "_h3", sep = "")),
+                               (paste(currVodType, "_others", sep = "")),
+                               (paste(currVodType, "_h4", sep = "")),
+                               (paste(currVodType, "_h5", sep = "")),
+                               (paste(currVodType, "_h6", sep = "")),
+                               (paste(currVodType, "_h7", sep = "")),
+                               (paste(currVodType, "_h8", sep = "")),
+                               (paste(currVodType, "_h9", sep = "")),
+                               (paste(currVodType, "_h_minus1", sep = "")))
+    
+    comparableKeeps <- c(comparableKeeps,
+                         (paste(currVodType, "_h1", sep = "")),
+                         (paste(currVodType, "_h2", sep = "")),
+                         (paste(currVodType, "_h3", sep = "")),
+                         (paste(currVodType, "_others", sep = "")))
     
     if (nrow(LNIs) == 0) {
       LNIs <- vodTypeLNIs
@@ -894,13 +937,13 @@ analyzeData <- function(modelType = MODEL_TYPES[3],
   }
   
   # computation of mean LNIs
-  meanLNIs <- apply(LNIs, 2, median)
+  meanLNIs <- apply(LNIs, 2, mean)
 
   # exporting Goodness of Fit
-  exportGOF(exportDir, meanLNIs)
+  exportGOF(exportDir, meanLNIs[comparableKeeps])
   
   # exporting LNI comparison data (model vs. experiment)
-  exportLNIComparison(exportDir, meanLNIs)
+  exportLNIComparison(exportDir, meanLNIs[comparableKeeps])
 
   
   if (fit) {
@@ -912,25 +955,25 @@ analyzeData <- function(modelType = MODEL_TYPES[3],
     
     library(hydroGOF)
 
-    symCroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[1:3]), as.numeric(LNIS_EXP1[1:3]), "sym")
-    symRMSE <- rmse(as.numeric(meanLNIs[1:3]), as.numeric(LNIS_EXP1[1:3]))
-    symNRMSE <- nrmse(as.numeric(meanLNIs[1:3]), as.numeric(LNIS_EXP1[1:3]))
-    symRSQ <- summary(lm(as.numeric(LNIS_EXP1[1:3]) ~ as.numeric(meanLNIs[1:3])))$r.squared
+    symCroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]), "sym")
+    symRMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]))
+    symNRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]))
+    symRSQ <- summary(lm(as.numeric(LNIS_EXP1[1:4]) ~ as.numeric(meanLNIs[comparableKeeps][1:4])))$r.squared
     
-    asym1CroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[4:6]), as.numeric(LNIS_EXP1[4:6]), "asym1")
-    asym1RMSE <- rmse(as.numeric(meanLNIs[4:6]), as.numeric(LNIS_EXP1[4:6]))
-    asym1NRMSE <- nrmse(as.numeric(meanLNIs[4:6]), as.numeric(LNIS_EXP1[4:6]))
-    asym1RSQ <- summary(lm(as.numeric(LNIS_EXP1[4:6]) ~ as.numeric(meanLNIs[4:6])))$r.squared
+    asym1CroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]), "asym1")
+    asym1RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]))
+    asym1NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]))
+    asym1RSQ <- summary(lm(as.numeric(LNIS_EXP1[5:8]) ~ as.numeric(meanLNIs[comparableKeeps][5:8])))$r.squared
     
-    asym2CroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[7:9]), as.numeric(LNIS_EXP1[7:9]), "asym2")
-    asym2RMSE <- rmse(as.numeric(meanLNIs[7:9]), as.numeric(LNIS_EXP1[7:9]))
-    asym2NRMSE <- nrmse(as.numeric(meanLNIs[7:9]), as.numeric(LNIS_EXP1[7:9]))
-    asym2RSQ <- summary(lm(as.numeric(LNIS_EXP1[7:9]) ~ as.numeric(meanLNIs[7:9])))$r.squared
+    asym2CroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]), "asym2")
+    asym2RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]))
+    asym2NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]))
+    asym2RSQ <- summary(lm(as.numeric(LNIS_EXP1[9:12]) ~ as.numeric(meanLNIs[comparableKeeps][9:12])))$r.squared
     
-    croppedRMSE <- croppedRmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
-    RMSE <- rmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
-    NRMSE <- nrmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
-    RSQ <- summary(lm(as.numeric(LNIS_EXP1) ~ as.numeric(meanLNIs)))$r.squared
+    croppedRMSE <- croppedRmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1))
+    RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1))
+    NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1))
+    RSQ <- summary(lm(as.numeric(LNIS_EXP1) ~ as.numeric(meanLNIs[comparableKeeps])))$r.squared
     
     GOF_per_vod_type <- c("###", "###", "###")
     cropped_RMSE_per_vod_type <- c(symCroppedRMSE, asym1CroppedRMSE, asym2CroppedRMSE)

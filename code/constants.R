@@ -72,12 +72,9 @@ GAMMA <<- 0.6                             # RL discount factor, the higher the m
 
 ############# REF DATA ############
 # LNIs taken from experiment 1 (Diekmann & Przepiorka, 2016, p.1321, Table 3.)
-# LNIS_EXP1 <- data.frame("sym_h1" = 3.3, "sym_h2" = 8.0, "sym_h3" = 49.5, "sym_others" = 39.2,
-#                         "asym1_h1" = 34.9, "asym1_h2" = 8.2, "asym1_h3" = 13.4, "asym1_others" = 43.5,
-#                         "asym2_h1" = 61.7, "asym2_h2" = 1.5, "asym2_h3" = 6.7, "asym2_others" = 30.1)
-LNIS_EXP1 <- data.frame("sym_h1" = 3.3, "sym_h2" = 8.0, "sym_h3" = 49.5,
-                        "asym1_h1" = 34.9, "asym1_h2" = 8.2, "asym1_h3" = 13.4,
-                        "asym2_h1" = 61.7, "asym2_h2" = 1.5, "asym2_h3" = 6.7)
+LNIS_EXP1 <- data.frame("sym_h1" = 3.3, "sym_h2" = 8.0, "sym_h3" = 49.5, "sym_others" = 39.2,
+                        "asym1_h1" = 34.9, "asym1_h2" = 8.2, "asym1_h3" = 13.4, "asym1_others" = 43.5,
+                        "asym2_h1" = 61.7, "asym2_h2" = 1.5, "asym2_h3" = 6.7, "asym2_others" = 30.1)
 
 # dummy data
 LNIS_TEST <- data.frame("sym_h1" = 1.5, "sym_h2" = 4.0, "sym_h3" = 23.5, "sym_others" = 71.0,

@@ -45,11 +45,11 @@ simulateAndAnalyze <- function(modelType = MODEL_TYPES[3],
 fitParameters <- function() {
   
   # number of simulations and rounds per simulation
-  vodCount <- 10
-  roundsPerVod <- 150
+  vodCount <- 4
+  roundsPerVod <- 50
   
   # Random, ClassicQ, SequenceX
-  modelTypes <- c(MODEL_TYPES[1], MODEL_TYPES[2], MODEL_TYPES[4])
+  modelTypes <- MODEL_TYPES
   
   ##### Random #####
   # coop ratio
@@ -68,9 +68,9 @@ fitParameters <- function() {
   propStarts <- c(43.33)
   
   # learning rate
-  alphas <- c(0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70)
+  alphas <- c(0.20, 0.25)
   # discount rate
-  gammas <- c(0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.00)
+  gammas <- c(0.75, 0.80)
   
   # ClassicQ 
   classicXs <- c(2)               # actions per state
