@@ -791,8 +791,7 @@ plotGOF <- function(meanLNIs) {
   
   # legend and title
   legend(x = "topright", y = 10, c("Model","Diekmann & Przepiorka (2016)"), cex=0.7, fill=cols)
-  title(bquote(paste("Model Data vs. Experimental Data (croppedRMSE = ", .(round(croppedRMSE, digits = 2)),
-                     ", RMSE = ", .(round(RMSE, digits = 2)), 
+  title(bquote(paste("Model Data vs. Experimental Data (RMSE = ", .(round(RMSE, digits = 2)), 
                      ", NRMSE = ", .(round(NRMSE, digits = 2)), "%, ", 
                      R^2, " = ", .(round(RSQ, digits = 2)), ")", sep = "")), 
         outer=TRUE)
