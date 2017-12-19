@@ -374,8 +374,8 @@ ClassicQPlayer <- setRefClass("ClassicQPlayer",
                                   #d_prop <- qRow$d_prop + (qRow$d_prop * runif(1, -epsilon, epsilon))
                                   
                                   # add noise to state's propensities - normal distribution
-                                  c_prop <- rnorm(1, c_prop, c_prop * epsilon)
-                                  d_prop <- rnorm(1, d_prop, d_prop * epsilon)
+                                  c_prop <- rnorm(1, qRow$c_prop, qRow$c_prop * epsilon)
+                                  d_prop <- rnorm(1, qRow$d_prop, qRow$d_prop * epsilon)
                                   
                                   # select action 
                                   if (c_prop > d_prop) {

@@ -743,7 +743,7 @@ plotGOF <- function(meanLNIs) {
           beside = TRUE, col = cols, ylim = range(0:100))
 
   # GOF values
-  croppedRMSE <- croppedRMSE(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
+  croppedRMSE <- croppedRmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))
   
   library(hydroGOF)
   RMSE <- rmse(as.numeric(meanLNIs), as.numeric(LNIS_EXP1))

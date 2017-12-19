@@ -87,7 +87,7 @@ fitParameters <- function() {
     if (modelType == "Random") {
       i <- 1
       fitCSV <- paste(SIM_DIR, gsub("-", "", Sys.Date(), fixed = TRUE), "-random-fit.csv", sep = "")
-      cat(paste("\nsimulation", i,"out of", length(randomCoopRatios) * length(roundsPerVodVec), ":\n",
+      cat(paste("\nsimulation", i,"out of", length(randomCoopRatio), ":\n",
                 "\tmodel type:", modelType, "\n",
                 "\trounds per VOD:", roundsPerVod, "\n",
                 "\trandom coop ratio:", randomCoopRatio, "\n"))
@@ -112,7 +112,6 @@ fitParameters <- function() {
                       for (classicX in classicXs) {
                         for (cQPlayersPerState in cQPlayersPerStates) {
                           cat(paste("\nsimulation", i,"out of",
-                                    length(roundsPerVodVecCQ) *
                                       length(cQPlayersPerState) *
                                       length(classicXs) *
                                       length(gammas) *
@@ -120,8 +119,7 @@ fitParameters <- function() {
                                       length(epsilonDecays) *
                                       length(epsilonStarts) *
                                       length(propStarts) *
-                                      length(sBehavs) *
-                                      length(bTypes), ":\n",
+                                      length(sBehavs), ":\n",
                                     "\tmodel type:", modelType, "\n",
                                     "\trounds per VOD:", roundsPerVod, "\n",
                                     "\tbalancing type:", balancingType, "\n",
@@ -143,7 +141,7 @@ fitParameters <- function() {
                                                     alpha = alpha,
                                                     gamma = gamma,
                                                     classicX = classicX,
-                                                    classicPlayersPerState = cQPlayersPerState)
+                                                    cQPlayersPerState = cQPlayersPerState)
                           analyzeData(modelType = modelType, fit = TRUE, fitCSV = fitCSV)
                           i <- i+1
                           cat("done\n")
@@ -156,15 +154,13 @@ fitParameters <- function() {
                       fitCSV <- paste(SIM_DIR, gsub("-", "", Sys.Date(), fixed = TRUE), "-coordinateX-fit.csv", sep = "")
                       for (coordX in coordXs) {
                         cat(paste("\nsimulation", i,"out of",
-                                  length(roundsPerVodVec) *
                                     length(coordXs) *
                                     length(gammas) *
                                     length(alphas) *
                                     length(epsilonDecays) *
                                     length(epsilonStarts) *
                                     length(propStarts) *
-                                    length(sBehavs) *
-                                    length(bTypes), ":\n",
+                                    length(sBehavs), ":\n",
                                   "\tmodel type:", modelType, "\n",
                                   "\trounds per VOD:", roundsPerVod, "\n",
                                   "\tbalancing type:", balancingType, "\n",
@@ -196,15 +192,13 @@ fitParameters <- function() {
                       fitCSV <- paste(SIM_DIR, gsub("-", "", Sys.Date(), fixed = TRUE), "-sequencex-fit.csv", sep = "")
                       for (seqX in seqXs) {
                         cat(paste("\nsimulation", i,"out of",
-                                  length(roundsPerVodVec) *
                                     length(seqXs) *
                                     length(gammas) *
                                     length(alphas) *
                                     length(epsilonDecays) *
                                     length(epsilonStarts) *
                                     length(propStarts) *
-                                    length(sBehavs) *
-                                    length(bTypes), ":\n",
+                                    length(sBehavs), ":\n",
                                   "\trounds per VOD:", roundsPerVod, "\n",
                                   "\tmodel type:", modelType, "\n",
                                   "\tbalancing type:", balancingType, "\n",

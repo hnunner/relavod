@@ -53,7 +53,7 @@ initPlayers <- function(modelType, vodType,
                         gamma,
                         
                         classicX, 
-                        classicPlayersPerState, 
+                        cQPlayersPerState, 
                         
                         coordX,
                         
@@ -83,7 +83,7 @@ initPlayers <- function(modelType, vodType,
     # ClassicQ
     } else if (modelType == MODEL_TYPES[2]) {
       players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, coopCosts, 
-                                                  classicX, classicPlayersPerState, balancingType,
+                                                  classicX, cQPlayersPerState, balancingType,
                                                   propStart, epsilonStart, epsilonDecay, alpha, 
                                                   gamma, socialBehavior)
       
@@ -303,7 +303,7 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
       # initializing the players
       players <- initPlayers(modelType, currVodType, randomCoopRatio, balancingType,
                              socialBehavior, propStart, epsilonStart, epsilonDecay,
-                             alpha, gamma, classicX, classicPlayersPerState, coordX, seqX)
+                             alpha, gamma, classicX, cQPlayersPerState, coordX, seqX)
       
       # creating a new VOD for the players
       vod <- Vod$new(players)
