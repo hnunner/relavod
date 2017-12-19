@@ -865,7 +865,6 @@ analyzeData <- function(modelType = MODEL_TYPES[3],
   LNIs <- data.frame()
   
   # looping over the VOD types to be analyzed (e.g.: sym -> asym1 -> asym2)
-  comparableKeeps <- c()
   for (i in 1:length(vodType)) {
     currVodType <- vodType[i]
     
