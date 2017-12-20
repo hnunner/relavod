@@ -693,8 +693,21 @@ exportInteractionPatterns <- function(directory, vodType, vodData) {
   }
 }
 
-
-croppedRmse <- function(sim, obs) {
+#----------------------------------------------------------------------------------------------------#
+# function: croppedRmse
+#   Computes a cropped version of the rmse. That is, only LNIs that are lower than the LNIs
+#   from the original study by Diekmann & Prezpiorka (2016) are considered. This ensures that
+#   models that outperform the human data do not get punished for their effectivity.
+#
+#   param:  sim
+#       the simulated LNIs
+#   param:  obs
+#       the observed LNIs
+#   param:  cropFully
+#       flag indicating whether a model that has a higher LNI for best pattern (sym: h3, asym: h1)
+#       is considered to have a perfect match (RMSE = 0).
+#----------------------------------------------------------------------------------------------------#
+croppedRmse <- function(sim, obs, cropFully = FALSE) {
   if (length(sim) != length(obs)) {
     stop("sim and obs not comparable!")
   }
@@ -715,9 +728,13 @@ croppedRmse <- function(sim, obs) {
       bestIndex <- 9
     }
 
+    if (cropFully && sim[bestIndex] > obs[bestIndex]) {
+      # do nothing (for readability)
+      s <- s + 0
+    }
     # consider only simulation data that has a lower LNI than the original
     # higher values are considered to "match" the observed data
-    if (i != bestIndex || (i == bestIndex && sim[i] < obs[i])) {
+    else if (i != bestIndex || (i == bestIndex && sim[i] < obs[i])) {
       s <- s + (sim[i] - obs[i])^2
     }
   }
@@ -727,9 +744,9 @@ croppedRmse <- function(sim, obs) {
 
 #----------------------------------------------------------------------------------------------------#
 # function: croppedRmsePerVODType
-#   Computes a cropped version of the rmse. That is, only LNIs that are lower than the LNIs
-#   from the original study by Diekmann & Prezpiorka (2016) are considered. This ensures that
-#   models that outperform the human data do not get punished for their effectivity.
+#   Computes a cropped version of the rmse for a specific type of VOD. That is, only LNIs that 
+#   are lower than the LNIs from the original study by Diekmann & Prezpiorka (2016) are considered. 
+#   This ensures that models that outperform the human data do not get punished for their effectivity.
 #
 #   param:  sim
 #       the simulated LNIs
@@ -737,8 +754,11 @@ croppedRmse <- function(sim, obs) {
 #       the observed LNIs
 #   param:  vodType
 #       the type of VOD
+#   param:  cropFully
+#       flag indicating whether a model that has a higher LNI for best pattern (sym: h3, asym: h1)
+#       is considered to have a perfect match (RMSE = 0).
 #----------------------------------------------------------------------------------------------------#
-croppedRmsePerVODType <- function(sim, obs, vodType) {
+croppedRmsePerVODType <- function(sim, obs, vodType, cropFully = FALSE) {
   if (length(sim) != length(obs)) {
     stop("sim and obs not comparable!")
   }
@@ -756,6 +776,11 @@ croppedRmsePerVODType <- function(sim, obs, vodType) {
     bestIndex <- 3
   } else {
     stop(paste("unknown vod type:", vodType))
+  }
+  
+  # perfect match?
+  if (cropFully && sim[bestIndex] > obs[bestIndex]) {
+    return(0)
   }
   
   s <- 0
@@ -955,39 +980,46 @@ analyzeData <- function(modelType = MODEL_TYPES[3],
     
     library(hydroGOF)
 
+    symFullyCroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]), "sym", TRUE)
     symCroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]), "sym")
     symRMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]))
     symNRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][1:4]), as.numeric(LNIS_EXP1[1:4]))
     symRSQ <- summary(lm(as.numeric(LNIS_EXP1[1:4]) ~ as.numeric(meanLNIs[comparableKeeps][1:4])))$r.squared
     
+    asym1FullyCroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]), "asym1", TRUE)
     asym1CroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]), "asym1")
     asym1RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]))
     asym1NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][5:8]), as.numeric(LNIS_EXP1[5:8]))
     asym1RSQ <- summary(lm(as.numeric(LNIS_EXP1[5:8]) ~ as.numeric(meanLNIs[comparableKeeps][5:8])))$r.squared
     
+    asym2FullyCroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]), "asym2", TRUE)
     asym2CroppedRMSE <- croppedRmsePerVODType(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]), "asym2")
     asym2RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]))
     asym2NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps][9:12]), as.numeric(LNIS_EXP1[9:12]))
     asym2RSQ <- summary(lm(as.numeric(LNIS_EXP1[9:12]) ~ as.numeric(meanLNIs[comparableKeeps][9:12])))$r.squared
     
+    fullyCroppedRMSE <- croppedRmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1), TRUE)
     croppedRMSE <- croppedRmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1))
     RMSE <- rmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1))
     NRMSE <- nrmse(as.numeric(meanLNIs[comparableKeeps]), as.numeric(LNIS_EXP1))
     RSQ <- summary(lm(as.numeric(LNIS_EXP1) ~ as.numeric(meanLNIs[comparableKeeps])))$r.squared
     
     GOF_per_vod_type <- c("###", "###", "###")
+    fully_cropped_RMSE_per_vod_type <- c(symFullyCroppedRMSE, asym1FullyCroppedRMSE, asym2FullyCroppedRMSE)
     cropped_RMSE_per_vod_type <- c(symCroppedRMSE, asym1CroppedRMSE, asym2CroppedRMSE)
     RMSE_per_vod_type <- c(symRMSE, asym1RMSE, asym2RMSE)
     NRMSE_per_vod_type <- c(symNRMSE, asym1NRMSE, asym2NRMSE)
     RSQ_per_vod_type <- c(symRSQ, asym1RSQ, asym2RSQ)
     GOF_combined <- c("#", "#", "#")
+    fully_Cropped_RMSE_combined <- c(fullyCroppedRMSE, fullyCroppedRMSE, fullyCroppedRMSE)
     cropped_RMSE_combined <- c(croppedRMSE, croppedRMSE, croppedRMSE)
     RMSE_combined <- c(RMSE, RMSE, RMSE)
     NRMSE_combined <- c(NRMSE, NRMSE, NRMSE)
     RSQ_combined <- c(RSQ, RSQ, RSQ)
     vod_params <- c("###", "###", "###")
-    gofs <- data.frame(GOF_per_vod_type, cropped_RMSE_per_vod_type, RMSE_per_vod_type, NRMSE_per_vod_type, 
-                       RSQ_per_vod_type, GOF_combined, cropped_RMSE_combined, RMSE_combined, NRMSE_combined, 
+    gofs <- data.frame(GOF_per_vod_type, fully_cropped_RMSE_per_vod_type, cropped_RMSE_per_vod_type, 
+                       RMSE_per_vod_type, NRMSE_per_vod_type, RSQ_per_vod_type, GOF_combined, 
+                       fully_Cropped_RMSE_combined, cropped_RMSE_combined, RMSE_combined, NRMSE_combined, 
                        RSQ_combined, vod_params)
     
     library(dplyr)
