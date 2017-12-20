@@ -49,11 +49,11 @@ fitParameters <- function() {
   roundsPerVod <- 150
   
   # Random, ClassicQ, SequenceX
-  modelTypes <- c(MODEL_TYPES[1], MODEL_TYPES[2], MODEL_TYPES[4])
+  modelTypes <- MODEL_TYPES
   
   ##### Random #####
   # coop ratio
-  randomCoopRatio <- RANDOM_COOP_RATIO
+  randomCoopRatio <- 1/3
   
   ##### ClassicQ, SequenceX #####
   # exploration vs. exploitation: e-noise
