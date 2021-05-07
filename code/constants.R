@@ -1,4 +1,24 @@
-###################################### SHARED GLOBAL PARAMETERS ###################################### 
+# Copyright (C) 2017 - 2021
+#      Hendrik Nunner    <h.nunner@gmail.com>
+#
+# This file is part of the ReLAVOD project <https://github.com/hnunner/relavod>.
+#
+# This project is a stand-alone R program of reinforcement learning agents interacting in the
+# repeated Volunteer's Dilemma (VOD). The purpose of ReLAVOD is to use reinforcement learning
+# to investigate the role of cognitive mechanisms in the emergence of conventions.
+#
+# This program is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <http://www.gnu.org/licenses/>.
+
+###################################### SHARED GLOBAL PARAMETERS ######################################
 
 ########### FILE SYSTEM ############
 PLAYERS_DIR <<- paste(BASE_DIR, "players/", sep = "")
@@ -46,8 +66,8 @@ RANDOM_COOP_RATIO <<- 1/3                 # ratio (cooperate:deviate) in favor o
 
 # ClassicQ
 CLASSIC_X <<- 3                           # amount of previous rounds defining a state
-CLASSIC_PLAYERS_PER_STATE <<- 1           # actions of how many players defining a state 
-                                          # possible values: 
+CLASSIC_PLAYERS_PER_STATE <<- 1           # actions of how many players defining a state
+                                          # possible values:
                                           #   1 = only own actions
                                           #   PLAYERS_CNT = all players' actions
 
@@ -58,12 +78,12 @@ COORD_X <<- 3                             # default after how many rounds to coo
 SEQ_X <<- 3                               # default length of action sequence
 
 
-# Reinforcement Learning 
+# Reinforcement Learning
 # (ClassicQ & CoordinateX)
 PROP_START <<- 250                        # initial propensity for each strategy
-EPSILON_START <<- 0.1                     # initial balance between exploration (epsilon) 
+EPSILON_START <<- 0.1                     # initial balance between exploration (epsilon)
                                           # and exploration (1-epsilon)
-EPSILON_DECAY <<- 0.995                       # rate at which epsilon is decreasing after 
+EPSILON_DECAY <<- 0.995                       # rate at which epsilon is decreasing after
                                           # each completion of a strategy
 ALPHA <<- 0.4                             # RL learning rate, the higher the more important
                                           # recently learned information; 0 < ALPHA <= 1

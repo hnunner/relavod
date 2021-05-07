@@ -2,4 +2,5 @@
 /simulations_thesis/Random
 /simulations_thesis/ClassicQ
 /simulations_thesis/CoordinateX
-
+*.Rhistory
+/simulations

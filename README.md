@@ -13,3 +13,8 @@ The project is a stand-alone software application that can be run within an acti
 
 ## Data and analysis
 When invoking the *fitParameters* function ReLAVOD will create a folder named *simulation* that contains all generated data. The folder structure is divided into the outputs for each model class (Random, ClassicQ, SequenceX, CoordinateX). These folders are further divided into outputs per single parameter combinations. Each folder contains all raw data for the three types of VOD (symmetric, asymmetric 1, asymmetric 2), interaction patterns, goodness of fit plots, and CSV files for the model parameters and comparisons between model and experimental data.
+
+## Copyright ##
+Copyright (C), 2017 - 2021,  Hendrik Nunner (<h.nunner@gmail.com>)
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.

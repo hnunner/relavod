@@ -1,3 +1,23 @@
+# Copyright (C) 2017 - 2021
+#      Hendrik Nunner    <h.nunner@gmail.com>
+#
+# This file is part of the ReLAVOD project <https://github.com/hnunner/relavod>.
+#
+# This project is a stand-alone R program of reinforcement learning agents interacting in the
+# repeated Volunteer's Dilemma (VOD). The purpose of ReLAVOD is to use reinforcement learning
+# to investigate the role of cognitive mechanisms in the emergence of conventions.
+#
+# This program is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see <http://www.gnu.org/licenses/>.
+
 ########################################## GLOBAL PARAMETERS #########################################
 if (!exists("BASE_DIR")) BASE_DIR <<- paste(dirname(sys.frame(1)$ofile), "/", sep = "")
 
@@ -9,13 +29,13 @@ if (!exists("BASE_DIR")) BASE_DIR <<- paste(dirname(sys.frame(1)$ofile), "/", se
 #         the type of model used for the simulation
 #----------------------------------------------------------------------------------------------------#
 initSimulation <- function(modelType) {
-  
+
   # constants
   if (!exists("MODEL_TYPES")) source(paste(BASE_DIR, "constants.R", sep = ""))
-  
+
   # source VOD class
   if (!exists("Vod", mode="function")) source(paste(BASE_DIR, "vod.R", sep = ""))
-  
+
   # source appropriate model class
   modelTypeFound <- FALSE
   for (i in 1:length(MODEL_TYPES)) {
@@ -26,7 +46,7 @@ initSimulation <- function(modelType) {
       modelTypeFound <- TRUE
     }
   }
-  
+
   if (!modelTypeFound) {
     stop(paste("Unknown model type:", modelType))
   }
@@ -40,25 +60,25 @@ initSimulation <- function(modelType) {
 #     param:  vodType
 #         the type of the VOD
 #----------------------------------------------------------------------------------------------------#
-initPlayers <- function(modelType, vodType, 
-                        
+initPlayers <- function(modelType, vodType,
+
                         randomCoopRatio,
-                        
-                        balancingType, 
+
+                        balancingType,
                         socialBehavior,
-                        propStart, 
-                        epsilonStart, 
-                        epsilonDecay, 
-                        alpha, 
+                        propStart,
+                        epsilonStart,
+                        epsilonDecay,
+                        alpha,
                         gamma,
-                        
-                        classicX, 
-                        cQPlayersPerState, 
-                        
+
+                        classicX,
+                        cQPlayersPerState,
+
                         coordX,
-                        
+
                         seqX) {
-  
+
   # determining the cooperation costs per player, depending on VOD type
   coopCosts <- c()
   if (vodType == VOD_TYPES[1]) {
@@ -70,29 +90,29 @@ initPlayers <- function(modelType, vodType,
   } else {
     stop(paste("Unknown VOD type:", vodType))
   }
-  
+
   # initialization of players
   players <- list()
   for (currPlayer in 1:PLAYERS_CNT) {
-    
+
     # Random
     if (modelType == MODEL_TYPES[1]) {
       players[[currPlayer]] <- RandomPlayer$new(currPlayer, coopCosts,
                                                 randomCoopRatio)
-      
+
     # ClassicQ
     } else if (modelType == MODEL_TYPES[2]) {
-      players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, coopCosts, 
+      players[[currPlayer]] <- ClassicQPlayer$new(currPlayer, coopCosts,
                                                   classicX, cQPlayersPerState, balancingType,
-                                                  propStart, epsilonStart, epsilonDecay, alpha, 
+                                                  propStart, epsilonStart, epsilonDecay, alpha,
                                                   gamma, socialBehavior)
-      
+
     # CoordinateX
     } else if (modelType == MODEL_TYPES[3]) {
-      players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, coopCosts, 
-                                                     coordX, balancingType,propStart, epsilonStart, 
+      players[[currPlayer]] <- CoordinateXPlayer$new(currPlayer, coopCosts,
+                                                     coordX, balancingType,propStart, epsilonStart,
                                                      epsilonDecay, alpha, gamma, socialBehavior)
-      
+
     # SequenceX
     } else if (modelType == MODEL_TYPES[4]) {
       if (LOG_LEVEL == "all") {
@@ -101,13 +121,13 @@ initPlayers <- function(modelType, vodType,
       players[[currPlayer]] <- SequenceXPlayer$new(currPlayer, coopCosts,
                                                    seqX, balancingType,propStart, epsilonStart,
                                                    epsilonDecay, alpha, gamma, socialBehavior)
-      
+
     # unknown
     } else {
       stop(paste("Unknown model type:", modelType))
     }
   }
-  
+
   return(players)
 }
 
@@ -118,13 +138,13 @@ initPlayers <- function(modelType, vodType,
 #         the type of model to create the directory for
 #----------------------------------------------------------------------------------------------------#
 createSimulationsBaseDirectory <- function(modelType) {
-  
+
   # creation of base directory for the model type
   modelTypeDir <- paste(SIM_DIR, modelType, "/", sep = "")
   if (!dir.exists(modelTypeDir)) {
     dir.create(modelTypeDir)
   }
-  
+
   # creation of base directory for the simulations
   simDir <- NA
   dirCnt <- 0
@@ -133,7 +153,7 @@ createSimulationsBaseDirectory <- function(modelType) {
     simDir <- paste(modelTypeDir, dirCnt, "/", sep = "")
   }
   dir.create(simDir)
-  
+
   return(simDir)
 }
 
@@ -146,13 +166,13 @@ createSimulationsBaseDirectory <- function(modelType) {
 #         the type of VOD to create the directory for
 #----------------------------------------------------------------------------------------------------#
 createVodDirectory <- function(baseDir, vodType) {
-  
+
   # creation of base directory for the VOD type
   vodTypeDir <- paste(baseDir, vodType, "/", sep = "")
   if (!dir.exists(vodTypeDir)) {
     dir.create(vodTypeDir)
   }
-  
+
   return(vodTypeDir)
 }
 
@@ -171,31 +191,31 @@ createVodDirectory <- function(baseDir, vodType) {
 #         the amount of rounds played in one VOD instance
 #----------------------------------------------------------------------------------------------------#
 getModelParameters <- function(vod, modelType, vodType, vodCount, roundsPerVod) {
-  
+
   players <- vod$players
   playersCount <- length(players)
-  
+
   # initialization of general parameters
-  modelParams <- data.frame("model_type" = modelType, 
-                            "vod_type" = vodType, 
-                            "vod_count" = vodCount, 
+  modelParams <- data.frame("model_type" = modelType,
+                            "vod_type" = vodType,
+                            "vod_count" = vodCount,
                             "rounds_per_vod" = roundsPerVod,
                             "players_count" = playersCount,
                             "util_max" = UTIL_MAX,
                             "util_none" = UTIL_NONE,
                             stringsAsFactors=FALSE)
-  
+
   # player specific parameters / model specific parameters
   playerParameters <- c()
   for (i in 1:playersCount) {
     playerParameters <- c(playerParameters, players[[i]]$getModelParameters())
-  } 
+  }
   j <- 1
   while (j < length(playerParameters)) {
     modelParams[playerParameters[j]] <- playerParameters[j+1]
     j <- j+2
   }
-  
+
   return(modelParams)
 }
 
@@ -208,12 +228,12 @@ getModelParameters <- function(vod, modelType, vodType, vodCount, roundsPerVod) 
 #         the directory to store the parameters in
 #----------------------------------------------------------------------------------------------------#
 storeModelParameters <- function(modelParams, directory) {
-  
-  # row binding of parameters to have a single all-inclusive table for all VODs and models 
+
+  # row binding of parameters to have a single all-inclusive table for all VODs and models
   # (if possible)
   parameterRows <- modelParams[[1]]
   fileCnt <- 1
-  
+
   for (i in 2:length(modelParams)) {
     currentParameters <- modelParams[[i]]
     if (ncol(parameterRows) == ncol(currentParameters)) {
@@ -224,7 +244,7 @@ storeModelParameters <- function(modelParams, directory) {
       fileCnt <- fileCnt+1
     }
   }
-  
+
   if (fileCnt == 1) {
     write.csv(parameterRows, file = paste(directory, "model-params.csv", sep = ""))
   } else {
@@ -263,26 +283,26 @@ storeData <- function(data, directory, vodCount) {
 #----------------------------------------------------------------------------------------------------#
 computeSimulation <- function(modelType = MODEL_TYPES[2],
                               vodType = "all",
-                              vodCount = 10,              
+                              vodCount = 10,
                               roundsPerVod = 100,
-                              
+
                               randomCoopRatio = RANDOM_COOP_RATIO,
-                              
-                              balancingType = BALANCING_TYPE, 
+
+                              balancingType = BALANCING_TYPE,
                               socialBehavior = SOCIAL_BEHAVIOR,
-                              propStart = PROP_START, 
-                              epsilonStart = EPSILON_START, 
-                              epsilonDecay = EPSILON_DECAY, 
-                              alpha = ALPHA, 
+                              propStart = PROP_START,
+                              epsilonStart = EPSILON_START,
+                              epsilonDecay = EPSILON_DECAY,
+                              alpha = ALPHA,
                               gamma = GAMMA,
-                              
-                              classicX = CLASSIC_X, 
-                              cQPlayersPerState = CLASSIC_PLAYERS_PER_STATE, 
-                              
+
+                              classicX = CLASSIC_X,
+                              cQPlayersPerState = CLASSIC_PLAYERS_PER_STATE,
+
                               coordX = COORD_X,
-                              
-                              seqX = SEQ_X) {       
-  
+
+                              seqX = SEQ_X) {
+
   # initializations
   initSimulation(modelType)
   baseDirectory <- createSimulationsBaseDirectory(modelType)
@@ -290,34 +310,34 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
     vodType <- VOD_TYPES
   }
   modelParams <- list()
-  
+
   # looping over VOD types (e.g., sym, asym1, asym2)
   for (currVodType in 1:length(vodType)) {
-    
+
     currVodType <- vodType[currVodType]
     directory <- createVodDirectory(baseDirectory, currVodType)
-    
+
     # looping over the amount of VOD instancess played
     for (currVod in 1:vodCount) {
-      
+
       # initializing the players
       players <- initPlayers(modelType, currVodType, randomCoopRatio, balancingType,
                              socialBehavior, propStart, epsilonStart, epsilonDecay,
                              alpha, gamma, classicX, cQPlayersPerState, coordX, seqX)
-      
+
       # creating a new VOD for the players
       vod <- Vod$new(players)
-      
+
       # actual VOD simulation
       for (currRound in 1:roundsPerVod) {
         vod$computeRound()
       }
-      
+
       # data storage
       storeData(vod$history, directory, currVod)
-      
+
       # caching of current model's parameters
-      modelParams[[currVodType]] <- getModelParameters(vod, modelType, currVodType, 
+      modelParams[[currVodType]] <- getModelParameters(vod, modelType, currVodType,
                                                        vodCount, roundsPerVod)
     }
   }
@@ -330,10 +350,10 @@ computeSimulation <- function(modelType = MODEL_TYPES[2],
 #----------------------------------------------------------------------------------------------------#
 #   function: computeRandomSimulation
 #----------------------------------------------------------------------------------------------------#
-computeRandomSimulation <- function(vodCount, roundsPerVod, randomCoopRatio) {       
-  computeSimulation(modelType = "Random", 
-                    vodType = "all", 
-                    vodCount = vodCount, 
+computeRandomSimulation <- function(vodCount, roundsPerVod, randomCoopRatio) {
+  computeSimulation(modelType = "Random",
+                    vodType = "all",
+                    vodCount = vodCount,
                     roundsPerVod = roundsPerVod,
                     randomCoopRatio = randomCoopRatio)
 }
@@ -343,12 +363,12 @@ computeRandomSimulation <- function(vodCount, roundsPerVod, randomCoopRatio) {
 #----------------------------------------------------------------------------------------------------#
 computeClassicQSimulation <- function(vodCount, roundsPerVod, balancingType, socialBehavior,
                                       propStart, epsilonStart, epsilonDecay, alpha, gamma,
-                                      classicX, cQPlayersPerState) {       
-  computeSimulation(modelType = "ClassicQ", 
-                    vodType = "all", 
-                    vodCount = vodCount, 
+                                      classicX, cQPlayersPerState) {
+  computeSimulation(modelType = "ClassicQ",
+                    vodType = "all",
+                    vodCount = vodCount,
                     roundsPerVod = roundsPerVod,
-                    
+
                     balancingType = balancingType,
                     socialBehavior = socialBehavior,
                     propStart = propStart,
@@ -356,7 +376,7 @@ computeClassicQSimulation <- function(vodCount, roundsPerVod, balancingType, soc
                     epsilonDecay = epsilonDecay,
                     alpha = alpha,
                     gamma = gamma,
-                    
+
                     classicX = classicX,
                     cQPlayersPerState = cQPlayersPerState)
 }
@@ -365,13 +385,13 @@ computeClassicQSimulation <- function(vodCount, roundsPerVod, balancingType, soc
 #   function: computeCoordinateXSimulation
 #----------------------------------------------------------------------------------------------------#
 computeCoordinateXSimulation <- function(vodCount, roundsPerVod, balancingType, socialBehavior,
-                                         propStart, epsilonStart, epsilonDecay, alpha, gamma, 
-                                         coordX) {       
-  computeSimulation(modelType = "CoordinateX", 
-                    vodType = "all", 
-                    vodCount = vodCount, 
+                                         propStart, epsilonStart, epsilonDecay, alpha, gamma,
+                                         coordX) {
+  computeSimulation(modelType = "CoordinateX",
+                    vodType = "all",
+                    vodCount = vodCount,
                     roundsPerVod = roundsPerVod,
-                    
+
                     balancingType = balancingType,
                     socialBehavior = socialBehavior,
                     propStart = propStart,
@@ -379,7 +399,7 @@ computeCoordinateXSimulation <- function(vodCount, roundsPerVod, balancingType, 
                     epsilonDecay = epsilonDecay,
                     alpha = alpha,
                     gamma = gamma,
-                    
+
                     coordX = coordX)
 }
 
@@ -387,12 +407,12 @@ computeCoordinateXSimulation <- function(vodCount, roundsPerVod, balancingType, 
 #   function: computeSequenceXSimulation
 #----------------------------------------------------------------------------------------------------#
 computeSequenceXSimulation <- function(vodCount, roundsPerVod, balancingType, socialBehavior,
-                                       propStart, epsilonStart, epsilonDecay, alpha, gamma, seqX) {       
-  computeSimulation(modelType = "SequenceX", 
-                    vodType = "all", 
-                    vodCount = vodCount, 
+                                       propStart, epsilonStart, epsilonDecay, alpha, gamma, seqX) {
+  computeSimulation(modelType = "SequenceX",
+                    vodType = "all",
+                    vodCount = vodCount,
                     roundsPerVod = roundsPerVod,
-                    
+
                     balancingType = balancingType,
                     socialBehavior = socialBehavior,
                     propStart = propStart,
@@ -400,6 +420,6 @@ computeSequenceXSimulation <- function(vodCount, roundsPerVod, balancingType, so
                     epsilonDecay = epsilonDecay,
                     alpha = alpha,
                     gamma = gamma,
-                    
+
                     seqX = seqX)
 }
